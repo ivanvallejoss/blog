@@ -7,6 +7,8 @@ from sqlalchemy import delete
 from notion.client import get_posts, get_page_blocks, get_details_from_post
 from notion.converter import blocks_to_markdown
 
+from app.render import convert_markdown_to_html
+
 from app.models.category import Category
 from app.models.post import Post
 from app.models.sync_error import SyncError
@@ -40,7 +42,8 @@ def _create_post(db, full_post):
     new_post = Post(
         title=full_post["title"],
         slug=full_post["slug"],
-        content=full_post["content"],
+        content_markdown=full_post["content_markdown"],
+        content_html=full_post["content_html"],
         published_at=full_post["published_at"],
         notion_id=full_post["notion_id"],
         synced_at=full_post["synced_at"],
@@ -58,7 +61,8 @@ def _update_post(post, full_post):
     """
     post.title = full_post["title"]
     post.slug = full_post["slug"]
-    post.content = full_post["content"]
+    post.content_markdown = full_post["content_markdown"]
+    post.content_html = full_post["content_html"]
     post.published_at = full_post["published_at"]
     post.synced_at = full_post["synced_at"]
     post.category = full_post["category"]
@@ -76,12 +80,14 @@ def _get_full_post(db, post_details, db_categories) -> dict:
     # OBTENIENDO EL CONTENT
     page_id = post_details["notion_id"]
     page_blocks = get_page_blocks(page_id)
-    content = blocks_to_markdown(page_blocks)
+    content_markdown = blocks_to_markdown(page_blocks)
+    content_html = convert_markdown_to_html(content_markdown)
 
     # OBTENIENDO LA CATEGORIA
     category = _get_or_create_category(post_details["category_name"], db, db_categories)
 
-    post_details["content"] = content
+    post_details["content_markdown"] = content_markdown
+    post_details["content_html"] = content_html
     post_details["category"] = category
     return post_details
 
