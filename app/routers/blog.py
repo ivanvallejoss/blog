@@ -1,8 +1,9 @@
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Request, HTTPException
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from sqlalchemy import and_
 from app.database import get_db
+from ..selectors import get_category_by_slug, get_post_by_slugs, get_published_posts 
 
 router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
@@ -12,7 +13,7 @@ def post_list(
     request: Request, 
     db: Session = Depends(get_db)
     ):
-    posts = db.query(Post).all()
+    posts = get_published_posts(db)
     return templates.TemplateResponse(
         "index.html", 
         {"request": request, "posts": posts}
@@ -25,8 +26,7 @@ def get_category(
     request: Request,
     db: Session = Depends(get_db)
     ):
-    
-    category = db.query(Category).filter_by(slug=category_slug).first()
+    category = get_category_by_slug(db, category_slug)
 
     if not category:
         raise HTTPException(status_code=404, detail="Categoria no encontrada o inexistente")
@@ -44,13 +44,7 @@ def get_post(
     request: Request,
     db: Session = Depends(get_db)
     ):
-
-    post = db.query(Post).join(Category).filter(
-        and_(
-            Category.slug == category_slug,
-            Post.slug == post_slug
-            )
-    ).first()
+    post = get_post_by_slugs(db, category_slug, post_slug)
 
     if not post:
         raise HTTPException(status_code=404, detail="Post no encontrado o categoria no encontrada")
