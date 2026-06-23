@@ -106,8 +106,6 @@ uv run fastapi dev app/main.py
 | `python cli.py sync` | Sync posts from Notion (creates, updates, deletes) |
 | `python cli.py backfill-db` | Recompute `content_html` from `content_markdown` |
 
----
-
 ### Notion setup
 
 The sync layer expects a Notion database with the following properties:
@@ -119,3 +117,5 @@ The sync layer expects a Notion database with the following properties:
 | `Estado` | Status | Only `Published` posts are synced |
 | `categoria` | Select | Required — posts without category are skipped |
 | `Fecha Publicacion` | Date | Publication date |
+
+---
