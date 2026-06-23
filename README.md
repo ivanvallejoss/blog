@@ -4,7 +4,17 @@
 > Posts are written and managed in Notion, then synced to a local PostgreSQL database and served via FastAPI + Jinja2.
 > Notion is the source of truth — the database functions as a read cache, not a content store.
 
-[tech stack's badges]
+![Python](https://img.shields.io/badge/Python_3.14-3776AB?style=flat&logo=python&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=flat&logo=fastapi&logoColor=white)
+![SQLAlchemy](https://img.shields.io/badge/SQLAlchemy-D71F00?style=flat&logo=sqlalchemy&logoColor=white)
+![Alembic](https://img.shields.io/badge/Alembic-6BA539?style=flat&logo=alembic&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=flat&logo=postgresql&logoColor=white)
+![Notion](https://img.shields.io/badge/Notion_API-000000?style=flat&logo=notion&logoColor=white)
+![Jinja2](https://img.shields.io/badge/Jinja2-B41717?style=flat&logo=jinja&logoColor=white)
+![HTMX](https://img.shields.io/badge/HTMX-3D72D7?style=flat&logo=htmx&logoColor=white)
+![Alpine.js](https://img.shields.io/badge/Alpine.js-8BC0D0?style=flat&logo=alpinedotjs&logoColor=black)
+![uv](https://img.shields.io/badge/uv-DE5FE9?style=flat&logo=uv&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-2496ED?style=flat&logo=docker&logoColor=white)
 
 ---
 
@@ -60,7 +70,8 @@ cp .env.example .env
 
 To get the Notion token see [Notion API getting started](https://developers.notion.com/docs/getting-started) to create an integration and get your token.
 
-The `NOTION_DATA_SOURCE_ID` is the alphanumeric str after the last `/` and before any query parameter (e.g. `?`)
+The `NOTION_DATA_SOURCE_ID` is **not** the database ID visible in the Notion URL.
+It must be retrieved via the Notion API (`notion.data_sources.list()`).
 
 The sync commands expects an inline-database element in the main page from where the Token is config + the exact properties that the "Notion Setup" section describes.
 
