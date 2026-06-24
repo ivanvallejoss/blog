@@ -420,14 +420,6 @@ li:last-child {
   margin-bottom: 16px;
 }
 
-.post-content {
-  /* Espacio vertical entre elementos generados por Markdown */
-}
-
-.post-content > * + * {
-  /* Los márgenes están definidos globalmente en h2, h3, p, etc. */
-}
-
 .post-content ul,
 .post-content ol {
   padding-left: 28px;
