@@ -474,3 +474,32 @@ li:last-child {
     transition-duration: 0.01ms !important;
   }
 }
+
+
+/* =============================================================================
+   12. PÁGINAS DE ERROR
+   ============================================================================= */
+
+.error-page {
+  padding-top: 48px;
+}
+
+.error-code {
+  display: block;
+  font-family: 'Geist Mono', monospace;
+  font-weight: 700;
+  font-size: 72px;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  color: var(--color-text-muted);
+  margin-bottom: 20px;
+}
+
+.error-page h1 {
+  margin-bottom: 16px;
+}
+
+.error-page > p {
+  color: var(--color-text-muted);
+  margin-bottom: 32px;
+}
