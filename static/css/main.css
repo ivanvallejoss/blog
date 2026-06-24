@@ -1,0 +1,484 @@
+/* =============================================================================
+   main.css — ivan.dev
+   Orden: @font-face → tokens → reset → layout → nav → tipografía → componentes
+   Sin build step. CSS plano con custom properties.
+   ============================================================================= */
+
+
+/* =============================================================================
+   1. FUENTES — Self-hosted, Geist family (Vercel, MIT)
+      Archivos esperados en static/fonts/
+   ============================================================================= */
+
+@font-face {
+  font-family: 'Geist Sans';
+  src: url('/static/fonts/GeistSans-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Geist Mono';
+  src: url('/static/fonts/GeistMono-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Geist Mono';
+  src: url('/static/fonts/GeistMono-Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+
+/* =============================================================================
+   2. TOKENS DE DISEÑO
+      Tokens base del design system + tokens derivados para uso interno.
+      Los derivados (muted, border, separator) no forman parte del spec público
+      pero son necesarios para implementación sin duplicar lógica de color.
+   ============================================================================= */
+
+[data-theme="dark"] {
+  /* Paleta base */
+  --color-bg:        #060B07;
+  --color-surface:   #1A2E1A;
+  --color-text:      #F0E8D8;
+  --color-accent:    #D08840;
+  --color-code-text: #A4C9A4;
+
+  /* Derivados — calculados a partir de --color-text */
+  --color-text-muted: rgba(240, 232, 216, 0.5);
+  --color-border:     rgba(240, 232, 216, 0.09);
+  --color-separator:  rgba(240, 232, 216, 0.1);
+}
+
+[data-theme="light"] {
+  /* Paleta base */
+  --color-bg:        #F0E8D8;
+  --color-surface:   #E3D8C2;
+  --color-text:      #0D1F12;
+  --color-accent:    #8B5218;
+  --color-code-text: #2A5A2A;
+
+  /* Derivados — calculados a partir de --color-text */
+  --color-text-muted: rgba(13, 31, 18, 0.5);
+  --color-border:     rgba(13, 31, 18, 0.09);
+  --color-separator:  rgba(13, 31, 18, 0.1);
+}
+
+
+/* =============================================================================
+   3. RESET + BASE
+   ============================================================================= */
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 17px;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  font-family: 'Geist Sans', system-ui, sans-serif;
+  font-weight: 400;
+  line-height: 1.7;
+  min-height: 100vh;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+a {
+  color: var(--color-accent);
+  text-decoration: none;
+  transition: color 0.15s ease, opacity 0.15s ease;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+a:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+img, svg {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* Alpine: oculta elementos con x-cloak hasta que Alpine inicializa */
+[x-cloak] { display: none !important; }
+
+
+/* =============================================================================
+   4. LAYOUT
+      content-wrapper: columna editorial de 700px, centrada.
+      header: full-width con color de superficie, contenido al mismo ancho.
+   ============================================================================= */
+
+.content-wrapper {
+  max-width: 700px;
+  margin-inline: auto;
+  padding-inline: 24px;
+}
+
+.site-header {
+  background-color: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+  padding-block: 18px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.site-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.site-main {
+  padding-block: 56px;
+}
+
+
+/* =============================================================================
+   5. NAVEGACIÓN — brand + toggle de tema
+   ============================================================================= */
+
+.nav-brand {
+  font-family: 'Geist Mono', monospace;
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: -0.02em;
+  color: var(--color-text);
+  text-decoration: none;
+}
+
+.nav-brand:hover {
+  color: var(--color-accent);
+  text-decoration: none;
+}
+
+.theme-toggle {
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  padding: 5px 9px;
+  font-size: 13px;
+  line-height: 1;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+
+.theme-toggle:hover {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+
+.theme-toggle:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 3px;
+}
+
+/*
+  Visibilidad de íconos controlada por data-theme en <html>.
+  El inline script en base.html setea este atributo antes del primer frame,
+  por lo que el ícono correcto se muestra sin flash ni esperar a Alpine.
+*/
+[data-theme="dark"]  .icon-sun  { display: none; }
+[data-theme="dark"]  .icon-moon { display: inline; }
+[data-theme="light"] .icon-sun  { display: inline; }
+[data-theme="light"] .icon-moon { display: none; }
+
+
+/* =============================================================================
+   6. TIPOGRAFÍA
+      Geist Mono para titulares y metadata — jerarquía técnica.
+      Geist Sans para cuerpo — lectura sostenida.
+      Escala: 13 / 17 / 21 / 28 / 44
+   ============================================================================= */
+
+h1, h2, h3 {
+  font-family: 'Geist Mono', monospace;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  color: var(--color-text);
+}
+
+h1 {
+  font-size: 44px;
+  margin-bottom: 20px;
+}
+
+h2 {
+  font-size: 28px;
+  margin-top: 52px;
+  margin-bottom: 16px;
+}
+
+h3 {
+  font-size: 21px;
+  margin-top: 36px;
+  margin-bottom: 12px;
+}
+
+p {
+  margin-bottom: 24px;
+}
+
+p:last-child {
+  margin-bottom: 0;
+}
+
+strong, b {
+  font-weight: 700;
+}
+
+/* Metadata: fechas, categorías, labels auxiliares */
+.meta {
+  font-family: 'Geist Mono', monospace;
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--color-text-muted);
+  letter-spacing: 0.01em;
+}
+
+/* Código inline — fuera de bloques de código */
+code:not(pre code) {
+  font-family: 'Geist Mono', monospace;
+  font-size: 0.85em;
+  color: var(--color-code-text);
+  background-color: var(--color-surface);
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-feature-settings: 'liga' 0;
+}
+
+blockquote {
+  border-left: 3px solid var(--color-accent);
+  padding-left: 20px;
+  margin-block: 28px;
+  color: var(--color-text-muted);
+}
+
+blockquote p {
+  margin-bottom: 0;
+}
+
+hr {
+  border: none;
+  border-top: 1px solid var(--color-separator);
+  margin-block: 44px;
+}
+
+ul, ol {
+  padding-left: 28px;
+  margin-bottom: 24px;
+}
+
+li {
+  margin-bottom: 8px;
+}
+
+li:last-child {
+  margin-bottom: 0;
+}
+
+
+/* =============================================================================
+   7. BLOQUES DE CÓDIGO — .codehilite
+      Cards flotantes sobre el near-black. NO full-width — tienen margen lateral.
+      Pygments genera las clases de color de tokens; nosotros controlamos
+      el contenedor, la fuente y forzamos el fondo con !important para
+      que main.css gane sobre el CSS generado por Pygments.
+   ============================================================================= */
+
+.codehilite {
+  background-color: var(--color-surface) !important;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 20px 24px;
+  margin-block: 32px;
+  overflow-x: auto;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.codehilite pre {
+  margin: 0;
+  padding: 0;
+  background: none !important; /* override Pygments */
+  font-family: 'Geist Mono', monospace;
+  font-size: 14px;
+  line-height: 1.6;
+  font-feature-settings: 'liga' 0;
+  overflow-x: auto;
+}
+
+.codehilite pre code {
+  background: none !important;
+  padding: 0;
+  font-size: inherit;
+  border-radius: 0;
+}
+
+
+/* =============================================================================
+   8. LISTA DE POSTS — index.html y category.html
+      Estructura esperada en los templates:
+        <ul class="post-list" id="post-list">
+          <li class="post-item">
+            <div class="post-meta">
+              <time class="meta">…</time>
+              <a class="tag" href="…">Categoria</a>
+            </div>
+            <a class="post-title-link" href="…">Título del post</a>
+          </li>
+        </ul>
+   ============================================================================= */
+
+.post-list {
+  list-style: none;
+  padding: 0;
+}
+
+.post-item {
+  padding-block: 32px;
+  border-bottom: 1px solid var(--color-separator);
+}
+
+.post-item:first-child {
+  padding-top: 0;
+}
+
+.post-item:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.post-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.post-title-link {
+  font-family: 'Geist Mono', monospace;
+  font-weight: 700;
+  font-size: 21px;
+  line-height: 1.3;
+  letter-spacing: -0.02em;
+  color: var(--color-text);
+  text-decoration: none;
+  display: block;
+}
+
+.post-title-link:hover {
+  color: var(--color-accent);
+  text-decoration: none;
+}
+
+
+/* =============================================================================
+   9. DETALLE DE POST — post.html
+      Estructura esperada:
+        <article class="post-detail">
+          <header class="post-header">
+            <div class="post-meta">…</div>
+            <h1>…</h1>
+          </header>
+          <div class="post-content">
+            {{ post.content_html | safe }}
+          </div>
+        </article>
+   ============================================================================= */
+
+.post-header {
+  margin-bottom: 48px;
+  padding-bottom: 32px;
+  border-bottom: 1px solid var(--color-separator);
+}
+
+.post-header .post-meta {
+  margin-bottom: 16px;
+}
+
+.post-content {
+  /* Espacio vertical entre elementos generados por Markdown */
+}
+
+.post-content > * + * {
+  /* Los márgenes están definidos globalmente en h2, h3, p, etc. */
+}
+
+.post-content ul,
+.post-content ol {
+  padding-left: 28px;
+  margin-bottom: 24px;
+}
+
+.post-content li {
+  margin-bottom: 6px;
+}
+
+
+/* =============================================================================
+   10. TAGS DE CATEGORÍA
+       Acento como borde y texto — señal de interacción, no decoración.
+       Hover: invierten fondo/texto para dar feedback de clic.
+   ============================================================================= */
+
+.tag {
+  display: inline-block;
+  font-family: 'Geist Mono', monospace;
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: 0.03em;
+  color: var(--color-accent);
+  border: 1px solid var(--color-accent);
+  padding: 2px 8px;
+  border-radius: 3px;
+  text-decoration: none;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.tag:hover {
+  background-color: var(--color-accent);
+  color: var(--color-bg);
+  text-decoration: none;
+}
+
+.tag:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 3px;
+}
+
+
+/* =============================================================================
+   11. ACCESIBILIDAD — reduced motion
+   ============================================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
