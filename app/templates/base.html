@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}ivan.dev{% endblock %}</title>
+
+  {#
+    Inicialización del tema — SINCRÓNICO, antes del <link> de CSS.
+    Sin esto: el browser pinta con el data-theme default del HTML,
+    Alpine lo corrige después, y el usuario ve un flash.
+    Este IIFE resuelve el data-theme en el primer frame.
+
+    Prioridad: localStorage → prefers-color-scheme → dark (modo principal)
+  #}
+  <script>
+    (function () {
+      var saved = localStorage.getItem('theme');
+      var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      document.documentElement.setAttribute(
+        'data-theme',
+        saved || (prefersDark ? 'dark' : 'light')
+      );
+    })();
+  </script>
+
+  <link rel="stylesheet" href="{{ url_for('static', path='css/main.css') }}">
+
+  {#
+    Slot para CSS adicional por página.
+    post.html lo usa para las dos hojas de Pygments:
+      pygments-dark.css y pygments-light.css
+    index.html y category.html no necesitan syntax highlighting.
+  #}
+  {% block head %}{% endblock %}
+
+  {#
+    Alpine primero (maneja x-data del body antes de que HTMX escanee el DOM).
+    Ambos con defer: ejecutan en orden luego de que el DOM esté parseado.
+  #}
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.3/dist/cdn.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.4/dist/htmx.min.js"></script>
+</head>
+<body
+  x-data="{
+    theme: document.documentElement.getAttribute('data-theme'),
+    toggleTheme() {
+      this.theme = this.theme === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', this.theme);
+      localStorage.setItem('theme', this.theme);
+    }
+  }"
+>
+
+  <header class="site-header">
+    <nav class="content-wrapper site-nav">
+      <a href="{{ url_for('post_list') }}" class="nav-brand">ivan.dev</a>
+      <button class="theme-toggle" @click="toggleTheme()" aria-label="Cambiar tema">
+        {#
+          Visibilidad controlada por CSS vía data-theme en <html> — no por Alpine.
+          Resultado: el ícono correcto se muestra desde el primer frame,
+          sin esperar a que Alpine inicialice.
+        #}
+        <span class="icon-sun" aria-hidden="true">☀</span>
+        <span class="icon-moon" aria-hidden="true">☾</span>
+      </button>
+    </nav>
+  </header>
+
+  <main class="content-wrapper site-main">
+    {% block content %}{% endblock %}
+  </main>
+
+</body>
+</html>

@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block title %}{{ post.title }} — ivan.dev{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', path='css/pygments-dark.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', path='css/pygments-light.css') }}">
+{% endblock %}
+
+{% block content %}
+<article class="post-detail">
+  <header class="post-header">
+    <div class="post-meta">
+      <time class="meta" datetime="{{ post.published_at.isoformat() }}">
+        {{ post.published_at | format_date }}
+      </time>
+      <a href="{{ url_for('get_category', category_slug=post.category.slug) }}" class="tag">
+        {{ post.category.name }}
+      </a>
+    </div>
+    <h1>{{ post.title }}</h1>
+  </header>
+
+  <div class="post-content">
+    {{ post.content_html | safe }}
+  </div>
+</article>
+{% endblock %}

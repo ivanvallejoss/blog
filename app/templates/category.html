@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block title %}{{ category.name }} — ivan.dev{% endblock %}
+
+{% block content %}
+<header class="post-header">
+  <div class="post-meta">
+    <span class="meta">Categoría</span>
+  </div>
+  <h1>{{ category.name }}</h1>
+</header>
+
+{% include "partials/post_list.html" %}
+{% endblock %}
