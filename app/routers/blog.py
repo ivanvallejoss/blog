@@ -1,12 +1,32 @@
+from datetime import datetime
+
 from fastapi import APIRouter, Depends, Request, HTTPException
 from fastapi.templating import Jinja2Templates
+
 from sqlalchemy.orm import Session
-from sqlalchemy import and_
+
 from app.database import get_db
+
 from ..selectors import get_category_by_slug, get_post_by_slugs, get_published_posts 
 
 router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
+
+
+def _format_date(value: datetime) -> str:
+    """
+    Filtro Jinja2 para fechas. Locale-independent.
+    Ejemplo: 5 jun 2025
+    """
+    months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", 
+            "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+    
+    return f"{value.day} {months[value.month - 1]} {value.year}"
+
+templates.env.filters["format_date"] = _format_date
+
+
+
 
 @router.get("/")
 def post_list(
@@ -15,8 +35,9 @@ def post_list(
     ):
     posts = get_published_posts(db)
     return templates.TemplateResponse(
+        request,
         "index.html", 
-        {"request": request, "posts": posts}
+        {"posts": posts}
         )
 
 
@@ -26,14 +47,18 @@ def get_category(
     request: Request,
     db: Session = Depends(get_db)
     ):
+    
     category = get_category_by_slug(db, category_slug)
-
     if not category:
         raise HTTPException(status_code=404, detail="Categoria no encontrada o inexistente")
 
+    is_htmx = request.headers.get("HX-Request") == "true"
+    template = "partials/post_list.html" if is_htmx else "category.html"
+
     return templates.TemplateResponse(
-        "category.html" , 
-        {"request":request, "posts": category.posts}
+        request,
+        template,
+        {"posts": category.posts, "category": category}
         )
 
 
@@ -50,6 +75,7 @@ def get_post(
         raise HTTPException(status_code=404, detail="Post no encontrado o categoria no encontrada")
 
     return templates.TemplateResponse(
+        request,
         "post.html", 
-        {"request":request, "post":post}
+        {"post":post}
         )
