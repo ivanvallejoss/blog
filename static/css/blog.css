@@ -505,3 +505,37 @@ img, svg { max-width: 100%; height: auto; }
 .ghost.g10 { right: clamp(100px, 9vw, 200px); bottom: 26vh; width: 70px; height: 110px; background: var(--mod-slate); opacity: .45; }
 .ghost.g11 { left: clamp(30px, 4vw, 70px);   top: 30vh; width: 56px;  height: 56px;  background: var(--mod-slate);  opacity: .4; }
 .ghost.g12 { right: clamp(40px, 5vw, 90px);  bottom: 42vh; width: 60px; height: 40px; background: var(--mod-neutral); opacity: .5; }
+
+/* =============================================================================
+   12. ANCLAS DE HEADINGS — extensión toc de python-markdown (permalink '#')
+       Invisible hasta hover/focus del heading; ámbar al interactuar.
+       scroll-margin compensa el header sticky al navegar a #anclas.
+   ============================================================================= */
+
+.post-content h2,
+.post-content h3 {
+  scroll-margin-top: calc(var(--nav-h) + 20px);
+}
+
+.headerlink {
+  margin-left: 10px;
+  font-family: var(--font-mono);
+  font-weight: 400;
+  color: oklch(0.78 0.13 70 / .55);
+  opacity: 0;
+  transition: opacity .15s ease;
+}
+
+h2:hover .headerlink,
+h3:hover .headerlink,
+.headerlink:focus-visible { opacity: 1; }
+
+.headerlink:hover { color: var(--amber); opacity: 1; }
+
+/* al aterrizar en un ancla, el heading destino se señala brevemente */
+.post-content h2:target,
+.post-content h3:target { color: var(--amber); }
+
+@media (prefers-reduced-motion: reduce) {
+  .headerlink { transition: none; }
+}
