@@ -54,12 +54,14 @@
   --color-text-muted: rgba(240, 232, 216, 0.5);
   --color-border:     rgba(240, 232, 216, 0.09);
   --color-separator:  rgba(240, 232, 216, 0.1);
+  --color-card: #0f1E0F
 }
 
 [data-theme="light"] {
   /* Paleta base */
   --color-bg:        #F0E8D8;
   --color-surface:   #E3D8C2;
+  /* --color-surface:   #E8C98A; */
   --color-text:      #0D1F12;
   --color-accent:    #8B5218;
   --color-code-text: #2A5A2A;
@@ -68,6 +70,7 @@
   --color-text-muted: rgba(13, 31, 18, 0.5);
   --color-border:     rgba(13, 31, 18, 0.09);
   --color-separator:  rgba(13, 31, 18, 0.1);
+  --color-card: #FAF6EE
 }
 
 
@@ -353,23 +356,31 @@ li:last-child {
         </ul>
    ============================================================================= */
 
+/* =============================================================================
+   8. LISTA DE POSTS — index.html y category.html
+   ============================================================================= */
+
 .post-list {
   list-style: none;
   padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
 .post-item {
-  padding-block: 32px;
-  border-bottom: 1px solid var(--color-separator);
+  position: relative;
+  background-color: var(--color-card);
+  background-image: linear-gradient(to bottom, rgba(255, 255, 255, 0.04), rgba(0, 0, 0, 0.08));
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 24px;
+  cursor: pointer;
+  transition: border-color 0.15s ease;
 }
 
-.post-item:first-child {
-  padding-top: 0;
-}
-
-.post-item:last-child {
-  border-bottom: none;
-  padding-bottom: 0;
+.post-item:has(.post-title-link:hover) {
+  border-color: var(--color-accent);
 }
 
 .post-meta {
@@ -393,6 +404,18 @@ li:last-child {
 .post-title-link:hover {
   color: var(--color-accent);
   text-decoration: none;
+}
+
+.post-title-link::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 8px;
+}
+
+.post-author {
+  display: block;
+  margin-top: 8px;
 }
 
 
@@ -420,6 +443,10 @@ li:last-child {
   margin-bottom: 16px;
 }
 
+.post-header .post-author {
+  margin-top: 12px;
+}
+
 .post-content ul,
 .post-content ol {
   padding-left: 28px;
@@ -438,6 +465,8 @@ li:last-child {
    ============================================================================= */
 
 .tag {
+  position: relative;
+  z-index: 1;
   display: inline-block;
   font-family: 'Geist Mono', monospace;
   font-size: 12px;
