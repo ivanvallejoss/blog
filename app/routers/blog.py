@@ -31,17 +31,13 @@ def get_category(
     request: Request,
     db: Session = Depends(get_db)
     ):
-    
     category = get_category_by_slug(db, category_slug)
     if not category:
         raise HTTPException(status_code=404, detail="Categoria no encontrada o inexistente")
 
-    is_htmx = request.headers.get("HX-Request") == "true"
-    template = "partials/post_list.html" if is_htmx else "category.html"
-
     return templates.TemplateResponse(
         request,
-        template,
+        "category.html",
         {"posts": category.posts, "category": category}
         )
 

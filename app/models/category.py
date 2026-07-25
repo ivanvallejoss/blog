@@ -16,4 +16,7 @@ class Category(Base):
     slug: Mapped[str] = mapped_column(String(100), unique=True, index=True, nullable=False)
 
     # Relacion 1:N (posts tiene una categoria, una categoria tiene muchos posts)
-    posts: Mapped[List["Post"]] = relationship("Post", back_populates="category", cascade="all, delete-orphan")
+    posts: Mapped[list["Post"]] = relationship(
+        "Post", back_populates="category",
+        order_by="(Post.featured.desc(), Post.published_at.desc())"
+    )

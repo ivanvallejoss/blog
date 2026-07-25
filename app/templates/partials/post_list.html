@@ -8,7 +8,8 @@
       <a href="{{ url_for('get_category', category_slug=post.category.slug) }}"
          class="tag"
          hx-get="{{ url_for('get_category', category_slug=post.category.slug) }}"
-         hx-target="#post-list"
+         hx-target="#listing"
+         hx-select="#listing"
          hx-swap="outerHTML"
          hx-push-url="true">
         {{ post.category.name }}

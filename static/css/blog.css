@@ -175,7 +175,6 @@ li:last-child { margin-bottom: 0; }
 
 img, svg { max-width: 100%; height: auto; }
 
-[x-cloak] { display: none !important; }
 
 
 /* =============================================================================

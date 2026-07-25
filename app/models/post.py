@@ -1,6 +1,7 @@
 from datetime import datetime
 
-from sqlalchemy import String, Text, Integer, ForeignKey, DateTime, func
+from sqlalchemy import String, Text, Integer, ForeignKey, DateTime, Boolean, func
+from sqlalchemy.sql import expression
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from typing import Optional
@@ -20,6 +21,10 @@ class Post(Base):
     content_html: Mapped[str] = mapped_column(Text, nullable=False)
     published_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now(), onupdate=func.now())
+    
+    featured: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, server_default=expression.false()
+    )
 
     # Propiedades sobre la sincronizacion de Notion
     notion_id: Mapped[str] = mapped_column(String(36), unique=True, nullable=False, index=True)

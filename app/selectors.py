@@ -14,7 +14,8 @@ def get_published_posts(db):
         ).options(
             joinedload(Post.category)
             ).order_by(
-                Post.published_at.desc()
+                    Post.featured.desc(),
+                    Post.published_at.desc()
                 ).all()
     
     return posts
