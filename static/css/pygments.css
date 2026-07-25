@@ -1,0 +1,61 @@
+/* =============================================================================
+   pygments.css — tema de syntax highlighting del blog.
+   Diseñado contra CIMIENTO v2: ámbar (keywords) + inks (todo lo demás) +
+   --code-lit (ámbar desaturado, extensión) para literales.
+   Sin verde: la regla del token dice verde SOLO estados vivos, y en código
+   estático no hay nada vivo que señalar.
+   Dark-only — el blog no tiene modo claro (identidad cerrada).
+   Requiere los tokens de extensión definidos en blog.css (--code-*).
+   ============================================================================= */
+
+/* base */
+.codehilite .hll { background-color: rgba(255, 255, 255, .05); }
+
+/* --- comentarios: lo más apagado de la escala --- */
+.codehilite .c,
+.codehilite .ch, .codehilite .cm, .codehilite .cp,
+.codehilite .cpf, .codehilite .c1, .codehilite .cs { color: var(--code-comment); }
+
+/* --- keywords: ámbar, el único énfasis fuerte --- */
+.codehilite .k,
+.codehilite .kc, .codehilite .kd, .codehilite .kn,
+.codehilite .kp, .codehilite .kr, .codehilite .kt,
+.codehilite .ow { color: var(--code-kw); }
+
+/* --- literales: strings y números en ámbar desaturado --- */
+.codehilite .s, .codehilite .sa, .codehilite .sb, .codehilite .sc,
+.codehilite .dl, .codehilite .sd, .codehilite .s2, .codehilite .se,
+.codehilite .sh, .codehilite .si, .codehilite .sx, .codehilite .sr,
+.codehilite .s1, .codehilite .ss,
+.codehilite .m, .codehilite .mb, .codehilite .mf, .codehilite .mh,
+.codehilite .mi, .codehilite .mo, .codehilite .il,
+.codehilite .l { color: var(--code-lit); }
+
+/* --- definiciones (funciones, clases, decoradores): ink pleno, peso medio --- */
+.codehilite .nf, .codehilite .fm,
+.codehilite .nc, .codehilite .nd,
+.codehilite .ne { color: var(--code-fn); font-weight: 500; }
+
+/* --- nombres, variables, atributos: base --- */
+.codehilite .n, .codehilite .na, .codehilite .nb, .codehilite .bp,
+.codehilite .no, .codehilite .ni, .codehilite .nl, .codehilite .nn,
+.codehilite .nx, .codehilite .py, .codehilite .nv, .codehilite .vc,
+.codehilite .vg, .codehilite .vi, .codehilite .vm,
+.codehilite .nt { color: var(--code-base); }
+
+/* --- operadores y puntuación: retroceden --- */
+.codehilite .o, .codehilite .p { color: var(--code-punct); }
+
+/* --- misc --- */
+.codehilite .err { color: var(--code-base); }  /* sin dramatismo: no hay rojo en el sistema */
+.codehilite .g, .codehilite .x, .codehilite .esc, .codehilite .w { color: var(--code-base); }
+.codehilite .gd { color: var(--code-punct); }
+.codehilite .gi { color: var(--code-lit); }
+.codehilite .ge { font-style: italic; }
+.codehilite .gs { font-weight: 600; }
+.codehilite .gh, .codehilite .gu { color: var(--code-fn); font-weight: 500; }
+.codehilite .gp { color: var(--code-comment); }
+
+/* números de línea (si se activan en el futuro) */
+.codehilite td.linenos .normal,
+.codehilite span.linenos { color: var(--code-comment); background: transparent; padding-inline: 5px; }

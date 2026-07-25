@@ -1,0 +1,508 @@
+/* =============================================================================
+   blog.css — blog.ivanvallejos.dev
+   Capa de adaptación del sistema de diseño CIMIENTO v2 al contexto de blog.
+   Carga DESPUÉS de tokens.css (canónico, copiado verbatim de la landing).
+   Reset, base, gradiente de fondo, selection y focus ya vienen de tokens.css.
+
+   Regla de sincronización: tokens.css y fonts.css se copian de la landing y
+   no se tocan acá. Todo lo específico del blog vive en este archivo.
+   ============================================================================= */
+
+
+/* =============================================================================
+   0. EXTENSIÓN BLOG — tokens NO canónicos.
+      Único bloque autorizado a definir variables nuevas. Si el sistema v2
+      incorpora lectura larga / código, estos tokens migran a tokens.css.
+      --code-lit es el ÚNICO color nuevo del blog: ámbar desaturado para
+      literales (strings/números). Deriva del --amber canónico (mismo hue 70).
+   ============================================================================= */
+
+:root {
+  /* medida de lectura: columna editorial */
+  --measure: 700px;
+
+  /* tema de código (Pygments) — ámbar + inks, sin verde (nada semántico
+     que señalar en código estático) */
+  --code-base:    var(--ink-2);
+  --code-comment: var(--ink-5);
+  --code-kw:      var(--amber);
+  --code-lit:     oklch(0.75 0.08 70);  /* ★ único color nuevo */
+  --code-fn:      var(--ink);
+  --code-punct:   var(--ink-4);
+}
+
+
+/* =============================================================================
+   1. LAYOUT — columna editorial centrada
+   ============================================================================= */
+
+.content-wrapper {
+  max-width: var(--measure);
+  margin-inline: auto;
+  padding-inline: var(--pad-x);
+}
+
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--band-bg);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--line);
+  padding-block: 16px;
+}
+
+.site-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.site-main {
+  flex: 1;
+  width: 100%;
+  padding-block: clamp(48px, 8vw, 72px);
+}
+
+/* banda de lectura del post: columna sólida sobre el fondo del sitio,
+   con los módulos fantasma asomando por los costados (coherencia con índice) */
+.page-post .site-main {
+  background: var(--bg-solid);
+  border-inline: 1px solid var(--line);
+}
+
+.site-footer {
+  border-top: 1px solid var(--line);
+  padding-block: 28px;
+}
+
+.footer-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.footer-copy {
+  font: 400 11.5px/1 var(--font-mono);
+  color: var(--ink-5);
+}
+
+
+/* =============================================================================
+   2. NAVEGACIÓN — brand del blog + link de vuelta a la landing
+      Mismo lenguaje que el nav de la landing (logo "IV." mono, punto ámbar).
+   ============================================================================= */
+
+.nav-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font: 600 15px/1 var(--font-mono);
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+.nav-brand .dot { color: var(--amber); }
+.nav-ring { width: 18px; height: 18px; flex: none; display: block; }
+.nav-brand .path { color: var(--ink-4); font-weight: 400; }
+.nav-brand:hover { opacity: 1; }
+.nav-brand:hover .path { color: var(--ink-2); }
+
+.nav-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font: 400 12.5px/1 var(--font-mono);
+  letter-spacing: 0.04em;
+  color: var(--ink-3);
+}
+.nav-back .arr { color: var(--amber); font-size: 11px; }
+
+
+/* =============================================================================
+   3. TIPOGRAFÍA DE PROSA — el trabajo de diseño real del blog.
+      Titulares: --font-display (Geist Mono, decisión 2026-07-24 de la landing).
+      Cuerpo: Geist a 17px/1.7 — lectura sostenida. Prosa en --ink-2:
+      contraste AA holgado sobre el near-black, un paso menos duro que --ink
+      (que queda para titulares y strong).
+      Escala: 13 / 17 / 21 / 27 / clamp(30–40)
+   ============================================================================= */
+
+html { font-size: 17px; }
+body { line-height: 1.6; min-height: 100svh; display: flex; flex-direction: column; }
+
+h1, h2, h3 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.03em;
+  color: var(--ink);
+}
+
+h1 {
+  font-size: clamp(30px, 5vw, 40px);
+  line-height: 1.12;
+  margin-bottom: 20px;
+}
+
+h2 { font-size: 27px; margin-top: 52px; margin-bottom: 16px; }
+h3 { font-size: 21px; margin-top: 36px; margin-bottom: 12px; }
+
+p { margin-bottom: 24px; }
+p:last-child { margin-bottom: 0; }
+
+strong, b { font-weight: 600; color: var(--ink); }
+
+/* metadata: fechas, labels auxiliares */
+.meta {
+  font: 400 13px/1.5 var(--font-mono);
+  letter-spacing: 0.01em;
+  color: var(--ink-4);
+}
+
+hr {
+  border: none;
+  border-top: 1px solid var(--line);
+  margin-block: 44px;
+}
+
+ul, ol { padding-left: 28px; margin-bottom: 24px; }
+li { margin-bottom: 8px; }
+li:last-child { margin-bottom: 0; }
+
+img, svg { max-width: 100%; height: auto; }
+
+[x-cloak] { display: none !important; }
+
+
+/* =============================================================================
+   4. CONTENIDO DE POST — prosa larga (HTML generado por python-markdown)
+   ============================================================================= */
+
+.post-content {
+  color: var(--ink-2);
+  line-height: 1.75;   /* lectura larga: aire entre líneas (fix 2026-07-25) */
+}
+.post-content h2, .post-content h3 { color: var(--ink); }
+
+.post-content a {
+  color: var(--amber);
+  border-bottom: 1px solid oklch(0.78 0.13 70 / .35);
+  padding-bottom: 1px;
+}
+.post-content a:hover { border-bottom-color: var(--amber); opacity: 1; }
+
+.post-content blockquote {
+  border-left: 2px solid var(--amber);
+  padding-left: 20px;
+  margin-block: 28px;
+  color: var(--ink-3);
+}
+.post-content blockquote p { margin-bottom: 0; }
+
+/* código inline — fuera de bloques */
+.post-content code:not(pre code) {
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+  color: var(--ink);
+  background: var(--mod-warm);
+  border: 1px solid var(--line);
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-feature-settings: 'liga' 0;
+}
+
+
+/* =============================================================================
+   5. BLOQUES DE CÓDIGO — contenedor .codehilite
+      Módulo "deep": el tono más apagado del backdrop, radio 3px (lenguaje
+      de módulo de la landing). Los colores de tokens los pone pygments.css.
+   ============================================================================= */
+
+.codehilite {
+  background: var(--mod-deep);
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  padding: 20px 24px;
+  margin-block: 32px;
+  overflow-x: auto;
+}
+
+.codehilite pre {
+  margin: 0;
+  padding: 0;
+  background: none;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  line-height: 1.65;
+  font-feature-settings: 'liga' 0;
+  color: var(--code-base);
+}
+
+.codehilite pre code {
+  background: none;
+  padding: 0;
+  font-size: inherit;
+  border-radius: 0;
+}
+
+
+/* =============================================================================
+   6. LISTA DE POSTS — índice y categoría.
+      Módulos quietos: mismo lenguaje k/v/d que .blog-mod / .bio-mod de la
+      landing, SIN animación de pulso (el blog es más quieto).
+      El primer módulo (post más reciente) es warm — espejo del "destacado"
+      del interludio de blog de la landing.
+   ============================================================================= */
+
+.post-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.post-item {
+  position: relative;
+  background: rgba(23, 23, 26, .55);
+  border: 1px solid rgba(255, 255, 255, .09);
+  border-radius: 3px;
+  padding: 20px 22px;
+  transition: border-color .3s ease;
+}
+
+.post-item:first-child {
+  background: rgba(32, 25, 20, .55);
+  border-color: oklch(0.78 0.13 70 / .22);
+}
+
+.post-item:has(.post-title-link:hover) { border-color: oklch(0.78 0.13 70 / .5); }
+
+.post-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.post-meta .meta {
+  font-size: 10.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: oklch(0.78 0.13 70 / .8);
+}
+
+.post-title-link {
+  display: block;
+  margin-top: 10px;
+  font: 500 18px/1.35 var(--font-sans);
+  letter-spacing: -0.01em;
+  color: #e6e6e2;
+}
+.post-title-link:hover { opacity: 1; }
+
+/* toda la card clickeable */
+.post-title-link::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 3px;
+}
+
+.post-author {
+  display: block;
+  margin-top: 8px;
+  font-size: 11.5px;
+  color: var(--ink-4);
+}
+
+
+/* =============================================================================
+   7. CHIP DE CATEGORÍA — lenguaje .chip de la landing (hover = .chip.hot)
+   ============================================================================= */
+
+.tag {
+  position: relative;
+  z-index: 1;
+  display: inline-block;
+  font: 500 11px/1 var(--font-mono);
+  letter-spacing: 0.03em;
+  color: var(--ink-2);
+  border: 1px solid rgba(255, 255, 255, .14);
+  padding: 6px 10px;
+  border-radius: 6px;
+  transition: color .15s ease, border-color .15s ease;
+}
+
+.tag:hover {
+  color: var(--amber);
+  border-color: oklch(0.78 0.13 70 / .4);
+  opacity: 1;
+}
+
+
+/* =============================================================================
+   8. HEADER DE POST / CATEGORÍA
+   ============================================================================= */
+
+.post-header {
+  margin-bottom: 48px;
+  padding: clamp(24px, 4vw, 34px);
+  background: rgba(32, 25, 20, .45);
+  border: 1px solid oklch(0.78 0.13 70 / .2);
+  border-radius: 3px;
+}
+
+.post-header h1 { margin-bottom: 0; }
+
+/* en pantallas grandes el módulo del header rompe la columna de lectura:
+   más ancho que la banda, centrado — jerarquía y anclaje visual del post */
+@media (min-width: 940px) {
+  .post-header {
+    position: relative;
+    left: 50%;
+    transform: translateX(-50%);
+    width: min(880px, calc(100vw - 2 * var(--pad-x)));
+  }
+}
+
+.post-header .post-meta { margin-bottom: 18px; }
+.post-header .post-author { margin-top: 12px; }
+
+
+.post-footer {
+  margin-top: 56px;
+  padding-top: 28px;
+  border-top: 1px solid var(--line);
+}
+
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font: 500 13px/1 var(--font-mono);
+  color: var(--ink-3);
+}
+.back-link .arr { color: var(--amber); }
+.back-link:hover { color: var(--ink); opacity: 1; }
+
+
+/* =============================================================================
+   9. PÁGINAS DE ERROR
+   ============================================================================= */
+
+.error-page { padding-top: 48px; }
+
+.error-code {
+  display: block;
+  font: 600 72px/1 var(--font-mono);
+  letter-spacing: -0.04em;
+  color: var(--ink-5);
+  margin-bottom: 20px;
+}
+
+.error-page h1 { margin-bottom: 16px; }
+.error-page > p { color: var(--ink-3); margin-bottom: 32px; }
+
+
+/* =============================================================================
+   10. ACCESIBILIDAD — reduced motion
+       (el backdrop animado de la landing NO se traslada al blog; las únicas
+       transiciones son de hover y ya son cortas)
+   ============================================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  html { scroll-behavior: auto; }
+}
+
+/* =============================================================================
+   11. MÓDULOS FANTASMA — índice solamente (partials/ghost_field.html)
+       El backdrop de la landing "asomándose por los bordes": 3 módulos
+       estáticos con los tonos --mod-*, fuera de la columna de lectura,
+       visibles solo en viewports anchos. Sin animación, sin interacción.
+   ============================================================================= */
+
+.ghost-field {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+}
+
+@media (min-width: 1180px) {
+  .ghost-field { display: block; }
+}
+
+.ghost {
+  position: absolute;
+  border-radius: 3px;
+  border: 1px solid rgba(255, 255, 255, .05);
+}
+
+.ghost.g1 {
+  left: clamp(28px, 4vw, 72px);
+  top: 16vh;
+  width: 156px; height: 96px;
+  background: var(--mod-neutral);
+  opacity: .55;
+}
+
+.ghost.g2 {
+  right: clamp(28px, 4.5vw, 80px);
+  top: 42vh;
+  width: 118px; height: 148px;
+  background: var(--mod-warm);
+  border-color: oklch(0.78 0.13 70 / .12);
+  opacity: .45;
+}
+
+.ghost.g3 {
+  left: clamp(40px, 6vw, 96px);
+  bottom: 14vh;
+  width: 104px; height: 64px;
+  background: var(--mod-slate);
+  opacity: .5;
+}
+
+.ghost.g4 {
+  right: clamp(60px, 7vw, 120px);
+  top: 10vh;
+  width: 88px; height: 56px;
+  background: var(--mod-slate);
+  opacity: .5;
+}
+
+.ghost.g5 {
+  right: clamp(24px, 3.5vw, 64px);
+  bottom: 10vh;
+  width: 140px; height: 88px;
+  background: var(--mod-neutral);
+  opacity: .55;
+}
+
+.ghost.g6 {
+  left: clamp(24px, 3.5vw, 60px);
+  top: 46vh;
+  width: 76px; height: 100px;
+  background: var(--mod-deep);
+  border-color: rgba(255, 255, 255, .07);
+  opacity: .6;
+}
+
+.ghost.g7  { left: clamp(120px, 10vw, 220px); top: 6vh;  width: 64px;  height: 64px;  background: var(--mod-neutral); opacity: .4; }
+.ghost.g8  { right: clamp(140px, 11vw, 240px); top: 22vh; width: 92px;  height: 58px;  background: var(--mod-deep);   border-color: rgba(255,255,255,.07); opacity: .6; }
+.ghost.g9  { left: clamp(90px, 8vw, 180px);  top: 68vh; width: 118px; height: 74px;  background: var(--mod-warm);   border-color: oklch(0.78 0.13 70 / .1); opacity: .4; }
+.ghost.g10 { right: clamp(100px, 9vw, 200px); bottom: 26vh; width: 70px; height: 110px; background: var(--mod-slate); opacity: .45; }
+.ghost.g11 { left: clamp(30px, 4vw, 70px);   top: 30vh; width: 56px;  height: 56px;  background: var(--mod-slate);  opacity: .4; }
+.ghost.g12 { right: clamp(40px, 5vw, 90px);  bottom: 42vh; width: 60px; height: 40px; background: var(--mod-neutral); opacity: .5; }

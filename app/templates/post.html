@@ -2,12 +2,14 @@
 
 {% block title %}{{ post.title }} — ivan.dev{% endblock %}
 
+{% block body_class %}page-post{% endblock %}
+
 {% block head %}
-<link rel="stylesheet" href="{{ url_for('static', path='css/pygments-dark.css') }}">
-<link rel="stylesheet" href="{{ url_for('static', path='css/pygments-light.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', path='css/pygments.css') }}">
 {% endblock %}
 
 {% block content %}
+{% include "partials/ghost_field.html" %}
 <article class="post-detail">
   <header class="post-header">
     <div class="post-meta">
@@ -25,5 +27,9 @@
   <div class="post-content">
     {{ post.content_html | safe }}
   </div>
+
+  <footer class="post-footer">
+    <a href="{{ url_for('post_list') }}" class="back-link"><span class="arr">←</span> Todos los posts</a>
+  </footer>
 </article>
 {% endblock %}

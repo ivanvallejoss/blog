@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- Anillo-ensamblaje: 3 segmentos, 3/4 de circunferencia, cuarto vacio
+       abajo-derecha. Marca estatica del blog (decision 2026-07-25).
+       Deriva del ring del hero de la landing; rotacion FIJA, no animada. -->
+  <path d="M 16.00 28.50 A 12.5 12.5 0 0 1 3.98 19.45" stroke="oklch(0.78 0.13 70)" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+  <path d="M 3.62 14.26 A 12.5 12.5 0 0 1 14.26 3.62" stroke="oklch(0.78 0.13 70)" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+  <path d="M 19.45 3.98 A 12.5 12.5 0 0 1 28.50 16.00" stroke="oklch(0.78 0.13 70)" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+</svg>

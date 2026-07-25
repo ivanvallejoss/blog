@@ -1,0 +1,50 @@
+/* =============================================================================
+   _light-palette.reference.css — ARCHIVO DE REFERENCIA. NO SE CARGA.
+   ─────────────────────────────────────────────────────────────────────────────
+   Paleta light del blog v1 (pre-migración a CIMIENTO v2), preservada como
+   insumo para una futura versión light del sistema de diseño compartido.
+   Decisión 2026-07-25: el blog migra a dark-only (identidad cerrada de la
+   landing); el toggle de tema y estas variables se eliminan del runtime,
+   pero los valores quedan versionados acá.
+
+   Contexto de la paleta original: verde bosque + crema, acento naranja tierra.
+   Si el sistema v2 define modo light, estos valores NO se retoman tal cual —
+   habría que derivar el light desde los tokens canónicos (ámbar oklch,
+   escala de inks invertida) con contraste AA. Esto es solo el registro
+   histórico de qué funcionaba: jerarquía de derivados (muted/border/separator
+   como alphas del texto) y el patrón surface/card separado del bg.
+   ============================================================================= */
+
+/*
+[data-theme="light"] {
+  --color-bg:        #F0E8D8;
+  --color-surface:   #E3D8C2;
+  --color-text:      #0D1F12;
+  --color-accent:    #8B5218;
+  --color-code-text: #2A5A2A;
+
+  --color-text-muted: rgba(13, 31, 18, 0.5);
+  --color-border:     rgba(13, 31, 18, 0.09);
+  --color-separator:  rgba(13, 31, 18, 0.1);
+  --color-card:       #FAF6EE;
+}
+
+[data-theme="dark"] {
+  --color-bg:        #060B07;
+  --color-surface:   #1A2E1A;
+  --color-text:      #F0E8D8;
+  --color-accent:    #D08840;
+  --color-code-text: #A4C9A4;
+
+  --color-text-muted: rgba(240, 232, 216, 0.5);
+  --color-border:     rgba(240, 232, 216, 0.09);
+  --color-separator:  rgba(240, 232, 216, 0.1);
+  --color-card:       #0f1E0F;
+}
+*/
+
+/* Infraestructura del toggle eliminada (referencia de implementación):
+   - IIFE sincrónico en <head>: localStorage → prefers-color-scheme → dark
+   - Íconos sol/luna con visibilidad por [data-theme] en <html> (sin flash)
+   - Alpine solo para el estado del toggle
+   Si se reintroduce, ese patrón anti-FOUC era correcto y vale reutilizarlo. */
