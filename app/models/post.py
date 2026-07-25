@@ -1,3 +1,4 @@
+import re
 from datetime import datetime
 
 from sqlalchemy import String, Text, Integer, ForeignKey, DateTime, Boolean, func
@@ -35,3 +36,12 @@ class Post(Base):
 
     # Relacion inversa
     category: Mapped["Category"] = relationship("Category", back_populates="posts")
+
+
+    @property
+    def reading_minutes(self) -> int:
+        """Minutos de lectura estimados: ~200 palabras/min sobre el
+        markdown sin bloques de código (el código no se 'lee', se estudia)."""
+        text = re.sub(r"```.*?```", "", self.content_markdown, flags=re.S)
+        words = len(text.split())
+        return max(1, round(words / 200))

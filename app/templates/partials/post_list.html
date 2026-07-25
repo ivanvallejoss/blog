@@ -5,6 +5,7 @@
       <time class="meta" datetime="{{ post.published_at.isoformat() }}">
         {{ post.published_at | format_date }}
       </time>
+      - <span class="meta">{{ post.reading_minutes }} min</span>
       <a href="{{ url_for('get_category', category_slug=post.category.slug) }}"
          class="tag"
          hx-get="{{ url_for('get_category', category_slug=post.category.slug) }}"
