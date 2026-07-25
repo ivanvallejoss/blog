@@ -16,6 +16,7 @@ dependencies = [
     "python-slugify>=8.0.4",
     "sqlalchemy>=2.0.51",
     "typer>=0.26.7",
+    "gunicorn>=23.0.0",
 ]
 [tool.setuptools]
 py-modules = []
