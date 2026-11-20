@@ -1,4 +1,4 @@
-from sqlalchemy import func
+from sqlalchemy import and_, func, or_
 from sqlalchemy.orm import joinedload, selectinload
 
 from app.models.post import Post
@@ -101,3 +101,24 @@ def group_posts_by_tag(posts, tags):
     for post in posts:
         by_slug.setdefault(post.category.slug, []).append(post)
     return [{**tag, "posts": by_slug.get(tag["slug"], [])} for tag in tags]
+
+
+def get_next_post(db, post):
+    """
+    «Siguiente» al pie del artículo: el post publicado inmediatamente antes
+    que `post` (se lee del más nuevo al más viejo, como el archivo). Con la
+    misma fecha desempata el id, para que el orden sea total. None si `post`
+    es el más viejo.
+    """
+    return (
+        db.query(Post)
+        .options(joinedload(Post.category))
+        .filter(
+            or_(
+                Post.published_at < post.published_at,
+                and_(Post.published_at == post.published_at, Post.id < post.id),
+            )
+        )
+        .order_by(Post.published_at.desc(), Post.id.desc())
+        .first()
+    )

@@ -7,6 +7,7 @@ from app.templating import templates
 
 from ..selectors import (
     get_category_by_slug,
+    get_next_post,
     get_post_by_slugs,
     get_posts_by_year,
     get_published_posts,
@@ -18,6 +19,12 @@ router = APIRouter()
 
 # Filas de «Recientes» en desktop; en mobile se muestran todas (diseño 1a).
 RECENT_DESKTOP = 4
+
+# Tamaño de texto del artículo (README §8): entero en px, guardado por el
+# cliente en localStorage. El template se lo pasa al script en línea del
+# <head> y a static/js/article.js; el 18 por defecto es también el de
+# --prose-size en blog-tokens.css, que es lo que se ve sin JavaScript.
+TEXT_SIZE = {"min": 15, "max": 24, "default": 18, "key": "blog.textSize"}
 
 
 @router.get("/")
@@ -101,5 +108,14 @@ def get_post(
     return templates.TemplateResponse(
         request,
         "post.html",
-        {"post": post}
+        {
+            "post": post,
+            "next_post": get_next_post(db, post),
+            # Detrás de un proxy, url_for da https solo si uvicorn confía en
+            # sus cabeceras (--proxy-headers / --forwarded-allow-ips).
+            "share_url": str(request.url_for(
+                "get_post", category_slug=post.category.slug, post_slug=post.slug
+            )),
+            "text_size": TEXT_SIZE,
+        }
         )
