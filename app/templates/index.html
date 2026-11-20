@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from "partials/posts.html" import post_url, post_meta, post_row, empty_state with context %}
+{% from "partials/posts.html" import post_url, post_meta, post_row, empty_state, lang_empty_state with context %}
 
 {% block content %}
 {% if featured %}
@@ -37,7 +37,7 @@
   <section class="topics desktop-only" aria-label="{{ t.topics }}">
     {% for topic in topics %}
     <div class="topic">
-      <h3 class="topic__title"><a href="{{ url_for('get_category', category_slug=topic.slug) }}">{{ topic.name }}</a> <span class="topic__count">{{ topic.count }}</span></h3>
+      <h3 class="topic__title"><a href="{{ url_for('get_category', category_slug=topic.slug) }}">{{ topic | topic(lang) }}</a> <span class="topic__count">{{ topic.count }}</span></h3>
       <ul class="list-reset topic__list">
         {% for post in topic.posts[:3] %}
         <li><a class="topic__post" href="{{ post_url(post) }}">{{ post.title }}</a></li>
@@ -54,7 +54,7 @@
 {% else %}
 <div class="container home home--empty">
   <h1 class="visually-hidden">{{ t.site_title }}</h1>
-  {{ empty_state(t.no_posts, none) }}
+  {% if other_count %}{{ lang_empty_state(other_count) }}{% else %}{{ empty_state(t.no_posts, none) }}{% endif %}
 </div>
 {% endif %}
 {% endblock %}

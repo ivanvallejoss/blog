@@ -8,14 +8,18 @@
   post_row(post, class)   fila de lista: link en bloque con título y metadatos (Recientes).
                           `class` opcional: post-row--compact (404) achica el título y el aire.
   empty_state(title, body) título 26px + texto 17px (tema vacío, portada sin posts).
+  lang_empty_state(count, topic)
+                          «sin posts en este idioma» (Extras E3b): cuántos hay en
+                          el otro idioma (`count`, en el tema `topic` si se pasa) y
+                          el botón a la misma página en ese idioma.
 #}
 
 {% macro post_url(post) -%}
-{{ url_for('get_post', category_slug=post.category.slug, post_slug=post.slug) }}
+{{ url_for('get_post', lang=post.lang, category_slug=post.category.slug, post_slug=post.slug) }}
 {%- endmacro %}
 
 {% macro post_meta(post) -%}
-<time datetime="{{ post.published_at.date().isoformat() }}">{{ post.published_at | format_date_short(lang) }}</time> · {{ post.category.name }} · {{ t.minutes.format(n=post.reading_minutes) }}
+<time datetime="{{ post.published_at.date().isoformat() }}">{{ post.published_at | format_date_short(lang) }}</time> · {{ post.category | topic(lang) }} · {{ t.minutes.format(n=post.reading_minutes) }}
 {%- endmacro %}
 
 {% macro post_row(post, class="") -%}
@@ -29,5 +33,14 @@
 <div class="empty-state">
   <h2 class="empty-state__title">{{ title }}</h2>
   {% if body %}<p class="empty-state__body">{{ body }}</p>{% endif %}
+  {{ caller() if caller }}
 </div>
+{%- endmacro %}
+
+{% macro lang_empty_state(count, topic=none) -%}
+{% if topic %}{% set body = t | plural("lang_empty_topic", count, topic=topic | topic(lang) | em) %}
+{% else %}{% set body = t | plural("lang_empty_all", count) %}{% endif %}
+{% call empty_state(t.lang_empty_title, body) %}
+<a class="btn btn-secondary empty-state__action" href="{{ lang_urls[other_lang] }}" hreflang="{{ other_lang }}" lang="{{ other_lang }}">{{ t_other.see_in_this_lang }}</a>
+{% endcall %}
 {%- endmacro %}
