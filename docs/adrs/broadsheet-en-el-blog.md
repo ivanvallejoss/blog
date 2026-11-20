@@ -88,3 +88,15 @@ El rediseño quedó completo en seis ventanas, con un informe cada una en `docs/
 - **Los tokens que usan las imágenes** están duplicados como constantes en `app/og/tokens.py`, cada una con el nombre de su variable de CSS. Si cambia un token del sitio, hay que cambiarlo ahí también.
 - **Región de `og:locale`:** `es_AR` y `en_US`.
 - **El `apple-touch-icon.png` se commitea.** Lo dibuja el mismo código del anillo (`cli.py touch-icon`).
+
+## Apartamientos del diseño original (20 nov 2026, ventana 7)
+
+Después de ver el rediseño funcionando se cambiaron cinco puntos del handoff a propósito. En todo lo demás el README del handoff sigue mandando. El detalle está en `informes/ventana-7.md`.
+
+| Punto | Handoff | Ahora | Motivo |
+| --- | --- | --- | --- |
+| Separación entre secciones | Solo espacio, sin líneas | Además del espacio, una raya de 48 × 1 px en `--color-divider`, alineada a la izquierda sobre el rótulo (`.section-rule`). Va sobre Recientes, Por tema, cada año del archivo y «Siguiente». Nunca sobre la primera sección de la página, ni entre filas, ni en el lateral | Con solo espacio, las secciones se leían pegadas. La raya marca dónde empieza cada una sin cortar la página de lado a lado |
+| Bloques por tema de la portada | `h3` con el nombre del tema en 22 px, igual que un título de post | Rótulo «Por tema» como «Recientes». Cada tema abre con la misma etiqueta de la cabecera del artículo (macro `topic_tag`) y su cantidad en mono. Los posts van en una lista compacta de 16 px | No se distinguía un bloque que organiza un tema de un post. Un tema se ve igual en todo el sitio |
+| Lateral del artículo | 220 px, a 80 px de la prosa | 180 px, a 64 px | Lateral más liviano, que acompaña a la prosa más angosta. Los controles siguen entrando |
+| Columna de lectura | 680 px (unas 81 letras por línea a 18 px) | 600 px (unas 72), en el único token `--measure` | Las líneas largas cansaban. Es un valor a probar: se cambia en un solo lugar |
+| Índice del artículo | Lista de links estática | Marca la sección que se está leyendo: inactivas en neutral-700, la activa en el color del texto con una barrita de acento a la izquierda y `aria-current`. Sin JavaScript queda la lista de links | Muestra dónde está el lector en un post largo, en el lateral y en el panel de mobile |
