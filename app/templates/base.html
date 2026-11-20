@@ -5,6 +5,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{% block title %}{{ t.site_title }}{% endblock %}</title>
+  {# Marca de JavaScript disponible: los controles .js-only no se muestran sin él. #}
+  <script>document.documentElement.classList.add("has-js");</script>
   {% block meta %}{% endblock %}
 
   <link rel="icon" type="image/svg+xml" href="{{ url_for('static', path='public/favicon.svg') }}">

@@ -8,12 +8,10 @@
 {#
   Tamaño de texto antes del primer pintado (README §8): si el lector eligió
   uno, se aplica como --prose-size en <html> y la prosa no salta al cargar.
-  Además marca <html> con .has-js: los controles que necesitan JavaScript
-  (.js-only) no se muestran sin él, y la prosa queda en los 18px del token.
+  Sin JavaScript la prosa queda en los 18px del token (.has-js lo pone base.html).
 #}
 <script>
   (function (root) {
-    root.classList.add("has-js");
     try {
       var size = parseInt(localStorage.getItem({{ text_size.key | tojson }}), 10);
       if (size >= {{ text_size.min }} && size <= {{ text_size.max }}) {
