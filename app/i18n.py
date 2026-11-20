@@ -28,6 +28,10 @@ LANGS = ("es", "en")
 # son las de siempre («/archivo/»); el inglés vive bajo /en/ (README §8).
 LANG_PREFIX = {"es": "", "en": "/en"}
 
+# Región de cada idioma para og:locale (ventana 6: español rioplatense, inglés
+# de Estados Unidos).
+OG_LOCALE = {"es": "es_AR", "en": "en_US"}
+
 STRINGS: dict[str, dict[str, str]] = {
     "es": {
         # — del diseño —
@@ -127,6 +131,15 @@ STRINGS: dict[str, dict[str, str]] = {
         # idioma («Ver en español» en una página en inglés, como el diseño):
         # el template lo toma de la tabla del otro idioma.
         "see_in_this_lang": "Ver en español",
+        # compartir y feed (ventana 6). `site_description` es la frase de la
+        # imagen por defecto: lo que va entre asteriscos sale en itálica
+        # (app/og/draw.py). Sin los asteriscos, es la descripción de la portada.
+        "site_description": "Notas de Iván Vallejos sobre *concurrencia*, sistemas de diseño y la vida alrededor del código.",
+        "archive_description": "Todos los posts del blog, por año y por tema.",
+        "topic_description": "Posts sobre {topic} en el blog de Iván Vallejos.",
+        "og_post_alt": "«{title}», en IV/blog",
+        "og_default_alt": "IV/blog: {description}",
+        "feed_title": "blog — Iván Vallejos · en español",
     },
     "en": {
         "archive": "Archive",
@@ -215,6 +228,12 @@ STRINGS: dict[str, dict[str, str]] = {
         "lang_empty_all_one": "There is 1 post in Spanish.",
         "lang_empty_all_many": "There are {n} posts in Spanish.",
         "see_in_this_lang": "See in English",
+        "site_description": "Notes by Iván Vallejos on *concurrency*, design systems and the life around code.",
+        "archive_description": "Every post on the blog, by year and by topic.",
+        "topic_description": "Posts about {topic} on Iván Vallejos’s blog.",
+        "og_post_alt": "“{title}”, on IV/blog",
+        "og_default_alt": "IV/blog: {description}",
+        "feed_title": "blog — Iván Vallejos · in English",
     },
 }
 
@@ -262,6 +281,11 @@ def plural(t: UIText, key: str, n: int, **fields) -> Markup:
     """
     template = getattr(t, f"{key}_one" if n == 1 else f"{key}_many")
     return Markup(escape(template)).format(n=n, **fields)
+
+
+def plain_text(text: str) -> str:
+    """Un texto del diccionario sin las marcas de énfasis (`*así*` → «así»)."""
+    return text.replace("*", "")
 
 
 def normalize_lang(value) -> str:
