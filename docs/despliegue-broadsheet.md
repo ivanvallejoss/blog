@@ -15,8 +15,8 @@ En la base de posts:
    - Vacía equivale a `es`.
    - Cualquier otro valor cae a español y el sync lo informa.
 2. **Crear la propiedad `Resumen`**, de tipo **Text**. Es la bajada escrita a mano: la usan la portada, la búsqueda, el feed y la descripción para compartir. Vacía, se deriva del primer párrafo.
-3. **Ponerle `Fecha Publicacion` a todo post en estado `Published`.** Un post publicado sin fecha corta el sync entero. Hoy le falta a «Levantar un servidor sin mirar».
-4. **Una traducción es otra página, con su propio `slug`.** Dos posts con el mismo slug hacen fallar el sync, aunque estén en idiomas distintos.
+3. **Completar los datos obligatorios de todo post en estado `Published`:** `Titulo`, `slug`, `Fecha Publicacion` y `categoria`. Un post al que le falta uno no se publica: el sync lo saltea, lo lista con el motivo y sigue con los demás. Si ya estaba en el sitio, se quita hasta que se corrija.
+4. **Una traducción es otra página, con su propio `slug`.** Si dos posts publicados comparten slug, aunque estén en idiomas distintos, se publica uno solo: el que ya estaba publicado con ese slug o, si no, el que se creó antes en Notion. El otro aparece en la lista de salteados.
 5. **Evitar temas (`categoria`) cuyo slug sea** `en`, `archivo`, `archive`, `search.json`, `rss.xml` o `static`: quedan tapados por una ruta fija. El sync los informa.
 
 ## B. En el servidor (en este orden)
@@ -40,7 +40,8 @@ En la base de posts:
 9. **Sincronizar una vez con `--force`:** `uv run python cli.py sync --force`.
    - Reconvierte todos los posts con el conversor nuevo, el idioma y la bajada de Notion, y el ancla de los títulos en su idioma.
    - Genera las imágenes.
-   - Revisar el resumen: tipos de bloque no soportados, `Idioma` desconocidos, temas con slug reservado e imágenes que fallaron.
+   - Revisar el resumen: posts salteados (con lo que hay que corregir en Notion), tipos de bloque no soportados, `Idioma` desconocidos, temas con slug reservado e imágenes que fallaron.
+   - Si dice «El sync no se hizo», a la base de Notion le falta una propiedad obligatoria: crearla con el nombre que indica y volver a correrlo. No se cambió nada.
 10. **Generar las imágenes que falten:** `uv run python cli.py og-images`. Escribe las dos por defecto y cualquiera que el sync no haya hecho. Sale con código 1 si alguna falla.
 11. **Reiniciar el servicio**, para que tome el código y las variables nuevas.
 12. **Purgar la caché de Cloudflare de `/static/`**, o *Purge Everything*. Los estáticos no llevan versión en la URL y cambiaron casi todos:
