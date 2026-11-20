@@ -696,7 +696,8 @@ a.archive-row { color: var(--color-text); }
 /* ── Artículo ──────────────────────────────────────────────────────────
    Mobile: cabecera, prosa y «Siguiente» a lo ancho; los controles de
    lectura van en un panel inferior que abre el botón flotante.
-   Desktop: grilla 220px | 680px con 80px; los controles en la columna
+   Desktop: grilla lateral | prosa (--article-side, --measure y
+   --article-columns-gap); los controles en la columna
    lateral, sticky a 24px del borde. */
 
 .article { padding-block-start: var(--article-pad-top); }
@@ -1005,6 +1006,12 @@ a.archive-row { color: var(--color-text); }
   .reader-toc__link {
     padding-block: var(--toc-link-pad);
     font-size: 15px;
+    /* En 180px un título largo ocupa dos o tres líneas: interlineado más
+       cerrado que el paso entre entradas, para que cada una se lea como un
+       bloque, y sin una palabra sola en la última línea. */
+    line-height: var(--reader-toc-leading);
+    text-wrap: pretty;
+    overflow-wrap: break-word; /* un nombre largo de función no se sale de la columna */
   }
   .reader-toc__link.hit::after { content: none; }
 

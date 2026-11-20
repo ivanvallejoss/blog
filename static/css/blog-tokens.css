@@ -123,8 +123,8 @@
 
   /* ── Artículo (ventana 3) ── */
   --article-pad-top: clamp(16px, calc(16px + (100vw - 390px) * 24 / 890), 40px);
-  --article-side: 220px;              /* columna lateral de desktop */
-  --article-columns-gap: 80px;
+  --article-side: 180px;              /* columna lateral de desktop (ventana 7: 220 → 180) */
+  --article-columns-gap: 64px;        /* lateral ↔ prosa (ventana 7: 80 → 64) */
   --article-meta-gap: 10px;           /* tag ↔ fecha y minutos */
   --article-meta-mb: clamp(14px, calc(14px + (100vw - 390px) * 2 / 890), 16px);
   --article-title-mb: clamp(10px, calc(10px + (100vw - 390px) * 4 / 890), 14px);
@@ -138,6 +138,7 @@
   --reader-side-pad-top: 8px;
   --reader-blocks-gap: 32px;
   --reader-block-gap: 8px;            /* rótulo ↔ contenido, y entre links del índice */
+  --reader-toc-leading: 1.35;         /* índice: títulos largos en dos líneas (ventana 7) */
   --reader-size-gap: 6px;
   --reader-share-gap: 4px;
   --reader-value-w: 44px;
