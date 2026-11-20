@@ -1,8 +1,15 @@
+import html
+
 import markdown
+from markupsafe import Markup
 from slugify import slugify as _slugify
 
+# sane_lists: una lista con viñetas seguida de una numerada son dos listas, no
+# una sola (sin esto Python-Markdown las funde). Las listas anidadas no
+# necesitan extensión: 4 espacios de sangría. El tachado tampoco: el conversor
+# emite <del> en línea (Python-Markdown no trae extensión de tachado).
 md = markdown.Markdown(
-    extensions=['fenced_code', 'codehilite', 'toc'],
+    extensions=['fenced_code', 'codehilite', 'toc', 'sane_lists'],
     extension_configs={
         'toc': {
             'slugify': lambda value, separator: _slugify(value, separator=separator),
@@ -24,7 +31,9 @@ def _flatten_toc(tokens: list[dict]) -> list[dict]:
         flat.append({
             "level": token["level"],
             "id": token["id"],
-            "text": token["name"],
+            # toc_tokens trae el nombre escapado como HTML («&amp;»); se guarda
+            # como texto plano y el template lo escapa una sola vez.
+            "text": html.unescape(token["name"]),
         })
         flat.extend(_flatten_toc(token["children"]))
     return flat
@@ -44,3 +53,16 @@ def render_markdown(content_markdown: str) -> tuple[str, list[dict]]:
     content_toc = _flatten_toc(md.toc_tokens)
 
     return content_html, content_toc
+
+# Instancia aparte, sin extensiones: solo pasa un fragmento a texto plano.
+_plain = markdown.Markdown()
+
+
+def markdown_to_text(source: str) -> str:
+    """
+    Markdown de un párrafo → texto plano, sin etiquetas ni escapes
+    («<strong>Hola</strong> \\*x\\* &amp;» → «Hola *x* &»). Para la bajada
+    derivada (Post.summary), que se muestra como texto.
+    """
+    _plain.reset()
+    return Markup(_plain.convert(source)).striptags()
