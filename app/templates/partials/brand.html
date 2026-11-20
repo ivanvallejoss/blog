@@ -10,7 +10,11 @@
                   y `class` opcional (p. ej. "mobile-only").
   search_button() lupa en mobile, «Buscar ⌘K» en desktop. Abre la búsqueda
                   (static/js/search.js) por [data-search-open]. Sin JavaScript no se muestra.
-  lang_switch()   ES/EN. Solo se renderiza si el flag está activo (app/config.py).
+  lang_switch()   ES/EN: dos links a la misma página en cada idioma (`urls`, por
+                  código), que funcionan sin JavaScript. El activo lleva
+                  aria-current. Solo se renderiza si el flag está activo
+                  (app/config.py). Su id lo vuelve a traer el swap de los
+                  filtros del archivo, para que apunte al tema nuevo.
 
   Las macros importadas no ven el contexto del template, por eso reciben `t`/`lang`.
 #}
@@ -44,15 +48,14 @@
 </button>
 {%- endmacro %}
 
-{% macro lang_switch(t, lang, langs, enabled) -%}
+{% macro lang_switch(t, lang, langs, enabled, urls) -%}
 {% if enabled %}
-<div class="lang-switch" role="group" aria-label="{{ t.language }}">
+<div id="lang-switch" class="lang-switch" role="group" aria-label="{{ t.language }}">
   {% for code in langs %}
   {% if not loop.first %}<span class="lang-switch__sep" aria-hidden="true">/</span>{% endif %}
-  <button type="button" class="lang-switch__btn hit" lang="{{ code }}"
-          aria-pressed="{{ 'true' if code == lang else 'false' }}"
-          aria-label="{{ t['lang_' ~ code] }}"
-          data-lang="{{ code }}">{{ code | upper }}</button>
+  <a class="lang-switch__btn hit" href="{{ urls[code] }}" hreflang="{{ code }}" lang="{{ code }}"
+     aria-label="{{ t['lang_' ~ code] }}"{% if code == lang %} aria-current="true"{% endif %}
+     data-lang="{{ code }}">{{ code | upper }}</a>
   {% endfor %}
 </div>
 {% endif %}

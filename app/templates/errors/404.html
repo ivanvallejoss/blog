@@ -2,6 +2,10 @@
 {% from "partials/errors.html" import plate_number %}
 {% from "partials/posts.html" import post_row with context %}
 
+{# Sin equivalente en el otro idioma: el switch lleva a la portada y la página
+   no lleva hreflang (base.html). #}
+{% set error_page = true %}
+
 {% block title %}{{ t.not_found_title }} — {{ t.site_title }}{% endblock %}
 
 {#

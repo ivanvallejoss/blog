@@ -269,6 +269,11 @@ def normalize_lang(value) -> str:
     return value if value in LANGS else DEFAULT_LANG
 
 
+def other_lang(lang: str) -> str:
+    """El otro idioma (el sitio tiene dos): el del switch y el del estado vacío."""
+    return next(code for code in LANGS if code != lang)
+
+
 def lang_from_path(path: str) -> str:
     """
     Idioma de un pedido según su ruta: «/en» y «/en/…» son inglés; todo lo

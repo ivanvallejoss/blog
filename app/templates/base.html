@@ -8,6 +8,12 @@
   {# Marca de JavaScript disponible: los controles .js-only no se muestran sin él. #}
   <script>document.documentElement.classList.add("has-js");</script>
   {% block meta %}{% endblock %}
+  {# La misma página en cada idioma (portada, archivo y tema; ver
+     app/templating.py). Las páginas de error no la llevan. #}
+  {% if not error_page %}{% for code, href in hreflang %}
+  <link rel="alternate" hreflang="{{ code }}" href="{{ href }}">
+  {%- endfor %}{% if hreflang %}
+  <link rel="alternate" hreflang="x-default" href="{{ hreflang[0][1] }}">{% endif %}{% endif %}
 
   <link rel="icon" type="image/svg+xml" href="{{ url_for('static', path='public/favicon.svg') }}">
 
@@ -64,7 +70,9 @@
            {%- if nav_active == "archive" %} aria-current="page"{% endif %}>{{ t.archive }}</a>
         {# hide_search: la 500 lo fija, porque la búsqueda depende de la base. #}
         {% if not hide_search %}{{ search_button(t) }}{% endif %}
-        {{ lang_switch(t, lang, langs, lang_switch_enabled) }}
+        {# El switch lleva a la misma página en el otro idioma; desde un post
+           o una página de error (error_page), a la portada. #}
+        {{ lang_switch(t, lang, langs, lang_switch_enabled, lang_homes if error_page else lang_urls) }}
         <a class="site-nav__external hit desktop-only" href="https://ivanvallejos.dev/">{{ t.landing_link }}</a>
         {% endblock %}
       </nav>

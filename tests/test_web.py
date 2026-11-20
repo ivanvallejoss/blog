@@ -22,12 +22,13 @@ from app.models.post import Post
 from app.search import build_search_index
 
 
-def make_post(title, slug, category, day, minutes_words=400, featured=False):
+def make_post(title, slug, category, day, minutes_words=400, featured=False, lang="es", excerpt=None):
     cat = Category(name=category, slug=category.replace(" ", "-"))
     body = f"Bajada de {title}.\n\n" + "palabra " * minutes_words
     return Post(
-        title=title, slug=slug, content_markdown=body, content_html="",
+        title=title, slug=slug, content_markdown=body, content_html="", content_toc=[],
         published_at=datetime(2026, 11, day, 10, 0), featured=featured, category=cat,
+        lang=lang, excerpt=excerpt,
     )
 
 
@@ -58,7 +59,7 @@ class SearchIndex(unittest.TestCase):
             "meta_label": "14 NOV · concurrencia · 2 min",
         })
 
-    def test_no_english_posts_yet(self):
+    def test_other_language_posts_are_left_out(self):
         self.assertEqual(build_search_index(POSTS, "en", lambda p: "/"), [])
 
 
@@ -88,9 +89,12 @@ class Web(unittest.TestCase):
         self.assertEqual(data[1]["url"], "/design-system/un-design-system/")
 
     def test_search_json_lang(self):
-        with mock.patch("app.routers.blog.get_recent_posts", return_value=POSTS):
+        with mock.patch("app.routers.blog.get_recent_posts", return_value=POSTS) as recent:
             self.assertEqual(self.client.get("/search.json?lang=en").json(), [])
+            self.assertEqual(recent.call_args.args[1], "en")
+            # Un idioma desconocido cae en español.
             self.assertEqual(len(self.client.get("/search.json?lang=xx").json()), 2)
+            self.assertEqual(recent.call_args.args[1], "es")
 
     def test_search_json_is_not_a_topic(self):
         # Registrada antes que /{category_slug}/: «search.json» no se busca como tema.
@@ -154,12 +158,12 @@ class Web(unittest.TestCase):
             return self.client.get("/concurrencia/concurrencia-sin-miedo/").text
 
     def test_share_url_from_the_request_without_base_url(self):
-        with mock.patch("app.routers.blog.BASE_URL", None):
+        with mock.patch("app.templating.BASE_URL", None):
             html = self.post_page()
         self.assertIn("share-offsite/?url=http%3A//testserver/concurrencia/concurrencia-sin-miedo/", html)
 
     def test_share_url_from_base_url(self):
-        with mock.patch("app.routers.blog.BASE_URL", "https://blog.ivanvallejos.dev"):
+        with mock.patch("app.templating.BASE_URL", "https://blog.ivanvallejos.dev"):
             html = self.post_page()
         self.assertIn("share-offsite/?url=https%3A//blog.ivanvallejos.dev/concurrencia/concurrencia-sin-miedo/", html)
         # «Siguiente» sigue siendo solo la ruta.
