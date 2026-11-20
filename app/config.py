@@ -22,3 +22,10 @@ LANG_SWITCH_ENABLED = _flag("BLOG_LANG_SWITCH", default=False)
 # Log de cada sentencia SQL (echo del engine). Apagado por defecto: llena la
 # salida del servidor. Para depurar: BLOG_SQL_ECHO=1.
 SQL_ECHO = _flag("BLOG_SQL_ECHO", default=False)
+
+# URL pública del sitio, sin barra final (p. ej. https://blog.ivanvallejos.dev).
+# Arma las URLs absolutas que salen del sitio: compartir un post (y, en la
+# ventana de OpenGraph, og:url y og:image). Sin definir, se toman del pedido,
+# que detrás de un proxy depende de sus cabeceras. Los links internos no la
+# usan: son siempre solo la ruta (ver app/templating.py).
+BASE_URL = os.environ.get("BLOG_BASE_URL", "").strip().rstrip("/") or None

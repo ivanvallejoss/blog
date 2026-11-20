@@ -2,6 +2,7 @@ from datetime import datetime
 
 from fastapi import Request
 from fastapi.templating import Jinja2Templates
+from jinja2 import pass_context
 from starlette.routing import NoMatchFound
 
 from .config import LANG_SWITCH_ENABLED
@@ -18,7 +19,7 @@ def site_context(request: Request) -> dict:
     """
     lang = DEFAULT_LANG
     try:
-        rss_url = request.url_for("rss")
+        rss_url = request.url_for("rss").path
     except NoMatchFound:
         rss_url = None  # el footer no muestra RSS hasta que exista la ruta
 
@@ -33,6 +34,21 @@ def site_context(request: Request) -> dict:
 
 
 templates = Jinja2Templates(directory="app/templates", context_processors=[site_context])
+
+
+@pass_context
+def url_path_for(context: dict, name: str, /, **path_params) -> str:
+    """
+    `url_for` de los templates: solo la ruta («/concurrencia/»), nunca la URL
+    absoluta. La de Starlette arma esquema y host con lo que llega en el pedido,
+    y detrás del proxy eso puede ser http en una página https (links, CSS y JS).
+    La navegación no depende de las cabeceras del proxy. Para una URL absoluta
+    que sale del sitio (compartir, OpenGraph) usar config.BASE_URL.
+    """
+    return context["request"].url_for(name, **path_params).path
+
+
+templates.env.globals["url_for"] = url_path_for
 
 templates.env.filters["format_date"] = format_date
 templates.env.filters["format_date_short"] = format_date_short

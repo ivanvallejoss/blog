@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, Request, HTTPException
 
 from sqlalchemy.orm import Session
 
+from app.config import BASE_URL
 from app.database import get_db
 from app.templating import templates
 
@@ -25,6 +26,16 @@ RECENT_DESKTOP = 4
 # <head> y a static/js/article.js; el 18 por defecto es también el de
 # --prose-size en blog-tokens.css, que es lo que se ve sin JavaScript.
 TEXT_SIZE = {"min": 15, "max": 24, "default": 18, "key": "blog.textSize"}
+
+
+def _absolute_url(request: Request, name: str, **path_params) -> str:
+    """
+    URL absoluta para usar fuera del sitio (compartir). Con BLOG_BASE_URL, se
+    arma con ella; si no, sale del pedido (detrás de un proxy, da https solo si
+    uvicorn confía en sus cabeceras).
+    """
+    url = request.url_for(name, **path_params)
+    return f"{BASE_URL}{url.path}" if BASE_URL else str(url)
 
 
 @router.get("/")
@@ -111,11 +122,9 @@ def get_post(
         {
             "post": post,
             "next_post": get_next_post(db, post),
-            # Detrás de un proxy, url_for da https solo si uvicorn confía en
-            # sus cabeceras (--proxy-headers / --forwarded-allow-ips).
-            "share_url": str(request.url_for(
-                "get_post", category_slug=post.category.slug, post_slug=post.slug
-            )),
+            "share_url": _absolute_url(
+                request, "get_post", category_slug=post.category.slug, post_slug=post.slug
+            ),
             "text_size": TEXT_SIZE,
         }
         )
