@@ -106,6 +106,11 @@ button { font: inherit; }
    <html> con .has-js desde un script en línea del <head>. */
 html:not(.has-js) .js-only { display: none !important; }
 
+/* Diálogo modal abierto (búsqueda, panel de lectura): el fondo no scrollea.
+   Lo pone static/js/dialog.js. */
+html.dialog-open,
+html.dialog-open body { overflow: hidden; }
+
 /* «Saltar al contenido»: aparece arriba a la izquierda al recibir foco. */
 .skip-link {
   position: absolute;
@@ -889,9 +894,6 @@ a.article__tag:hover { color: var(--color-accent-800); text-decoration: underlin
   transition: opacity var(--sheet-duration) ease;
 }
 
-/* Panel abierto: el fondo no scrollea. */
-html.reader-open,
-html.reader-open body { overflow: hidden; }
 
 @media (prefers-reduced-motion: reduce) {
   .reader,
@@ -973,4 +975,262 @@ html.reader-open body { overflow: hidden; }
 
 @media (min-width: 768px) and (pointer: coarse) {
   .reader-toc { --toc-link-pad: calc((var(--hit) - 1lh) / 2); }
+}
+
+
+/* ── Campo de búsqueda ─────────────────────────────────────────────────
+   .input de Broadsheet con la lupa adentro. 16px: iOS no hace zoom al
+   enfocarlo. Lo usan la búsqueda y la 404. */
+
+.search-field { position: relative; flex: 1; min-width: 0; }
+.search-field__icon {
+  position: absolute;
+  left: var(--search-field-icon-x);
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: var(--search-field-icon);
+  color: var(--color-neutral-700);
+  pointer-events: none;
+}
+.search-field__input {
+  min-height: var(--hit);
+  padding-inline-start: var(--search-field-pad);
+  font-size: 16px;
+}
+/* Sin la cruz nativa de type=search: el diseño no la tiene. */
+.search-field__input::-webkit-search-cancel-button { -webkit-appearance: none; appearance: none; }
+
+
+/* ── Búsqueda ──────────────────────────────────────────────────────────
+   Mobile: pantalla completa; arriba el campo y «Cancelar». Campo vacío:
+   temas como etiquetas. Con texto: cantidad y filas (título, bajada, meta).
+   Desktop: diálogo de 640px a 96px del borde, sobre un velo al 45 %;
+   resultados con alto máximo y scroll; pie con las ayudas de teclado. Campo
+   vacío: todos los posts (D4). El estado lo pone search.js en data-state. */
+
+.search {
+  position: fixed;
+  inset: 0;
+  z-index: 38; /* sobre el panel de lectura, debajo de los toasts */
+}
+.search__veil { display: none; }
+
+.search__panel {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: var(--color-bg);
+}
+
+.search__bar {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: var(--search-bar-gap);
+  padding: var(--search-bar-pad-y) var(--search-bar-pad-end) var(--search-bar-pad-y) var(--gutter);
+  background: var(--color-bg);
+}
+.search__cancel { min-height: var(--hit); font-size: 15px; }
+
+.search__body {
+  padding: var(--search-body-pad-top) var(--gutter) var(--search-body-pad-bottom);
+}
+
+.search__count {
+  margin: 0 0 var(--search-count-gap);
+  font-size: 13px;
+  color: var(--color-neutral-700);
+}
+
+.search-option {
+  display: flex;
+  flex-direction: column;
+  gap: var(--search-row-gap);
+  margin-inline: calc(var(--search-row-bleed) * -1);
+  padding: var(--search-row-pad-y) var(--search-row-bleed);
+  border-radius: var(--radius-md);
+  text-decoration: none;
+}
+a.search-option { color: var(--color-text); }
+.search-option__title { font-size: 19px; font-weight: var(--font-heading-weight); line-height: 1.2; }
+.search-option__excerpt { font-size: 15px; line-height: 1.45; color: var(--color-neutral-800); }
+.search-option__date { display: none; }
+.search-option .meta-mono { font-size: 11.5px; }
+a.search-option:hover .search-option__title { color: var(--color-accent-700); }
+/* En mobile el activo se resalta solo si se usan las flechas (teclado externo). */
+.search.uses-keys .search-option[aria-selected="true"] { background: var(--color-accent-100); }
+
+.search__none,
+.search__topics { display: none; }
+.search__none { padding-block-start: var(--search-none-pad-top); }
+.search__none-title { margin: 0 0 var(--search-none-title-gap); font-size: 26px; }
+.search__none-body { margin: 0 0 var(--search-none-body-gap); font-size: 17px; color: var(--color-neutral-800); }
+.search__topics-label { margin: 0 0 var(--search-topics-label-gap); }
+.search__chips { display: flex; flex-wrap: wrap; gap: var(--search-chip-gap); }
+.search-chip {
+  padding: var(--search-chip-pad);
+  border: 0;
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+.search-chip:hover { box-shadow: inset 0 0 0 1px var(--color-accent); }
+
+/* Estados (mobile) */
+.search:is([data-state="loading"], [data-state="idle"], [data-state="none"]) :is(.search__count, .search__results) { display: none; }
+.search:is([data-state="idle"], [data-state="none"]) .search__topics { display: block; }
+.search[data-state="none"] .search__none { display: block; }
+
+.search:not([hidden]) .search__panel { animation: search-in var(--search-duration) ease-out; }
+@keyframes search-in {
+  from { opacity: 0; transform: translateY(8px); }
+}
+
+@media (min-width: 768px) {
+  .search__veil {
+    display: block;
+    position: absolute;
+    inset: 0;
+    background: color-mix(in srgb, var(--color-neutral-900) var(--search-veil-mix), transparent);
+  }
+  .search:not([hidden]) .search__veil { animation: search-veil-in var(--search-duration) ease-out; }
+
+  .search__panel {
+    position: relative;
+    inset: auto;
+    width: min(var(--search-dialog-w), calc(100% - var(--gutter) * 2));
+    max-height: calc(100dvh - var(--search-dialog-top) - var(--space-4));
+    margin: var(--search-dialog-top) auto 0;
+    overflow: hidden;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+  }
+
+  .search__bar { position: relative; padding: var(--search-dialog-pad); }
+  .search__field .search-field__icon { left: var(--search-dialog-icon-x); font-size: var(--search-dialog-icon); }
+  .search__field .search-field__input {
+    min-height: var(--search-dialog-input-h);
+    padding-inline-start: var(--search-dialog-input-pad);
+    font-size: 18px;
+  }
+
+  .search__body {
+    flex: 0 1 auto;
+    min-height: 0;
+    max-height: var(--search-results-max);
+    overflow-y: auto;
+    padding: var(--search-results-pad);
+  }
+  .search__count { margin: 0; padding: 0 var(--search-option-pad) 6px; }
+
+  .search-option {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: var(--search-option-gap);
+    margin-inline: 0;
+    padding: var(--search-option-pad);
+  }
+  .search-option__title { font-size: 18px; line-height: 1.25; }
+  .search-option__date { display: block; padding-block-start: var(--space-1); }
+  .search-option__excerpt { grid-column: 1; line-height: 1.4; }
+  .search-option__meta { display: none; }
+  .search-option[aria-selected="true"],
+  a.search-option:hover { background: var(--color-accent-100); }
+  a.search-option:hover .search-option__title { color: inherit; }
+
+  /* Campo vacío en desktop: todos los posts, sin temas (D4). */
+  .search[data-state="idle"] :is(.search__count, .search__results) { display: block; }
+  .search[data-state="idle"] .search__topics { display: none; }
+  .search__none { padding: var(--search-option-pad) var(--search-option-pad) 0; }
+  .search__topics { padding: 0 var(--search-option-pad) var(--search-option-pad); }
+
+  .search__foot {
+    display: flex;
+    gap: var(--search-foot-gap);
+    padding: var(--search-foot-pad);
+    background: var(--color-surface);
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    color: var(--color-neutral-700);
+  }
+  .search__foot kbd { font: inherit; }
+}
+@keyframes search-veil-in { from { opacity: 0; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .search:not([hidden]) :is(.search__panel, .search__veil) { animation: none; }
+}
+
+
+/* ── Páginas de error ──────────────────────────────────────────────────
+   Número en planchas (.cmyk-num de Broadsheet) 132px → 220px, H1, texto.
+   404: campo que abre la búsqueda (con «Buscar» en desktop), «Quizás
+   buscabas» y «Volver al inicio»; en desktop, grilla 7fr | 4fr con 96px.
+   500 y genérico: «Reintentar», «Volver al inicio» y la referencia. */
+
+.error-page { padding-block-start: var(--error-pad-top); }
+
+.error-page__number {
+  font-size: clamp(132px, calc(132px + (100vw - 390px) * 88 / 890), 220px);
+  font-weight: var(--font-heading-weight);
+  letter-spacing: -0.03em;
+}
+.error-page__title {
+  margin: var(--error-title-gap) 0 var(--error-body-gap);
+  font-size: clamp(32px, calc(32px + (100vw - 390px) * 16 / 890), 48px);
+}
+.error-page__body {
+  margin: 0 0 var(--error-field-gap);
+  font-size: clamp(17px, calc(17px + (100vw - 390px) * 3 / 890), 20px);
+  color: var(--color-neutral-800);
+}
+
+.error-search {
+  display: flex;
+  gap: var(--error-search-gap);
+  max-width: var(--error-search-max);
+}
+.error-search__button { font-size: 15px; }
+
+.error-page__side { margin-block-start: var(--error-side-gap); }
+.error-page__label { margin: 0 0 var(--space-2); }
+.post-row--compact { padding-block: var(--error-row-pad-y); }
+.post-row--compact .post-row__title { font-size: 19px; }
+.error-page__home {
+  min-height: var(--hit);
+  margin: var(--error-home-gap) 0 0 var(--see-archive-nudge);
+  font-size: 15px;
+}
+
+.error-page--generic .error-page__body { margin-block-end: var(--error-actions-gap-top); }
+.error-page__actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--error-actions-gap);
+}
+.error-page__action { min-height: var(--error-action-h); font-size: 16px; }
+.error-page__ref {
+  margin: var(--error-ref-gap) 0 0;
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--color-neutral-700);
+}
+
+@media (min-width: 768px) {
+  .error-page--404 {
+    display: grid;
+    grid-template-columns: 7fr 4fr;
+    gap: var(--error-columns-gap);
+    align-items: start;
+  }
+  .error-page__side { margin-block-start: 0; padding-block-start: var(--error-side-pad-top); }
+
+  /* El 500 de desktop no está diseñado: la columna de la 404 y los botones en fila. */
+  .error-page--generic .error-page__main { max-width: var(--featured-summary-max); }
+  .error-page__actions { flex-direction: row; }
 }

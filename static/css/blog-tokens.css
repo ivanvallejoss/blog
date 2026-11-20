@@ -149,4 +149,56 @@
   --fab-right: 20px;
   --fab-bottom: 32px;
   --sheet-duration: 0.22s;
+
+  /* ── Búsqueda (ventana 4) ── */
+  --search-field-icon-x: 12px;        /* lupa dentro del campo */
+  --search-field-icon: 18px;
+  --search-field-pad: 38px;           /* texto después de la lupa */
+  --search-bar-pad-y: 8px;            /* barra de mobile: 8px 12px 8px 20px, como el header */
+  --search-bar-pad-end: 12px;
+  --search-bar-gap: 8px;
+  --search-body-pad-top: 24px;
+  --search-body-pad-bottom: 40px;
+  --search-count-gap: 8px;
+  --search-row-pad-y: 14px;
+  --search-row-gap: 6px;
+  --search-row-bleed: 8px;            /* el resaltado sobresale del texto, que no se mueve */
+  --search-chip-pad: 10px 14px;
+  --search-chip-gap: 8px;
+  --search-topics-label-gap: 12px;
+  --search-none-pad-top: 24px;        /* + el padding del cuerpo: 48px bajo la barra */
+  --search-none-title-gap: 10px;
+  --search-none-body-gap: 28px;
+  --search-dialog-w: 640px;           /* desktop: diálogo ⌘K */
+  --search-dialog-top: 96px;
+  --search-dialog-pad: 16px;
+  --search-dialog-icon-x: 14px;       /* 30px del borde del diálogo */
+  --search-dialog-icon: 20px;
+  --search-dialog-input-h: 48px;
+  --search-dialog-input-pad: 44px;
+  --search-results-pad: 4px 16px 8px;
+  --search-results-max: 440px;
+  --search-option-pad: 12px;
+  --search-option-gap: 4px 16px;
+  --search-foot-pad: 12px 28px;
+  --search-foot-gap: 20px;
+  --search-veil-mix: 45%;
+  --search-duration: 0.16s;
+
+  /* ── Páginas de error (ventana 4) ── */
+  --error-pad-top: clamp(48px, calc(48px + (100vw - 390px) * 24 / 890), 72px);
+  --error-columns-gap: 96px;          /* 404 en desktop: 7fr | 4fr */
+  --error-title-gap: clamp(32px, calc(32px + (100vw - 390px) * 12 / 890), 44px); /* número ↔ H1 */
+  --error-body-gap: clamp(10px, calc(10px + (100vw - 390px) * 2 / 890), 12px);   /* H1 ↔ texto */
+  --error-field-gap: clamp(24px, calc(24px + (100vw - 390px) * 4 / 890), 28px);  /* texto ↔ campo */
+  --error-actions-gap-top: 28px;      /* texto ↔ botones (500) */
+  --error-search-max: 520px;
+  --error-search-gap: 10px;
+  --error-actions-gap: 10px;
+  --error-action-h: 48px;
+  --error-ref-gap: 40px;
+  --error-side-gap: 48px;             /* mobile: «Quizás buscabas» debajo */
+  --error-side-pad-top: 24px;         /* desktop: columna derecha */
+  --error-row-pad-y: 12px;
+  --error-home-gap: 12px;
 }
