@@ -65,10 +65,13 @@ def site_context(request: Request) -> dict:
     """
     lang = lang_from_path(request.url.path)
     other = other_lang(lang)
+    # El feed del idioma en curso (`rss.es` → /rss.xml, `rss.en` →
+    # /en/rss.xml): el footer muestra «RSS» y el <head> lleva el link
+    # alternate solo si la ruta existe.
     try:
-        rss_url = request.url_for("rss").path
+        rss_url = page_path(request, "rss", lang)
     except NoMatchFound:
-        rss_url = None  # el footer no muestra RSS hasta que exista la ruta
+        rss_url = None
 
     lang_homes = {code: page_path(request, "post_list", code) for code in LANGS}
     current = _current_page(request)

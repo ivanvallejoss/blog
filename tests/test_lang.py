@@ -136,10 +136,11 @@ class Helpers(unittest.TestCase):
         self.assertEqual({name: paths["es"] for name, paths in PAGES.items()}, {
             "post_list": "/", "archive": "/archivo/",
             "get_category": "/{category_slug}/", "get_post": "/{category_slug}/{post_slug}/",
+            "rss": "/rss.xml",  # nueva en la ventana 6
         })
 
     def test_reserved_slugs(self):
-        self.assertTrue({"en", "archivo", "archive", "search.json"} <= RESERVED_TOPIC_SLUGS)
+        self.assertTrue({"en", "archivo", "archive", "search.json", "rss.xml"} <= RESERVED_TOPIC_SLUGS)
 
 
 class Summary(unittest.TestCase):

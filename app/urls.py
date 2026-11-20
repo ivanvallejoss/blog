@@ -19,6 +19,9 @@ PAGES: dict[str, dict[str, str]] = {
     "archive": {"es": "/archivo/", "en": "/en/archive/"},
     "get_category": {"es": "/{category_slug}/", "en": "/en/{category_slug}/"},
     "get_post": {"es": "/{category_slug}/{post_slug}/", "en": "/en/{category_slug}/{post_slug}/"},
+    # Feed Atom de cada idioma (app/feed.py). Ruta fija: va antes que las de
+    # tema, y «rss.xml» queda entre los slugs de tema reservados.
+    "rss": {"es": "/rss.xml", "en": "/en/rss.xml"},
 }
 
 # Rutas sin idioma que viven en la raíz (el idioma va en la query).

@@ -1,9 +1,10 @@
 from fastapi import APIRouter, Depends, Request, HTTPException
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, Response
 
 from sqlalchemy.orm import Session
 
 from app.database import get_db
+from app.feed import FEED_LIMIT, MEDIA_TYPE as FEED_MEDIA_TYPE, build_feed
 from app.i18n import STRINGS, lang_from_path, normalize_lang, other_lang, plain_text, topic_name
 from app.meta import listing_meta, post_meta
 from app.search import build_search_index
@@ -192,6 +193,27 @@ def get_post(
         )
 
 
+# El feed cambia solo con un sync, como el índice de búsqueda.
+FEED_CACHE = SEARCH_CACHE
+
+
+def rss(
+    request: Request,
+    lang: str = Depends(request_lang),
+    db: Session = Depends(get_db)
+    ):
+    """Feed Atom del idioma (app/feed.py): los últimos posts, completos."""
+    feed = build_feed(
+        get_recent_posts(db, lang, limit=FEED_LIMIT),
+        lang,
+        feed_url=absolute_url(request, page_path(request, "rss", lang)),
+        home_url=absolute_url(request, page_path(request, "post_list", lang)),
+        icon_url=absolute_url(request, page_path(request, "static", lang, path="public/apple-touch-icon.png")),
+        post_url=lambda post: absolute_url(request, post_path(request, post)),
+    )
+    return Response(feed, media_type=FEED_MEDIA_TYPE, headers={"Cache-Control": FEED_CACHE})
+
+
 # Una ruta por página y por idioma («archive.es» → /archivo/, «archive.en» →
 # /en/archive/), con el mismo manejador: el idioma lo deduce request_lang.
 _HANDLERS = {
@@ -199,6 +221,7 @@ _HANDLERS = {
     "archive": archive,
     "get_category": get_category,
     "get_post": get_post,
+    "rss": rss,
 }
 for _name, _lang, _path in registration_order():
     router.add_api_route(_path, _HANDLERS[_name], methods=["GET"], name=route_name(_name, _lang))

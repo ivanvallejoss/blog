@@ -26,6 +26,9 @@
   {%- endfor %}{% if hreflang %}
   <link rel="alternate" hreflang="x-default" href="{{ hreflang[0][1] }}">{% endif %}{% endif %}
 
+  {# Feed Atom del idioma en curso (app/feed.py). #}
+  {% if rss_url %}<link rel="alternate" type="application/atom+xml" title="{{ t.feed_title }}" href="{{ rss_url }}">{% endif %}
+
   <link rel="icon" type="image/svg+xml" href="{{ url_for('static', path='public/favicon.svg') }}">
   <link rel="apple-touch-icon" href="{{ url_for('static', path='public/apple-touch-icon.png') }}">
 
@@ -114,7 +117,7 @@
   {% block footer %}
   <footer class="site-footer">
     <span>{{ t.copyright.format(year=current_year) }}</span>
-    {# RSS solo aparece cuando exista una ruta llamada "rss" (ver app/templating.py). #}
+    {# RSS: el feed del idioma en curso, si su ruta existe (ver app/templating.py). #}
     {% if rss_url %}<a class="hit" href="{{ rss_url }}">{{ t.rss }}</a>{% endif %}
     <a class="hit" href="https://ivanvallejos.dev/">{{ t.landing_link }}</a>
   </footer>
