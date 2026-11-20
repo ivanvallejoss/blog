@@ -8,6 +8,15 @@ varios h2, párrafos y un bloque de código, pasado por `render_markdown` igual
 que en el sync. Los minutos de lectura se aproximan a los del diseño
 completando cada post con párrafos de relleno.
 
+El destacado no se escribe en markdown: es una lista de bloques de Notion
+hechos a mano (`FEATURED_BLOCKS`) que pasa por `notion/converter.py`, así la
+página muestra exactamente lo que el sync emitiría. Sigue la muestra de prosa
+del diseño (`PostBody.dc.html`) y suma lo que el conversor sabe hacer: cita,
+las dos listas, una anidada, formato en línea, un link y texto que se escapa.
+
+Además deja un tema sin posts (`EMPTY_TOPICS`) para probar el estado vacío:
+no aparece como filtro, pero su URL responde.
+
 Todos llevan `notion_id` con prefijo `seed-`: así se reconocen y se borran
 sin tocar lo que vino de Notion. `sync` también los borra, porque Notion es la
 fuente de verdad y estos posts no existen allá.
@@ -21,8 +30,10 @@ from sqlalchemy.engine import make_url
 from app.models.category import Category
 from app.models.post import Post
 from app.render import render_markdown
+from notion.converter import blocks_to_markdown
 
 SEED_PREFIX = "seed-"
+EMPTY_TOPICS = ["herramientas"]
 LOCAL_HOSTS = {"localhost", "127.0.0.1"}
 WORDS_PER_MINUTE = 200  # el mismo cálculo que Post.reading_minutes
 
@@ -37,38 +48,13 @@ def is_local_database(url: str | None) -> bool:
 
 
 # (título, tema, día, mes 1-12, año, minutos, bajada, cuerpo)
+# Cuerpo None: se arma con FEATURED_BLOCKS a través del conversor de Notion.
 # El primero es el destacado.
 POSTS = [
     (
         "Concurrencia sin miedo: async en Python 3.14", "concurrencia", 14, 11, 2026, 12,
         "TaskGroup, cancelación y por qué el event loop no es magia: lo que aprendí migrando el sync de Notion a async.",
-        """## El problema
-
-El sync recorría las páginas de Notion una por una. Cada pedido esperaba al anterior, y con cuarenta posts el comando tardaba más de un minuto en una conexión normal.
-
-La primera idea fue lanzar todo junto. La segunda, más prudente, fue entender qué estaba esperando el programa en cada momento.
-
-## Event loop en cinco minutos
-
-Un event loop es una lista de tareas y un bucle que las avanza mientras ninguna esté bloqueada. Cuando una tarea espera red, cede el turno; cuando la respuesta llega, vuelve a la cola.
-
-```python
-import asyncio
-
-async def fetch_all(client, ids):
-    async with asyncio.TaskGroup() as tg:
-        tasks = [tg.create_task(client.page(i)) for i in ids]
-    return [t.result() for t in tasks]
-```
-
-### Cancelación
-
-Si una tarea del grupo falla, `TaskGroup` cancela las demás y propaga el error. Es exactamente lo que queremos en un sync: o termina bien o no deja la base a medias.
-
-## Cuándo no usar async
-
-Si el trabajo es de CPU, async no ayuda. Si el código es corto y corre una vez por día, tampoco vale la complejidad. Async rinde cuando hay mucha espera de red y poco cálculo.
-""",
+        None,  # FEATURED_BLOCKS
     ),
     (
         "Un design system para dos sitios", "design system", 2, 11, 2026, 8,
@@ -216,6 +202,80 @@ Seguir escribiendo, con menos miedo a que esté incompleto.
     ),
 ]
 
+# — El destacado, como bloques de Notion (la forma de la API, solo las claves
+#   que lee el conversor) —
+
+def _rt(content, href=None, **annotations):
+    return {"type": "text", "plain_text": content, "href": href, "annotations": annotations}
+
+
+def _block(kind, *rich_text, children=None, **data):
+    block = {"type": kind, kind: {"rich_text": list(rich_text), **data}, "has_children": bool(children)}
+    if children:
+        block["children"] = children
+    return block
+
+
+FEATURED_BLOCKS = [
+    _block("paragraph", _rt(
+        "Durante meses el sync con Notion corrió en serie: una página, una request, una espera. "
+        "Funcionaba, pero cada post nuevo sumaba segundos. Migrarlo a async parecía trivial hasta "
+        "que dejó de serlo.")),
+    _block("heading_1", _rt("El problema")),
+    _block("paragraph",
+        _rt("La API de Notion es lenta y paginada. El cuello de botella nunca fue el CPU, sino "),
+        _rt("esperar", bold=True),
+        _rt(". Eso es exactamente lo que "), _rt("asyncio", italic=True),
+        _rt(" sabe hacer bien: esperar muchas cosas a la vez.")),
+    _block("code", _rt(
+        "async def fetch_all(urls):\n"
+        "    async with asyncio.TaskGroup() as tg:\n"
+        "        tasks = [tg.create_task(get(u)) for u in urls]\n"
+        "    return [t.result() for t in tasks]"), language="python"),
+    _block("paragraph",
+        _rt("Con "), _rt("TaskGroup", code=True),
+        _rt(", si una tarea falla, las demás se cancelan. Ese detalle cambió por completo cómo "
+            "pensaba los errores.")),
+    _block("quote", _rt(
+        "La concurrencia no hace el código más rápido; hace que la espera deje de ser tu problema.")),
+    _block("heading_3", _rt("Lo que no podía romperse")),
+    _block("paragraph", _rt("Antes de migrar anoté lo que tenía que seguir funcionando:")),
+    _block("bulleted_list_item", _rt("Que un post roto no corte el sync de los demás.")),
+    _block("bulleted_list_item", _rt("Que la base nunca quede "), _rt("a medias", bold=True), _rt(":"),
+        children=[
+            _block("bulleted_list_item", _rt("si falla una página, no se escribe nada de ese post;")),
+            _block("bulleted_list_item", _rt("si se corta la conexión, se reintenta desde cero.")),
+        ]),
+    _block("bulleted_list_item", _rt("Que el orden no dependa de qué respuesta llega primero.")),
+    _block("heading_2", _rt("Event loop en cinco minutos")),
+    _block("paragraph",
+        _rt("Un solo hilo, una cola de tareas y una regla: nadie bloquea. Cada "),
+        _rt("await", italic=True),
+        _rt(" es una promesa de devolver el control. Romper esa promesa con una llamada síncrona "
+            "congela todo lo demás.")),
+    _block("numbered_list_item", _rt("La tarea corre hasta su primer "), _rt("await", code=True), _rt(".")),
+    _block("numbered_list_item", _rt("Cede el turno y el loop avanza otra tarea que esté lista.")),
+    _block("numbered_list_item", _rt("Cuando llega la respuesta, la tarea vuelve a la cola."),
+        children=[
+            _block("bulleted_list_item", _rt("El orden de vuelta no está garantizado.")),
+            _block("bulleted_list_item", _rt("Por eso los resultados se ordenan al final.")),
+        ]),
+    _block("paragraph",
+        _rt("La "), _rt("documentación de asyncio", href="https://docs.python.org/3/library/asyncio.html"),
+        _rt(" lo explica mejor que yo. "),
+        _rt("Al principio pensé que con threads alcanzaba.", strikethrough=True),
+        _rt(" No alcanzaba.")),
+    _block("divider"),
+    _block("heading_2", _rt("Cuándo no usar async")),
+    _block("paragraph",
+        _rt("Si el trabajo es de CPU, async no ayuda. Ahí entran los procesos, o ahora, el "),
+        _rt("free-threading", bold=True, italic=True), _rt(" de 3.14.")),
+    _block("paragraph",
+        _rt("Un detalle del conversor: escribir <script>, *asteriscos* o _guiones_ en Notion no rompe "
+            "nada; llegan tal cual.")),
+]
+
+
 # Párrafos de relleno para acercar los minutos de lectura a los del diseño.
 FILLER = [
     "Este párrafo es relleno de desarrollo: existe para que el post tenga el largo que muestra el diseño y se puedan probar la lectura, el índice y el desplazamiento.",
@@ -261,6 +321,8 @@ def seed_posts(db) -> list[Post]:
             categories[cat_name] = category
 
         slug = slugify(title)
+        if body is None:
+            body = blocks_to_markdown(FEATURED_BLOCKS)
         markdown = _body(excerpt, body, minutes)
         content_html, content_toc = render_markdown(markdown)
         notion_id = f"{SEED_PREFIX}{slug}"[:36]
@@ -278,6 +340,10 @@ def seed_posts(db) -> list[Post]:
         db.add(post)
         result.append(post)
 
+    for name in EMPTY_TOPICS:
+        if name not in categories:
+            db.add(Category(name=name, slug=slugify(name)))
+
     db.commit()
     return result
 
@@ -286,6 +352,7 @@ def clear_seed_posts(db) -> tuple[int, int]:
     """Borra los posts `seed-…` y los temas que quedaron sin posts por eso."""
     posts = db.query(Post).filter(Post.notion_id.like(f"{SEED_PREFIX}%")).all()
     touched = {p.category_id for p in posts}
+    touched |= {c.id for c in db.query(Category).filter(Category.name.in_(EMPTY_TOPICS)).all()}
     for post in posts:
         db.delete(post)
     db.flush()

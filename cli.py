@@ -47,7 +47,8 @@ def seed_dev(
     Carga los siete posts de muestra del diseño (solo desarrollo local).
 
     Inserta o actualiza los posts del prototipo Broadsheet con notion_id
-    "seed-…": tres temas, dos años, uno destacado. Se niega a correr si
+    "seed-…": tres temas, dos años, uno destacado, y un tema sin posts
+    («herramientas») para el estado vacío. Se niega a correr si
     DATABASE_URL no apunta a localhost o 127.0.0.1.
 
     Ojo: `sync` borra estos posts, porque Notion es la fuente de verdad y
