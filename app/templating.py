@@ -8,7 +8,7 @@ from starlette.routing import NoMatchFound
 
 from .config import BASE_URL, LANG_SWITCH_ENABLED
 from .dates import format_date, format_date_short
-from .i18n import LANGS, UI_TEXT, lang_from_path, other_lang, plural, topic_name
+from .i18n import LANGS, UI_TEXT, lang_from_path, other_lang, plain_text, plural, topic_name
 from .urls import is_page, route_name
 
 # Páginas que existen igual en los dos idiomas: el switch lleva a la misma
@@ -31,8 +31,8 @@ def page_path(request: Request, name: str, lang: str, **path_params) -> str:
 
 def absolute_url(request: Request, path: str) -> str:
     """
-    URL absoluta de una ruta, para usar fuera del sitio (compartir, hreflang
-    y, en la ventana de OpenGraph, og:url). Con BLOG_BASE_URL se arma con ella;
+    URL absoluta de una ruta, para usar fuera del sitio (compartir, hreflang,
+    canonical, OpenGraph y el feed). Con BLOG_BASE_URL se arma con ella;
     si no, sale del pedido (detrás de un proxy, da https solo si uvicorn
     confía en sus cabeceras).
     """
@@ -128,3 +128,4 @@ templates.env.filters["format_date_short"] = format_date_short
 templates.env.filters["plural"] = plural
 templates.env.filters["topic"] = topic_name
 templates.env.filters["em"] = emphasis
+templates.env.filters["plain"] = plain_text

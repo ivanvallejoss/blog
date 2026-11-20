@@ -7,7 +7,18 @@
   <title>{% block title %}{{ t.site_title }}{% endblock %}</title>
   {# Marca de JavaScript disponible: los controles .js-only no se muestran sin él. #}
   <script>document.documentElement.classList.add("has-js");</script>
-  {% block meta %}{% endblock %}
+  {#
+    Descripción, canonical y tags sociales (app/meta.py, partials/meta.html).
+    Las páginas de error no reciben `meta`: llevan solo la descripción del
+    sitio, sin canonical ni tags sociales.
+  #}
+  {% block meta %}
+  {%- if meta and not error_page %}
+{% include "partials/meta.html" %}
+  {%- else %}
+  <meta name="description" content="{{ t.site_description | plain }}">
+  {%- endif %}
+  {% endblock %}
   {# La misma página en cada idioma (portada, archivo y tema; ver
      app/templating.py). Las páginas de error no la llevan. #}
   {% if not error_page %}{% for code, href in hreflang %}
@@ -16,6 +27,7 @@
   <link rel="alternate" hreflang="x-default" href="{{ hreflang[0][1] }}">{% endif %}{% endif %}
 
   <link rel="icon" type="image/svg+xml" href="{{ url_for('static', path='public/favicon.svg') }}">
+  <link rel="apple-touch-icon" href="{{ url_for('static', path='public/apple-touch-icon.png') }}">
 
   {#
     Broadsheet (ADR broadsheet-en-el-blog). Orden de carga del README §4:

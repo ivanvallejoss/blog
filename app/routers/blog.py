@@ -4,7 +4,8 @@ from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.i18n import lang_from_path, normalize_lang, other_lang
+from app.i18n import STRINGS, lang_from_path, normalize_lang, other_lang, plain_text, topic_name
+from app.meta import listing_meta, post_meta
 from app.search import build_search_index
 from app.templating import absolute_url, page_path, templates
 from app.urls import registration_order, route_name
@@ -93,6 +94,11 @@ def post_list(
             "recent_desktop": RECENT_DESKTOP,
             "topics": group_posts_by_tag(posts, tags),
             "other_count": 0 if posts else _other_count(db, lang),
+            "meta": listing_meta(
+                request, lang,
+                title=STRINGS[lang]["site_title"],
+                description=plain_text(STRINGS[lang]["site_description"]),
+            ),
         }
         )
 
@@ -111,6 +117,14 @@ def _archive_response(request: Request, db: Session, lang: str, category=None):
     category_id = category.id if category else None
     years = get_posts_by_year(db, lang, category_id)
 
+    t = STRINGS[lang]
+    if category:
+        name = topic_name(category, lang)
+        meta = listing_meta(request, lang, title=f"{name} — {t['archive']}",
+                            description=t["topic_description"].format(topic=name))
+    else:
+        meta = listing_meta(request, lang, title=t["archive"], description=t["archive_description"])
+
     return templates.TemplateResponse(
         request,
         "archive.html",
@@ -122,6 +136,7 @@ def _archive_response(request: Request, db: Session, lang: str, category=None):
             "total_posts": sum(tag["count"] for tag in tags),
             "total_topics": len(tags),
             "other_count": 0 if years else _other_count(db, lang, category_id),
+            "meta": meta,
         }
         )
 
@@ -172,6 +187,7 @@ def get_post(
             "next_post": get_next_post(db, post),
             "share_url": absolute_url(request, post_path(request, post)),
             "text_size": TEXT_SIZE,
+            "meta": post_meta(request, post),
         }
         )
 
