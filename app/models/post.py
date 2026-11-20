@@ -9,8 +9,13 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from typing import Optional
 
 from .base import Base
+from ..render import markdown_to_text
 
 SUMMARY_MAX = 160
+
+# Bloques de markdown que no son un párrafo de texto: títulos, código, citas,
+# listas, tablas, separadores y código sangrado.
+_NOT_PARAGRAPH = re.compile(r"^(#|```|~~~|>|[-*+]\s|\d+\.\s|\||---|\*\*\*|    )")
 
 class Post(Base):
     """
@@ -68,8 +73,12 @@ class Post(Base):
         Notion y el template no cambia.
         """
         for block in self.content_markdown.split("\n\n"):
-            block = block.strip()
-            if not block or block.startswith(("#", "```", ">", "-", "|", "*")):
+            if not block.strip() or _NOT_PARAGRAPH.match(block):
+                continue
+            # El conversor emite formato en línea y escapes: la bajada se
+            # muestra como texto, así que se recorta sobre el texto plano.
+            block = markdown_to_text(block.strip())
+            if not block:
                 continue
             if len(block) <= SUMMARY_MAX:
                 return block
