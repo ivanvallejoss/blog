@@ -25,8 +25,8 @@ def get_posts(filtro="Published"):
             "status": {"equals": filtro}
         }
 
-    response = notion.data_sources.query(**params) 
-    return response["results"]
+    # Notion devuelve como máximo 100 resultados por pedido: se sigue el cursor.
+    return collect_paginated_api(notion.data_sources.query, **params)
 
 
 def get_page_blocks(page_id):
