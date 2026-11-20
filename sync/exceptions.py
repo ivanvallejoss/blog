@@ -1,6 +1,11 @@
 # sync/exceptions.py
-class CategoriaFaltanteError(Exception):
+class EsquemaNotionError(Exception):
     """
-    Error que detecta la faltante de `categoria` en un post proveniente de Notion.
+    A la base de Notion le falta una propiedad obligatoria (o tiene otro tipo):
+    el sync no arranca, porque saltearía todos los posts. `problems` dice qué
+    corregir en Notion.
     """
-    pass
+
+    def __init__(self, problems: list[str]):
+        super().__init__("; ".join(problems))
+        self.problems = problems

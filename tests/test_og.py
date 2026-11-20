@@ -283,10 +283,12 @@ class SyncImages(unittest.TestCase):
         post = og_post()
         images.refresh_images([post])
         before = (self.dir / "concurrencia-sin-miedo.png").stat().st_mtime_ns
-        notion = {"notion_id": post.notion_id, "title": post.title, "category_name": "concurrencia",
-                  "synced_at": datetime(2026, 1, 1), "lang_unknown": None}
+        notion = {"notion_id": post.notion_id, "title": post.title, "slug": post.slug,
+                  "category_name": "concurrencia", "synced_at": datetime(2026, 1, 1),
+                  "lang_unknown": None, "problems": [], "created_time": ""}
         post.synced_at = datetime(2026, 1, 2)   # Notion no cambió desde el último sync
         with mock.patch("sync.services.get_posts", return_value=[{}]), \
+             mock.patch("sync.services.schema_problems", return_value=[]), \
              mock.patch("sync.services.get_details_from_post", return_value=notion):
             report = sync_posts(self.db_with([post], after=[post]))
         self.assertEqual((report.skipped, report.images.unchanged, report.images.generated), (1, 1, 0))
