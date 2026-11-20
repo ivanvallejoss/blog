@@ -95,6 +95,19 @@ STRINGS: dict[str, dict[str, str]] = {
         "link_copied": "Link copiado",
         "copy_failed": "No se pudo copiar el link.",
         "close_reading_opts": "Cerrar opciones de lectura",
+        # búsqueda
+        "search_results": "Resultados",
+        "no_results_title": "Nada sobre «{q}» todavía",
+        "no_results_body": "Probá con otra palabra o explorá por tema.",
+        "search_failed": "No se pudo cargar la búsqueda.",
+        "kbd_navigate": "↑↓",
+        "kbd_open": "↵",
+        "kbd_close": "esc",
+        # errores (los routers pasan estas claves en `detail`)
+        "not_found_post": "El post que buscás no existe o fue movido.",
+        "not_found_topic": "El tema que buscás no existe.",
+        "maybe_looking": "Quizás buscabas",
+        "error_ref": "ref · {ref}",
     },
     "en": {
         "archive": "Archive",
@@ -166,6 +179,17 @@ STRINGS: dict[str, dict[str, str]] = {
         "link_copied": "Link copied",
         "copy_failed": "Couldn't copy the link.",
         "close_reading_opts": "Close reading options",
+        "search_results": "Results",
+        "no_results_title": "Nothing about “{q}” yet",
+        "no_results_body": "Try another word or browse by topic.",
+        "search_failed": "Couldn't load search.",
+        "kbd_navigate": "↑↓",
+        "kbd_open": "↵",
+        "kbd_close": "esc",
+        "not_found_post": "The post you're looking for doesn't exist or was moved.",
+        "not_found_topic": "The topic you're looking for doesn't exist.",
+        "maybe_looking": "Maybe you were looking for",
+        "error_ref": "ref · {ref}",
     },
 }
 

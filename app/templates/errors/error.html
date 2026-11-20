@@ -1,13 +1,28 @@
 {% extends "base.html" %}
+{% from "partials/errors.html" import plate_number %}
+
+{# La búsqueda depende de la base, que puede ser justo lo que falló: esta
+   página no la ofrece (Extras E1b no tiene lupa). #}
+{% set hide_search = true %}
 
 {% block title %}{{ t.error_title }} — {{ t.site_title }}{% endblock %}
 
+{#
+  500 y cualquier otro código (README §7, Extras E1b). No consulta la base.
+  «Reintentar» es un link a la misma ruta: funciona también sin JavaScript.
+  `ref` es la referencia que el manejador dejó en el log junto con la traza.
+#}
 {% block content %}
-<div class="container">
-  <section class="section">
-    <h1>{{ t.error_title }}</h1>
-    <p>{{ detail or t.error_body }}</p>
-    <a href="{{ url_for('post_list') }}">{{ t.back_home }}</a>
-  </section>
+<div class="container error-page error-page--generic">
+  <div class="error-page__main">
+    {{ plate_number(status_code) }}
+    <h1 class="error-page__title">{{ t.error_title }}</h1>
+    <p class="error-page__body">{{ t.error_body }}</p>
+    <div class="error-page__actions">
+      <a class="btn btn-primary error-page__action" href="{{ retry_url }}"><i class="ph-duotone ph-arrow-clockwise" aria-hidden="true"></i>{{ t.retry }}</a>
+      <a class="btn btn-secondary error-page__action" href="{{ url_for('post_list') }}">{{ t.back_home }}</a>
+    </div>
+    {% if ref %}<p class="error-page__ref">{{ t.error_ref.format(ref=ref) }}</p>{% endif %}
+  </div>
 </div>
 {% endblock %}

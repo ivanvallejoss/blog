@@ -1,0 +1,16 @@
+{#
+  Piezas de las páginas de error.
+
+    {% from "partials/errors.html" import plate_number %}
+
+  plate_number(text)  número impreso en planchas desalineadas: la construcción
+                      .cmyk-num de broadsheet.css (README §7). El .paper lleva el
+                      texto una vez para el lector de pantalla; las planchas
+                      C, M e Y son repeticiones con aria-hidden. El tamaño lo da
+                      la clase .error-page__number (132px → 220px).
+#}
+{% macro plate_number(text) -%}
+<div class="cmyk-num error-page__number">
+  <span class="paper">{{ text }}</span><span class="plate plate-c" aria-hidden="true">{{ text }}</span><span class="plate plate-m" aria-hidden="true">{{ text }}</span><span class="plate plate-y" aria-hidden="true">{{ text }}</span>
+</div>
+{%- endmacro %}

@@ -127,7 +127,7 @@ def get_category(
     ):
     category = get_category_by_slug(db, category_slug)
     if not category:
-        raise HTTPException(status_code=404, detail="Categoria no encontrada o inexistente")
+        raise HTTPException(status_code=404, detail="not_found_topic")  # clave de app/i18n.py
 
     return _archive_response(request, db, category)
 
@@ -142,7 +142,7 @@ def get_post(
     post = get_post_by_slugs(db, category_slug, post_slug)
 
     if not post:
-        raise HTTPException(status_code=404, detail="Post no encontrado o categoria no encontrada")
+        raise HTTPException(status_code=404, detail="not_found_post")  # clave de app/i18n.py
 
     return templates.TemplateResponse(
         request,
