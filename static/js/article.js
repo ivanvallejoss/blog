@@ -187,22 +187,26 @@
       return;
     }
     if (event.key !== "Tab") return;
-    // Foco atrapado: de la última pieza vuelve a la primera y al revés.
-    var items = focusables();
-    if (!items.length) {
-      event.preventDefault();
-      return;
-    }
-    var first = items[0];
-    var last = items[items.length - 1];
-    var active = document.activeElement;
-    if (event.shiftKey && (active === first || active === reader)) {
-      event.preventDefault();
-      last.focus();
-    } else if (!event.shiftKey && active === last) {
-      event.preventDefault();
-      first.focus();
-    }
+    // Foco atrapado, y en el orden en que se ve: en el panel el índice va al
+    // final aunque en el marcado esté primero (ver post.html). De la última
+    // pieza vuelve a la primera y al revés.
+    event.preventDefault();
+    var items = visualOrder(focusables());
+    if (!items.length) return;
+    var index = items.indexOf(document.activeElement);
+    var next;
+    if (index === -1) next = event.shiftKey ? items[items.length - 1] : items[0];
+    else next = items[(index + (event.shiftKey ? -1 : 1) + items.length) % items.length];
+    next.focus();
+  }
+
+  function visualOrder(items) {
+    return items
+      .map(function (el) { return { el: el, box: el.getBoundingClientRect() }; })
+      .sort(function (a, b) {
+        return Math.abs(a.box.top - b.box.top) > 1 ? a.box.top - b.box.top : a.box.left - b.box.left;
+      })
+      .map(function (item) { return item.el; });
   }
 
   // Si el foco sale del panel por otro camino (lector de pantalla, clic en
