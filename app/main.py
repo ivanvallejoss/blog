@@ -18,7 +18,7 @@ logger = logging.getLogger("blog.errors")
 # Bajo uvicorn el logger raíz no tiene salida: sin esto los errores con su
 # referencia no llegarían al log del servidor.
 if not logging.getLogger().handlers:
-    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
+    logging.basicConfig(level=logging.WARNING, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 
 # «Quizás buscabas» de la 404: tres en desktop, dos en mobile (el tercero se
 # oculta por CSS).

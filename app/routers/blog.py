@@ -127,7 +127,9 @@ def get_category(
     ):
     category = get_category_by_slug(db, category_slug)
     if not category:
-        raise HTTPException(status_code=404, detail="not_found_topic")  # clave de app/i18n.py
+        # Un segmento que no es un tema puede ser cualquier cosa (un post mal
+        # escrito, una ruta vieja): el texto genérico de la 404, como el diseño.
+        raise HTTPException(status_code=404, detail="not_found_body")  # clave de app/i18n.py
 
     return _archive_response(request, db, category)
 

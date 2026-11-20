@@ -105,7 +105,6 @@ STRINGS: dict[str, dict[str, str]] = {
         "kbd_close": "esc",
         # errores (los routers pasan estas claves en `detail`)
         "not_found_post": "El post que buscás no existe o fue movido.",
-        "not_found_topic": "El tema que buscás no existe.",
         "maybe_looking": "Quizás buscabas",
         "error_ref": "ref · {ref}",
     },
@@ -187,7 +186,6 @@ STRINGS: dict[str, dict[str, str]] = {
         "kbd_open": "↵",
         "kbd_close": "esc",
         "not_found_post": "The post you're looking for doesn't exist or was moved.",
-        "not_found_topic": "The topic you're looking for doesn't exist.",
         "maybe_looking": "Maybe you were looking for",
         "error_ref": "ref · {ref}",
     },

@@ -1198,7 +1198,7 @@ a.search-option:hover .search-option__title { color: var(--color-accent-700); }
 .error-search__button { font-size: 15px; }
 
 .error-page__side { margin-block-start: var(--error-side-gap); }
-.error-page__label { margin: 0 0 var(--space-2); }
+.error-page__label { margin: 0 0 var(--recent-label-gap); }
 .post-row--compact { padding-block: var(--error-row-pad-y); }
 .post-row--compact .post-row__title { font-size: 19px; }
 .error-page__home {
