@@ -8,7 +8,7 @@
   --brand-ring-small: oklch(0.68 0.15 66); /* favicon y touch icon */
 
   /* Lectura */
-  --measure: 680px;
+  --measure: 600px;          /* columna de lectura (ventana 7: 680 → 600, unas 72 letras por línea a 18px). Valor a probar: se cambia solo acá */
   --prose-size: 18px;        /* ajustable 15–24 por el usuario */
   --prose-leading: 1.7;
 

@@ -966,6 +966,11 @@ a.archive-row { color: var(--color-text); }
 }
 
 @media (min-width: 768px) {
+  /* Lateral y prosa quedan anclados a la izquierda del contenedor (ventana 7):
+     el lateral sigue alineado con la marca del header, como el lateral del
+     archivo y el destacado de la portada; lo que sobra de ancho queda a la
+     derecha. La cabecera, «Siguiente» y la prosa comparten columna: mismo
+     borde izquierdo y mismo ancho (--measure). */
   .article {
     display: grid;
     grid-template-columns: var(--article-side) minmax(0, var(--measure));
