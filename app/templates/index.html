@@ -19,7 +19,7 @@
 
     {% if recent %}
     <section class="recent" aria-labelledby="recent-label">
-      <h2 class="section-label recent__label" id="recent-label">{{ t.recent }}</h2>
+      <h2 class="section-label section-rule recent__label" id="recent-label">{{ t.recent }}</h2>
       <ol class="list-reset">
         {% for post in recent %}
         <li{% if loop.index > recent_desktop %} class="mobile-only"{% endif %}>{{ post_row(post) }}</li>

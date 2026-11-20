@@ -41,6 +41,11 @@
 
   --gutter: clamp(20px, calc(20px + (100vw - 390px) * 20 / 890), 40px);
   --section-gap: clamp(56px, calc(56px + (100vw - 390px) * 56 / 890), 112px);
+  /* raya de sección (ventana 7): marca corta sobre el rótulo de una sección,
+     además del espacio. Se ubica en el aire que ya había: no mueve nada. */
+  --section-rule-w: 48px;
+  --section-rule-h: 1px;
+  --section-rule-gap: 12px;           /* raya ↔ rótulo */
 
   /* header: mobile 8px 12px 8px 20px → desktop 28px 40px */
   --header-pad-block: clamp(8px, calc(8px + (100vw - 390px) * 20 / 890), 28px);

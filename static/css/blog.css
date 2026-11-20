@@ -61,7 +61,7 @@ button { font: inherit; }
   padding-inline: var(--gutter);
 }
 
-/* Separación entre secciones: 56px → 112px, solo espacio, sin líneas. */
+/* Separación entre secciones: 56px → 112px de espacio. */
 .section + .section { margin-block-start: var(--section-gap); }
 .mt-section { margin-block-start: var(--section-gap); }
 .pt-section { padding-block-start: var(--section-gap); }
@@ -73,6 +73,25 @@ button { font: inherit; }
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--color-neutral-700);
+}
+
+/* Raya de sección (ventana 7; se aparta del README, que separa solo con
+   espacio): 48×1px en el color de división, alineada a la izquierda, sobre
+   el rótulo. Va en el rótulo (`.section-label section-rule`) y se ubica en
+   el aire de arriba, sin mover el rótulo ni lo que sigue.
+   Dónde: Recientes y Por tema en la portada, cada año del archivo y
+   «Siguiente» en el artículo. Nunca sobre la primera sección de una página
+   (el destacado, el título del archivo, la cabecera del artículo), ni entre
+   filas, ni dentro del lateral del artículo. */
+.section-rule { position: relative; }
+.section-rule::before {
+  content: "";
+  position: absolute;
+  inset-inline-start: 0;
+  bottom: calc(100% + var(--section-rule-gap));
+  width: var(--section-rule-w);
+  height: var(--section-rule-h);
+  background: var(--color-divider);
 }
 
 /* Lista sin viñetas ni sangría. */

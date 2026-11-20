@@ -124,7 +124,7 @@
 
     {% if next_post %}
     <nav class="article__next" aria-labelledby="next-label">
-      <span class="article__next-label meta-mono" id="next-label">{{ t.next }}</span>
+      <span class="article__next-label meta-mono section-rule" id="next-label">{{ t.next }}</span>
       <a class="article__next-link" href="{{ post_url(next_post) }}" rel="next">{{ next_post.title }}<span aria-hidden="true"> →</span></a>
     </nav>
     {% endif %}

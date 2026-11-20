@@ -50,7 +50,7 @@
   <div id="listing" class="archive__listing">
     {% for group in years %}
     <section class="archive-year" aria-labelledby="year-{{ group.year }}">
-      <h2 class="section-label archive-year__label" id="year-{{ group.year }}">{{ group.year }}</h2>
+      <h2 class="section-label section-rule archive-year__label" id="year-{{ group.year }}">{{ group.year }}</h2>
       <ol class="list-reset">
         {% for post in group.posts %}
         <li>
