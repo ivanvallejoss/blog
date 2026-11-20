@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="stylesheet" href="_ds/broadsheet-3f88e0c8-2dfa-410d-8d8e-5978c68974d4/styles.css">
+<script src="_ds/broadsheet-3f88e0c8-2dfa-410d-8d8e-5978c68974d4/_ds_bundle.js"></script>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500&amp;display=swap">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/duotone/style.css">
+<style>body{margin:0;background:var(--color-surface)} a{color:var(--color-accent-700)} a:hover{color:var(--color-accent-600)}</style>
+</helmet>
+
+<section style="padding:80px;display:flex;flex-direction:column;gap:72px">
+  <header style="max-width:960px;display:flex;flex-direction:column;gap:12px">
+    <div style="display:flex;align-items:center;gap:14px"><span style="font-family:'Geist Mono',monospace;font-size:16px;font-weight:500;background:var(--color-text);color:var(--color-bg);padding:3px 10px;border-radius:var(--radius-md)">1a</span><span style="font-family:'Geist Mono',monospace;font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--color-neutral-700)">Versión base · blog.ivanvallejos.dev</span></div>
+    <h1 style="font-size:56px;margin:0">Índice — diseño de referencia</h1>
+    <p style="font-size:20px;margin:0;color:var(--color-neutral-800);text-wrap:pretty">La base para pulir en implementación. El switch ES/EN funciona en todas las pantallas, igual que los filtros del archivo, la búsqueda y los controles de lectura.</p>
+  </header>
+
+  <div id="mobile" style="display:flex;flex-direction:column;gap:24px">
+    <h2 style="margin:0;font-size:28px">Mobile</h2>
+    <div style="display:flex;gap:48px;flex-wrap:wrap">
+
+      <!-- Home -->
+      <div style="display:flex;flex-direction:column;gap:14px" data-screen-label="M1 Portada">
+        <div style="font-size:14px;color:var(--color-neutral-700)">M1 · {{ t.home }}</div>
+        <div style="position:relative;width:390px;height:844px;flex:none;border-radius:44px;border:10px solid var(--color-neutral-900);overflow:hidden;background:var(--color-bg);box-shadow:var(--shadow-lg)">
+          <div style="position:absolute;inset:0;overflow-y:auto">
+            <div style="height:44px;display:flex;align-items:center;justify-content:space-between;padding:0 28px;font-size:14px;font-weight:600"><span>9:41</span><span style="display:flex;gap:6px"><i class="ph-duotone ph-cell-signal-full"></i><i class="ph-duotone ph-battery-full"></i></span></div>
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px 8px 20px">
+              <a href="#mobile" style="display:flex;align-items:center;gap:8px;text-decoration:none;color:var(--color-text);font-weight:600;font-size:18px"><svg viewBox="0 0 32 32" width="20" height="20" aria-hidden="true"><path d="M 16.00 28.50 A 12.5 12.5 0 0 1 3.98 19.45" stroke="oklch(0.72 0.15 68)" stroke-width="3" fill="none" stroke-linecap="round"></path><path d="M 3.62 14.26 A 12.5 12.5 0 0 1 14.26 3.62" stroke="oklch(0.72 0.15 68)" stroke-width="3" fill="none" stroke-linecap="round"></path><path d="M 19.45 3.98 A 12.5 12.5 0 0 1 28.50 16.00" stroke="oklch(0.72 0.15 68)" stroke-width="3" fill="none" stroke-linecap="round"></path></svg>IV<span style="font-family:'Geist Mono',monospace;font-weight:400;font-size:14px;color:var(--color-neutral-700)">/blog</span></a>
+              <div style="display:flex;align-items:center">
+                <div style="display:flex;align-items:center;font-family:'Geist Mono',monospace;font-size:12px"><button onClick="{{ setEs }}" style="height:44px;padding:0 4px 0 8px;border:0;background:transparent;font:inherit;cursor:pointer;color:{{ esColor }}">ES</button><span style="color:var(--color-neutral-500)">/</span><button onClick="{{ setEn }}" style="height:44px;padding:0 8px 0 4px;border:0;background:transparent;font:inherit;cursor:pointer;color:{{ enColor }}">EN</button></div>
+                <button class="btn btn-icon" style="width:44px;height:44px;font-size:22px" aria-label="{{ t.search }}"><i class="ph-duotone ph-magnifying-glass"></i></button>
+              </div>
+            </div>
+            <div style="padding:20px 20px 0">
+              <div style="font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--color-accent-2-700)">{{ t.featured }}</div>
+              <h1 style="font-size:34px;line-height:1.1;margin:10px 0 12px;text-wrap:balance">{{ feat.title }}</h1>
+              <p style="font-size:17px;margin:0 0 12px;color:var(--color-neutral-800);text-wrap:pretty">{{ feat.ex }}</p>
+              <div style="font-family:'Geist Mono',monospace;font-size:11.5px;letter-spacing:.04em;text-transform:uppercase;color:var(--color-neutral-700)">{{ feat.meta }}</div>
+            </div>
+            <div style="padding:56px 20px 0">
+              <h6 style="color:var(--color-neutral-700);margin:0 0 8px">{{ t.recent }}</h6>
+              <sc-for list="{{ rest }}" as="p" hint-placeholder-count="5">
+                <a href="#mobile" style="display:flex;flex-direction:column;gap:6px;padding:14px 0;text-decoration:none;color:var(--color-text)">
+                  <span style="font-size:20px;font-weight:600;line-height:1.2">{{ p.title }}</span>
+                  <span style="font-family:'Geist Mono',monospace;font-size:11.5px;letter-spacing:.04em;text-transform:uppercase;color:var(--color-neutral-700)">{{ p.meta }}</span>
+                </a>
+              </sc-for>
+              <button class="btn btn-ghost" style="margin:12px 0 0 -5px;font-size:15px;min-height:44px">{{ t.seeArchive }} <i class="ph-duotone ph-arrow-right"></i></button>
+            </div>
+            <div style="padding:64px 20px 40px;font-size:13px;color:var(--color-neutral-700);display:flex;gap:16px"><span>© 2026 Iván Vallejos</span><a href="#mobile">RSS</a><a href="#mobile">ivanvallejos.dev ↗</a></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Article -->
+      <div style="display:flex;flex-direction:column;gap:14px" data-screen-label="M2 Artículo">
+        <div style="font-size:14px;color:var(--color-neutral-700)">M2 · {{ t.article }} — {{ t.tapAa }}</div>
+        <div style="position:relative;width:390px;height:844px;flex:none;border-radius:44px;border:10px solid var(--color-neutral-900);overflow:hidden;background:var(--color-bg);box-shadow:var(--shadow-lg)">
+          <div style="position:absolute;inset:0;overflow-y:auto">
+            <div style="height:44px;display:flex;align-items:center;justify-content:space-between;padding:0 28px;font-size:14px;font-weight:600"><span>9:41</span><span style="display:flex;gap:6px"><i class="ph-duotone ph-cell-signal-full"></i><i class="ph-duotone ph-battery-full"></i></span></div>
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px">
+              <button class="btn btn-icon" style="width:44px;height:44px;font-size:22px" aria-label="{{ t.back }}"><i class="ph-duotone ph-arrow-left"></i></button>
+              <svg viewBox="0 0 32 32" width="20" height="20" aria-hidden="true"><path d="M 16.00 28.50 A 12.5 12.5 0 0 1 3.98 19.45" stroke="oklch(0.72 0.15 68)" stroke-width="3" fill="none" stroke-linecap="round"></path><path d="M 3.62 14.26 A 12.5 12.5 0 0 1 14.26 3.62" stroke="oklch(0.72 0.15 68)" stroke-width="3" fill="none" stroke-linecap="round"></path><path d="M 19.45 3.98 A 12.5 12.5 0 0 1 28.50 16.00" stroke="oklch(0.72 0.15 68)" stroke-width="3" fill="none" stroke-linecap="round"></path></svg>
+              <button class="btn btn-icon" style="width:44px;height:44px;font-size:22px" aria-label="{{ t.search }}"><i class="ph-duotone ph-magnifying-glass"></i></button>
+            </div>
+            <article style="padding:16px 20px 140px">
+              <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px"><span class="tag tag-accent">{{ feat.cat }}</span><span style="font-family:'Geist Mono',monospace;font-size:11.5px;letter-spacing:.04em;text-transform:uppercase;color:var(--color-neutral-700)">{{ feat.dateLong }} · {{ feat.min }} min</span></div>
+              <h1 style="font-size:32px;line-height:1.12;margin:0 0 10px;text-wrap:balance">{{ feat.title }}</h1>
+              <div style="font-size:15px;color:var(--color-neutral-700);margin-bottom:32px">Iván Vallejos</div>
+              <dc-import name="PostBody" size="{{ size }}" lang="{{ lang }}" hint-size="100%,1200px"></dc-import>
+              <div style="margin-top:56px;display:flex;flex-direction:column;gap:6px">
+                <span style="font-family:'Geist Mono',monospace;font-size:11.5px;letter-spacing:.04em;text-transform:uppercase;color:var(--color-neutral-700)">{{ t.next }}</span>
+                <a href="#mobile" style="font-size:22px;font-weight:600;line-height:1.2;text-decoration:none">{{ nextPost.title }} →</a>
+              </div>
+            </article>
+          </div>
+          <button onClick="{{ toggleSheet }}" aria-label="{{ t.readingOpts }}" style="position:absolute;right:20px;bottom:32px;width:56px;height:56px;border-radius:50%;border:0;background:var(--color-accent);color:var(--color-bg);font-size:26px;display:grid;place-items:center;box-shadow:var(--shadow-md);cursor:pointer" style-hover="background:var(--color-accent-600)" style-active="background:var(--color-accent-700)"><i class="ph-duotone ph-text-aa"></i></button>
+          <sc-if value="{{ sheet }}" hint-placeholder-val="{{ false }}">
+            <div onClick="{{ toggleSheet }}" style="position:absolute;inset:0;background:color-mix(in srgb,var(--color-neutral-900) 40%,transparent)"></div>
+            <div style="position:absolute;left:0;right:0;bottom:0;background:var(--color-bg);border-radius:18px 18px 0 0;padding:12px 24px 36px;box-shadow:var(--shadow-lg);display:flex;flex-direction:column;gap:22px">
+              <div style="width:40px;height:4px;border-radius:2px;background:var(--color-neutral-300);align-self:center"></div>
+              <div style="display:flex;flex-direction:column;gap:10px">
+                <span style="font-size:13px;color:var(--color-neutral-700)">{{ t.textSize }}</span>
+                <div style="display:flex;gap:8px;align-items:center">
+                  <button class="btn btn-secondary" onClick="{{ dec }}" style="min-height:44px;flex:1;font-size:14px">A−</button>
+                  <span style="font-family:'Geist Mono',monospace;font-size:13px;width:56px;text-align:center">{{ size }} px</span>
+                  <button class="btn btn-secondary" onClick="{{ inc }}" style="min-height:44px;flex:1;font-size:19px">A+</button>
+                </div>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:10px">
+                <span style="font-size:13px;color:var(--color-neutral-700)">{{ t.share }}</span>
+                <div style="display:flex;gap:8px">
+                  <button class="btn btn-secondary" onClick="{{ copy }}" style="min-height:44px;flex:1"><i class="ph-duotone {{ copyIcon }}"></i>{{ copyLabel }}</button>
+                  <button class="btn btn-secondary" style="min-height:44px;flex:1"><i class="ph-duotone ph-linkedin-logo"></i>LinkedIn</button>
+                  <button class="btn btn-secondary btn-icon" style="min-height:44px;width:44px" aria-label="{{ t.more }}"><i class="ph-duotone ph-export"></i></button>
+                </div>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:4px">
+                <span style="font-size:13px;color:var(--color-neutral-700);margin-bottom:4px">{{ t.inArticle }}</span>
+                <sc-for list="{{ toc }}" as="x" hint-placeholder-count="3"><a href="#mobile" style="font-size:17px;padding:8px 0;text-decoration:none">{{ x }}</a></sc-for>
+              </div>
+            </div>
+          </sc-if>
+        </div>
+      </div>
+
+      <!-- Archive -->
+      <div style="display:flex;flex-direction:column;gap:14px" data-screen-label="M3 Archivo">
+        <div style="font-size:14px;color:var(--color-neutral-700)">M3 · {{ t.archive }} — {{ t.tapFilter }}</div>
+        <div style="position:relative;width:390px;height:844px;flex:none;border-radius:44px;border:10px solid var(--color-neutral-900);overflow:hidden;background:var(--color-bg);box-shadow:var(--shadow-lg)">
+          <div style="position:absolute;inset:0;overflow-y:auto">
+            <div style="height:44px;display:flex;align-items:center;justify-content:space-between;padding:0 28px;font-size:14px;font-weight:600"><span>9:41</span><span style="display:flex;gap:6px"><i class="ph-duotone ph-cell-signal-full"></i><i class="ph-duotone ph-battery-full"></i></span></div>
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px">
+              <button class="btn btn-icon" style="width:44px;height:44px;font-size:22px" aria-label="{{ t.back }}"><i class="ph-duotone ph-arrow-left"></i></button>
+              <div style="display:flex;align-items:center">
+                <div style="display:flex;align-items:center;font-family:'Geist Mono',monospace;font-size:12px"><button onClick="{{ setEs }}" style="height:44px;padding:0 4px 0 8px;border:0;background:transparent;font:inherit;cursor:pointer;color:{{ esColor }}">ES</button><span style="color:var(--color-neutral-500)">/</span><button onClick="{{ setEn }}" style="height:44px;padding:0 8px 0 4px;border:0;background:transparent;font:inherit;cursor:pointer;color:{{ enColor }}">EN</button></div>
+                <button class="btn btn-icon" style="width:44px;height:44px;font-size:22px" aria-label="{{ t.search }}"><i class="ph-duotone ph-magnifying-glass"></i></button>
+              </div>
+            </div>
+            <div style="padding:12px 20px 0">
+              <h1 style="font-size:36px;margin:0 0 6px">{{ t.archive }}</h1>
+              <div style="font-size:15px;color:var(--color-neutral-700)">{{ t.countLine }}</div>
+            </div>
+            <div style="display:flex;gap:8px;padding:24px 20px 8px;overflow-x:auto">
+              <sc-for list="{{ chips }}" as="c" hint-placeholder-count="4"><button class="btn {{ c.cls }}" onClick="{{ c.pick }}" style="min-height:40px;font-size:14px;flex:none;white-space:nowrap">{{ c.name }}<span style="font-family:'Geist Mono',monospace;font-size:11px;opacity:.75">{{ c.count }}</span></button></sc-for>
+            </div>
+            <div style="padding:24px 20px 40px;display:flex;flex-direction:column;gap:32px">
+              <sc-for list="{{ years }}" as="y" hint-placeholder-count="2">
+                <div>
+                  <h6 style="color:var(--color-neutral-700);margin:0 0 6px">{{ y.year }}</h6>
+                  <sc-for list="{{ y.posts }}" as="p" hint-placeholder-count="3">
+                    <a href="#mobile" style="display:grid;grid-template-columns:60px 1fr;gap:4px 0;padding:12px 0;text-decoration:none;color:var(--color-text)">
+                      <span style="font-family:'Geist Mono',monospace;font-size:11.5px;letter-spacing:.04em;color:var(--color-neutral-700);padding-top:4px">{{ p.d }}</span>
+                      <span style="font-size:18px;font-weight:600;line-height:1.25">{{ p.title }}</span>
+                      <span></span>
+                      <span style="font-family:'Geist Mono',monospace;font-size:11.5px;letter-spacing:.04em;text-transform:uppercase;color:var(--color-neutral-700)">{{ p.cat }} · {{ p.min }} min</span>
+                    </a>
+                  </sc-for>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Search -->
+      <div style="display:flex;flex-direction:column;gap:14px" data-screen-label="M4 Búsqueda">
+        <div style="font-size:14px;color:var(--color-neutral-700)">M4 · {{ t.searchScreen }} — {{ t.type }}</div>
+        <div style="position:relative;width:390px;height:844px;flex:none;border-radius:44px;border:10px solid var(--color-neutral-900);overflow:hidden;background:var(--color-bg);box-shadow:var(--shadow-lg)">
+          <div style="position:absolute;inset:0;overflow-y:auto">
+            <div style="height:44px;display:flex;align-items:center;justify-content:space-between;padding:0 28px;font-size:14px;font-weight:600"><span>9:41</span><span style="display:flex;gap:6px"><i class="ph-duotone ph-cell-signal-full"></i><i class="ph-duotone ph-battery-full"></i></span></div>
+            <div style="display:flex;align-items:center;gap:8px;padding:8px 12px 8px 20px">
+              <div style="position:relative;flex:1">
+                <i class="ph-duotone ph-magnifying-glass" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:18px;color:var(--color-neutral-700)"></i>
+                <input class="input" value="{{ q }}" onChange="{{ setQ }}" placeholder="{{ t.searchPh }}" style="min-height:44px;padding-left:38px;font-size:16px">
+              </div>
+              <button class="btn btn-ghost" onClick="{{ clearQ }}" style="min-height:44px;font-size:15px">{{ t.cancel }}</button>
+            </div>
+            <div style="padding:24px 20px 40px">
+              <sc-if value="{{ qEmpty }}" hint-placeholder-val="{{ false }}">
+                <h6 style="color:var(--color-neutral-700);margin:0 0 12px">{{ t.topics }}</h6>
+                <div style="display:flex;flex-wrap:wrap;gap:8px"><sc-for list="{{ cats }}" as="c"><button class="tag tag-accent" onClick="{{ c.searchFor }}" style="font:inherit;font-size:14px;padding:10px 14px;border:0;cursor:pointer">{{ c.name }}</button></sc-for></div>
+              </sc-if>
+              <sc-if value="{{ qHas }}" hint-placeholder-val="{{ true }}">
+                <div style="font-size:13px;color:var(--color-neutral-700);margin-bottom:8px">{{ nRes }}</div>
+                <sc-for list="{{ results }}" as="p" hint-placeholder-count="2">
+                  <a href="#mobile" style="display:flex;flex-direction:column;gap:6px;padding:14px 0;text-decoration:none;color:var(--color-text)">
+                    <span style="font-size:19px;font-weight:600;line-height:1.2">{{ p.title }}</span>
+                    <span style="font-size:15px;color:var(--color-neutral-800);line-height:1.45">{{ p.ex }}</span>
+                    <span style="font-family:'Geist Mono',monospace;font-size:11.5px;letter-spacing:.04em;text-transform:uppercase;color:var(--color-neutral-700)">{{ p.meta }}</span>
+                  </a>
+                </sc-for>
+              </sc-if>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="desktop" style="display:flex;flex-direction:column;gap:24px">
+    <h2 style="margin:0;font-size:28px">Desktop</h2>
+    <div style="display:grid;grid-template-columns:repeat(2,1280px);gap:48px">
+
+      <!-- D1 Home -->
+      <div style="display:flex;flex-direction:column;gap:14px" data-screen-label="D1 Portada">
+        <div style="font-size:14px;color:var(--color-neutral-700)">D1 · {{ t.home }}</div>
+        <div style="width:1280px;height:820px;flex:none;border-radius:10px;overflow:hidden;background:var(--color-bg);box-shadow:var(--shadow-lg);display:flex;flex-direction:column">
+          <div style="height:38px;flex:none;background:var(--color-neutral-200);display:flex;align-items:center;gap:8px;padding:0 14px"><span style="width:11px;height:11px;border-radius:50%;background:var(--color-neutral-400)"></span><span style="width:11px;height:11px;border-radius:50%;background:var(--color-neutral-400)"></span><span style="width:11px;height:11px;border-radius:50%;background:var(--color-neutral-400)"></span><span style="margin-left:16px;font-family:'Geist Mono',monospace;font-size:12px;color:var(--color-neutral-700)">blog.ivanvallejos.dev</span></div>
+          <div style="flex:1;overflow-y:auto">
+            <div style="max-width:1120px;margin:0 auto;padding:28px 40px;display:flex;align-items:center;gap:32px">
+              <a href="#desktop" style="display:flex;align-items:center;gap:8px;text-decoration:none;color:var(--color-text);font-weight:600;font-size:20px;margin-right:auto"><svg viewBox="0 0 32 32" width="22" height="22" aria-hidden="true"><path d="M 16.00 28.50 A 12.5 12.5 0 0 1 3.98 19.45" stroke="oklch(0.72 0.15 68)" stroke-width="3" fill="none" stroke-linecap="round"></path><path d="M 3.62 14.26 A 12.5 12.5 0 0 1 14.26 3.62" stroke="oklch(0.72 0.15 68)" stroke-width="3" fill="none" stroke-linecap="round"></path><path d="M 19.45 3.98 A 12.5 12.5 0 0 1 28.50 16.00" stroke="oklch(0.72 0.15 68)" stroke-width="3" fill="none" stroke-linecap="round"></path></svg>IV<span style="font-family:'Geist Mono',monospace;font-weight:400;font-size:15px;color:var(--color-neutral-700)">/blog</span></a>
+              <a href="#desktop" style="font-size:15px;color:var(--color-text);text-decoration:none">{{ t.archive }}</a>
+              <button class="btn btn-secondary" style="font-size:14px;gap:10px"><i class="ph-duotone ph-magnifying-glass"></i>{{ t.search }} <span style="font-family:'Geist Mono',monospace;font-size:11px;color:var(--color-neutral-700)">⌘K</span></button>
+              <div style="display:flex;align-items:center;font-family:'Geist Mono',monospace;font-size:12px"><button onClick="{{ setEs }}" style="padding:6px 4px;border:0;background:transparent;font:inherit;cursor:pointer;color:{{ esColor }}">ES</button><span style="color:var(--color-neutral-500)">/</span><button onClick="{{ setEn }}" style="padding:6px 4px;border:0;background:transparent;font:inherit;cursor:pointer;color:{{ enColor }}">EN</button></div>
+              <a href="#desktop" style="font-size:15px;white-space:nowrap;flex:none">ivanvallejos.dev ↗</a>
+            </div>
+            <div style="max-width:1120px;margin:0 auto;padding:64px 40px 0;display:grid;grid-template-columns:7fr 4fr;gap:96px">
+              <div>
+                <div style="font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:var(--color-accent-2-700)">{{ t.featured }}</div>
+                <h1 style="font-size:58px;line-height:1.04;margin:14px 0 20px;text-wrap:balance">{{ feat.title }}</h1>
+                <p style="font-size:21px;line-height:1.5;color:var(--color-neutral-800);margin:0 0 20px;max-width:580px;text-wrap:pretty">{{ feat.ex }}</p>
+                <div style="display:flex;align-items:center;gap:20px"><button class="btn btn-primary" style="font-size:15px">{{ t.read }}</button><span style="font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:var(--color-neutral-700)">{{ feat.meta }}</span></div>
+              </div>
+              <div>
+                <h6 style="color:var(--color-neutral-700);margin:8px 0 10px">{{ t.recent }}</h6>
+                <sc-for list="{{ recent4 }}" as="p" hint-placeholder-count="4">
+                  <a href="#desktop" style="display:flex;flex-direction:column;gap:6px;padding:12px 0;text-decoration:none;color:var(--color-text)">
+                    <span style="font-size:19px;font-weight:600;line-height:1.25">{{ p.title }}</span>
+                    <span style="font-family:'Geist Mono',monospace;font-size:11.5px;letter-spacing:.04em;text-transform:uppercase;color:var(--color-neutral-700)">{{ p.meta }}</span>
+                  </a>
+                </sc-for>
+              </div>
+            </div>
+            <div style="max-width:1120px;margin:0 auto;padding:112px 40px 80px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:56px">
+              <sc-for list="{{ cats }}" as="c" hint-placeholder-count="3">
+                <div style="display:flex;flex-direction:column;gap:10px">
+                  <h3 style="margin:0">{{ c.name }} <span style="font-family:'Geist Mono',monospace;font-size:13px;font-weight:400;color:var(--color-neutral-700)">{{ c.count }}</span></h3>
+                  <sc-for list="{{ c.posts }}" as="p"><a href="#desktop" style="font-size:17px;line-height:1.35;color:var(--color-text);text-decoration:none">{{ p.title }}</a></sc-for>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- D2 Article -->
+      <div style="display:flex;flex-direction:column;gap:14px" data-screen-label="D2 Artículo">
+        <div style="font-size:14px;color:var(--color-neutral-700)">D2 · {{ t.article }}</div>
+        <div style="width:1280px;height:820px;flex:none;border-radius:10px;overflow:hidden;background:var(--color-bg);box-shadow:var(--shadow-lg);display:flex;flex-direction:column">
+          <div style="height:38px;flex:none;background:var(--color-neutral-200);display:flex;align-items:center;gap:8px;padding:0 14px"><span style="width:11px;height:11px;border-radius:50%;background:var(--color-neutral-400)"></span><span style="width:11px;height:11px;border-radius:50%;background:var(--color-neutral-400)"></span><span style="width:11px;height:11px;border-radius:50%;background:var(--color-neutral-400)"></span><span style="margin-left:16px;font-family:'Geist Mono',monospace;font-size:12px;color:var(--color-neutral-700)">blog.ivanvallejos.dev/{{ slugPrefix }}concurrencia-sin-miedo</span></div>
+          <div style="flex:1;overflow-y:auto">
+            <div style="max-width:1120px;margin:0 auto;padding:28px 40px;display:flex;align-items:center;gap:32px">
+              <a href="#desktop" style="display:flex;align-items:center;gap:8px;text-decoration:none;color:var(--color-text);font-weight:600;font-size:20px;margin-right:auto"><svg viewBox="0 0 32 32" width="22" height="22" aria-hidden="true"><path d="M 16.00 28.50 A 12.5 12.5 0 0 1 3.98 19.45" stroke="oklch(0.72 0.15 68)" stroke-width="3" fill="none" stroke-linecap="round"></path><path d="M 3.62 14.26 A 12.5 12.5 0 0 1 14.26 3.62" stroke="oklch(0.72 0.15 68)" stroke-width="3" fill="none" stroke-linecap="round"></path><path d="M 19.45 3.98 A 12.5 12.5 0 0 1 28.50 16.00" stroke="oklch(0.72 0.15 68)" stroke-width="3" fill="none" stroke-linecap="round"></path></svg>IV<span style="font-family:'Geist Mono',monospace;font-weight:400;font-size:15px;color:var(--color-neutral-700)">/blog</span></a>
+              <a href="#desktop" style="font-size:15px;color:var(--color-text);text-decoration:none">{{ t.archive }}</a>
+              <button class="btn btn-secondary" style="font-size:14px;gap:10px"><i class="ph-duotone ph-magnifying-glass"></i>{{ t.search }} <span style="font-family:'Geist Mono',monospace;font-size:11px;color:var(--color-neutral-700)">⌘K</span></button>
+              <div style="display:flex;align-items:center;font-family:'Geist Mono',monospace;font-size:12px"><button onClick="{{ setEs }}" style="padding:6px 4px;border:0;background:transparent;font:inherit;cursor:pointer;color:{{ esColor }}">ES</button><span style="color:var(--color-neutral-500)">/</span><button onClick="{{ setEn }}" style="padding:6px 4px;border:0;background:transparent;font:inherit;cursor:pointer;color:{{ enColor }}">EN</button></div>
+            </div>
+            <div style="max-width:1120px;margin:0 auto;padding:40px 40px 96px;display:grid;grid-template-columns:220px minmax(0,680px);gap:80px">
+              <aside style="position:sticky;top:24px;align-self:start;display:flex;flex-direction:column;gap:32px;padding-top:8px">
+                <div style="display:flex;flex-direction:column;gap:8px">
+                  <span style="font-size:13px;color:var(--color-neutral-700)">{{ t.inArticle }}</span>
+                  <sc-for list="{{ toc }}" as="x"><a href="#desktop" style="font-size:15px;text-decoration:none">{{ x }}</a></sc-for>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:8px">
+                  <span style="font-size:13px;color:var(--color-neutral-700)">{{ t.textSize }}</span>
+                  <div style="display:flex;gap:6px;align-items:center"><button class="btn btn-secondary" onClick="{{ dec }}" style="font-size:13px">A−</button><span style="font-family:'Geist Mono',monospace;font-size:12px;width:44px;text-align:center">{{ size }}</span><button class="btn btn-secondary" onClick="{{ inc }}" style="font-size:17px">A+</button></div>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:8px">
+                  <span style="font-size:13px;color:var(--color-neutral-700)">{{ t.share }}</span>
+                  <div style="display:flex;gap:4px"><button class="btn btn-icon btn-secondary" onClick="{{ copy }}" aria-label="{{ copyLabel }}"><i class="ph-duotone {{ copyIcon }}"></i></button><button class="btn btn-icon btn-secondary" aria-label="LinkedIn"><i class="ph-duotone ph-linkedin-logo"></i></button><button class="btn btn-icon btn-secondary" aria-label="X"><i class="ph-duotone ph-x-logo"></i></button></div>
+                </div>
+              </aside>
+              <article>
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px"><span class="tag tag-accent">{{ feat.cat }}</span><span style="font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:var(--color-neutral-700)">{{ feat.dateLong }} · {{ feat.min }} min</span></div>
+                <h1 style="font-size:48px;line-height:1.08;margin:0 0 14px;text-wrap:balance">{{ feat.title }}</h1>
+                <div style="font-size:16px;color:var(--color-neutral-700);margin-bottom:40px">Iván Vallejos</div>
+                <dc-import name="PostBody" size="{{ size }}" lang="{{ lang }}" hint-size="100%,1200px"></dc-import>
+                <div style="margin-top:64px;display:flex;flex-direction:column;gap:6px">
+                  <span style="font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:var(--color-neutral-700)">{{ t.next }}</span>
+                  <a href="#desktop" style="font-size:26px;font-weight:600;line-height:1.2;text-decoration:none">{{ nextPost.title }} →</a>
+                </div>
+              </article>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- D3 Archive -->
+      <div style="display:flex;flex-direction:column;gap:14px" data-screen-label="D3 Archivo">
+        <div style="font-size:14px;color:var(--color-neutral-700)">D3 · {{ t.archive }}</div>
+        <div style="width:1280px;height:820px;flex:none;border-radius:10px;overflow:hidden;background:var(--color-bg);box-shadow:var(--shadow-lg);display:flex;flex-direction:column">
+          <div style="height:38px;flex:none;background:var(--color-neutral-200);display:flex;align-items:center;gap:8px;padding:0 14px"><span style="width:11px;height:11px;border-radius:50%;background:var(--color-neutral-400)"></span><span style="width:11px;height:11px;border-radius:50%;background:var(--color-neutral-400)"></span><span style="width:11px;height:11px;border-radius:50%;background:var(--color-neutral-400)"></span><span style="margin-left:16px;font-family:'Geist Mono',monospace;font-size:12px;color:var(--color-neutral-700)">blog.ivanvallejos.dev/{{ slugPrefix }}archivo</span></div>
+          <div style="flex:1;overflow-y:auto">
+            <div style="max-width:1120px;margin:0 auto;padding:28px 40px;display:flex;align-items:center;gap:32px">
+              <a href="#desktop" style="display:flex;align-items:center;gap:8px;text-decoration:none;color:var(--color-text);font-weight:600;font-size:20px;margin-right:auto"><svg viewBox="0 0 32 32" width="22" height="22" aria-hidden="true"><path d="M 16.00 28.50 A 12.5 12.5 0 0 1 3.98 19.45" stroke="oklch(0.72 0.15 68)" stroke-width="3" fill="none" stroke-linecap="round"></path><path d="M 3.62 14.26 A 12.5 12.5 0 0 1 14.26 3.62" stroke="oklch(0.72 0.15 68)" stroke-width="3" fill="none" stroke-linecap="round"></path><path d="M 19.45 3.98 A 12.5 12.5 0 0 1 28.50 16.00" stroke="oklch(0.72 0.15 68)" stroke-width="3" fill="none" stroke-linecap="round"></path></svg>IV<span style="font-family:'Geist Mono',monospace;font-weight:400;font-size:15px;color:var(--color-neutral-700)">/blog</span></a>
+              <a href="#desktop" style="font-size:15px;color:var(--color-accent-700);text-decoration:none">{{ t.archive }}</a>
+              <button class="btn btn-secondary" style="font-size:14px;gap:10px"><i class="ph-duotone ph-magnifying-glass"></i>{{ t.search }} <span style="font-family:'Geist Mono',monospace;font-size:11px;color:var(--color-neutral-700)">⌘K</span></button>
+              <div style="display:flex;align-items:center;font-family:'Geist Mono',monospace;font-size:12px"><button onClick="{{ setEs }}" style="padding:6px 4px;border:0;background:transparent;font:inherit;cursor:pointer;color:{{ esColor }}">ES</button><span style="color:var(--color-neutral-500)">/</span><button onClick="{{ setEn }}" style="padding:6px 4px;border:0;background:transparent;font:inherit;cursor:pointer;color:{{ enColor }}">EN</button></div>
+            </div>
+            <div style="max-width:1120px;margin:0 auto;padding:48px 40px 96px;display:grid;grid-template-columns:220px minmax(0,1fr);gap:80px">
+              <aside style="display:flex;flex-direction:column;gap:6px;padding-top:12px">
+                <h1 style="font-size:42px;margin:0 0 4px">{{ t.archive }}</h1>
+                <div style="font-size:15px;color:var(--color-neutral-700);margin-bottom:24px">{{ t.countLine }}</div>
+                <sc-for list="{{ chips }}" as="c" hint-placeholder-count="4"><button class="btn {{ c.cls }}" onClick="{{ c.pick }}" style="justify-content:space-between;font-size:15px;white-space:nowrap">{{ c.name }}<span style="font-family:'Geist Mono',monospace;font-size:11px;opacity:.75">{{ c.count }}</span></button></sc-for>
+              </aside>
+              <div style="display:flex;flex-direction:column;gap:40px;max-width:760px">
+                <sc-for list="{{ years }}" as="y" hint-placeholder-count="2">
+                  <div>
+                    <h6 style="color:var(--color-neutral-700);margin:0 0 8px">{{ y.year }}</h6>
+                    <sc-for list="{{ y.posts }}" as="p">
+                      <a href="#desktop" style="display:grid;grid-template-columns:72px 1fr 150px 56px;align-items:baseline;gap:16px;padding:12px 0;text-decoration:none;color:var(--color-text)">
+                        <span style="font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:.04em;color:var(--color-neutral-700)">{{ p.d }}</span>
+                        <span style="font-size:20px;font-weight:600;line-height:1.25">{{ p.title }}</span>
+                        <span style="font-family:'Geist Mono',monospace;font-size:11.5px;letter-spacing:.04em;text-transform:uppercase;color:var(--color-neutral-700)">{{ p.cat }}</span>
+                        <span style="font-family:'Geist Mono',monospace;font-size:12px;color:var(--color-neutral-700);text-align:right">{{ p.min }} min</span>
+                      </a>
+                    </sc-for>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- D4 Search -->
+      <div style="display:flex;flex-direction:column;gap:14px" data-screen-label="D4 Búsqueda">
+        <div style="font-size:14px;color:var(--color-neutral-700)">D4 · {{ t.searchScreen }} ⌘K — {{ t.type }}</div>
+        <div style="position:relative;width:1280px;height:820px;flex:none;border-radius:10px;overflow:hidden;background:var(--color-bg);box-shadow:var(--shadow-lg);display:flex;flex-direction:column">
+          <div style="height:38px;flex:none;background:var(--color-neutral-200);display:flex;align-items:center;gap:8px;padding:0 14px"><span style="width:11px;height:11px;border-radius:50%;background:var(--color-neutral-400)"></span><span style="width:11px;height:11px;border-radius:50%;background:var(--color-neutral-400)"></span><span style="width:11px;height:11px;border-radius:50%;background:var(--color-neutral-400)"></span><span style="margin-left:16px;font-family:'Geist Mono',monospace;font-size:12px;color:var(--color-neutral-700)">blog.ivanvallejos.dev</span></div>
+          <div style="flex:1;position:relative;overflow:hidden">
+            <div style="max-width:1120px;margin:0 auto;padding:28px 40px;display:flex;align-items:center;gap:32px;opacity:.5">
+              <span style="font-weight:600;font-size:20px;margin-right:auto">IV<span style="font-family:'Geist Mono',monospace;font-weight:400;font-size:15px;color:var(--color-neutral-700)">/blog</span></span>
+              <span style="font-size:15px">{{ t.archive }}</span>
+            </div>
+            <div style="max-width:1120px;margin:0 auto;padding:64px 40px 0;opacity:.5">
+              <h1 style="font-size:58px;line-height:1.04;margin:0;max-width:640px">{{ feat.title }}</h1>
+            </div>
+            <div style="position:absolute;inset:0;background:color-mix(in srgb,var(--color-neutral-900) 45%,transparent);display:flex;justify-content:center;align-items:flex-start;padding-top:96px">
+              <div style="width:640px;background:var(--color-bg);border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);display:flex;flex-direction:column">
+                <div style="position:relative;padding:16px">
+                  <i class="ph-duotone ph-magnifying-glass" style="position:absolute;left:30px;top:50%;transform:translateY(-50%);font-size:20px;color:var(--color-neutral-700)"></i>
+                  <input class="input" value="{{ q }}" onChange="{{ setQ }}" placeholder="{{ t.searchPh }}" style="min-height:48px;padding-left:44px;font-size:18px">
+                </div>
+                <div style="padding:4px 16px 8px;max-height:440px;overflow-y:auto">
+                  <div style="font-size:13px;color:var(--color-neutral-700);padding:0 12px 6px">{{ nResAll }}</div>
+                  <sc-for list="{{ results }}" as="p" hint-placeholder-count="3">
+                    <a href="#desktop" style="display:grid;grid-template-columns:1fr auto;gap:4px 16px;padding:12px;border-radius:var(--radius-md);text-decoration:none;color:var(--color-text);background:{{ p.hl }}" style-hover="background:var(--color-accent-100)">
+                      <span style="font-size:18px;font-weight:600;line-height:1.25">{{ p.title }}</span>
+                      <span style="font-family:'Geist Mono',monospace;font-size:11.5px;letter-spacing:.04em;text-transform:uppercase;color:var(--color-neutral-700);padding-top:4px">{{ p.d }}</span>
+                      <span style="font-size:15px;color:var(--color-neutral-800);line-height:1.4">{{ p.ex }}</span>
+                    </a>
+                  </sc-for>
+                </div>
+                <div style="display:flex;gap:20px;padding:12px 28px;background:var(--color-surface);border-radius:0 0 var(--radius-lg) var(--radius-lg);font-family:'Geist Mono',monospace;font-size:11.5px;color:var(--color-neutral-700)"><span>↑↓ {{ t.navigate }}</span><span>↵ {{ t.open }}</span><span>esc {{ t.close }}</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="specs" style="display:flex;flex-direction:column;gap:20px;max-width:960px">
+    <h2 style="margin:0;font-size:28px">Notas de implementación</h2>
+    <div style="display:grid;grid-template-columns:220px 1fr;gap:14px 32px;font-size:16px;line-height:1.5">
+      <span style="font-weight:600">Tipografía</span><span>Source Serif 4 en toda la interfaz. Geist Mono solo en metadatos (11.5–12px, mayúsculas, +0.04em), código y la marca <em>/blog</em>.</span>
+      <span style="font-weight:600">Color</span><span>Fondo <code>--color-bg</code>, texto <code>--color-text</code>. Cian <code>--color-accent</code> solo para lo interactivo; links de texto en <code>--color-accent-700</code>. Magenta <code>--color-accent-2-700</code> solo en «Destacado». Ámbar <code>oklch(0.72 0.15 68)</code> solo en el anillo.</span>
+      <span style="font-weight:600">Escala</span><span>Mobile: H1 portada 34px, H1 post 32px, fila 20px, cuerpo 18px (ajustable 15–24). Desktop: 58 / 48 / 19 / 18px. Columna de lectura 680px.</span>
+      <span style="font-weight:600">Estructura</span><span>Sin bordes ni tarjetas: las secciones se separan con espacio (56px mobile, 112px desktop). Filas de lista con 14px de padding vertical.</span>
+      <span style="font-weight:600">Lectura</span><span>Mobile: botón Aa (56px, abajo a la derecha) que abre un panel inferior con tamaño, compartir e índice. Desktop: el mismo contenido en una columna fija a la izquierda. Guarda el tamaño en localStorage.</span>
+      <span style="font-weight:600">Idioma</span><span>Switch ES/EN global en el header; rutas <code>/en/…</code> para inglés. El tamaño de texto y el idioma persisten entre páginas.</span>
+      <span style="font-weight:600">Búsqueda</span><span>Del lado del cliente sobre título, tema y resumen (bastan menos de 20 posts). Mobile en pantalla completa; desktop con ⌘K y navegación por teclado.</span>
+    </div>
+  </div>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;lang&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;es&quot;,&quot;en&quot;],&quot;default&quot;:&quot;es&quot;,&quot;tsType&quot;:&quot;'es' | 'en'&quot;},&quot;openSheet&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;}}">
+class Component extends DCLogic {
+  state = { lang: null, size: 18, sheet: null, q: 'async', cat: null, copied: false };
+  raw = [
+    { es: 'Concurrencia sin miedo: async en Python 3.14', en: 'Fearless concurrency: async in Python 3.14', cat: 'conc', day: 14, m: 10, year: 2026, min: 12, exEs: 'TaskGroup, cancelación y por qué el event loop no es magia: lo que aprendí migrando el sync de Notion a async.', exEn: 'TaskGroup, cancellation and why the event loop isn’t magic: what I learned moving the Notion sync to async.' },
+    { es: 'Un design system para dos sitios', en: 'One design system, two sites', cat: 'ds', day: 2, m: 10, year: 2026, min: 8, exEs: 'Cómo la landing y el blog comparten tokens sin compartir código.', exEn: 'How the landing and the blog share tokens without sharing code.' },
+    { es: 'Locks, colas y otras formas de esperar', en: 'Locks, queues and other ways to wait', cat: 'conc', day: 21, m: 9, year: 2026, min: 10, exEs: 'Primitivas de sincronización con ejemplos que sí fallan.', exEn: 'Synchronization primitives, with examples that actually fail.' },
+    { es: 'Mudarse con una mochila', en: 'Moving with a backpack', cat: 'life', day: 3, m: 9, year: 2026, min: 5, exEs: 'Tres meses, dos ciudades y una lista de cosas que no extrañé.', exEn: 'Three months, two cities and a list of things I didn’t miss.' },
+    { es: 'Tokens que sobreviven a un rediseño', en: 'Tokens that survive a redesign', cat: 'ds', day: 18, m: 8, year: 2026, min: 7, exEs: 'Nombrar por rol y no por color: la decisión que hizo posible este cambio.', exEn: 'Naming by role, not by color: the decision that made this change possible.' },
+    { es: 'El GIL ya no es excusa', en: 'The GIL is no longer an excuse', cat: 'conc', day: 30, m: 7, year: 2026, min: 9, exEs: 'Free-threading en la práctica: benchmarks honestos en una máquina común.', exEn: 'Free-threading in practice: honest benchmarks on an ordinary machine.' },
+    { es: 'Un año escribiendo en público', en: 'A year of writing in public', cat: 'life', day: 12, m: 11, year: 2025, min: 4, exEs: 'Lo que cambió al publicar aunque nadie lea.', exEn: 'What changed when I kept publishing even if nobody read.' },
+  ];
+  months = { es: ['ENE','FEB','MAR','ABR','MAY','JUN','JUL','AGO','SEP','OCT','NOV','DIC'], en: ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'] };
+  catNames = { es: { conc: 'concurrencia', ds: 'design system', life: 'life' }, en: { conc: 'concurrency', ds: 'design system', life: 'life' } };
+  strings = {
+    es: { home: 'Portada', article: 'Artículo', archive: 'Archivo', searchScreen: 'Búsqueda', tapAa: 'toca Aa', tapFilter: 'toca un tema', type: 'escribe', featured: 'Destacado', recent: 'Recientes', seeArchive: 'Ver archivo completo', search: 'Buscar', searchPh: 'Buscar posts', cancel: 'Cancelar', topics: 'Temas', back: 'Volver', next: 'Siguiente', readingOpts: 'Opciones de lectura', textSize: 'Tamaño de texto', share: 'Compartir', copy: 'Copiar', copied: 'Copiado', more: 'Más', inArticle: 'En este artículo', read: 'Leer artículo', all: 'Todo', countLine: '7 posts · 3 temas', navigate: 'navegar', open: 'abrir', close: 'cerrar', toc: ['El problema', 'Event loop en cinco minutos', 'Cuándo no usar async'], res: n => n ? `${n} resultado${n > 1 ? 's' : ''}` : 'Sin resultados', allPosts: 'Todos los posts' },
+    en: { home: 'Home', article: 'Article', archive: 'Archive', searchScreen: 'Search', tapAa: 'tap Aa', tapFilter: 'tap a topic', type: 'type', featured: 'Featured', recent: 'Recent', seeArchive: 'See full archive', search: 'Search', searchPh: 'Search posts', cancel: 'Cancel', topics: 'Topics', back: 'Back', next: 'Next', readingOpts: 'Reading options', textSize: 'Text size', share: 'Share', copy: 'Copy', copied: 'Copied', more: 'More', inArticle: 'In this article', read: 'Read article', all: 'All', countLine: '7 posts · 3 topics', navigate: 'navigate', open: 'open', close: 'close', toc: ['The problem', 'The event loop in five minutes', 'When not to use async'], res: n => n ? `${n} result${n > 1 ? 's' : ''}` : 'No results', allPosts: 'All posts' },
+  };
+  norm = s => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  renderVals() {
+    const s = this.state;
+    const lang = s.lang ?? (this.props.lang ?? 'es');
+    const t = this.strings[lang], M = this.months[lang], C = this.catNames[lang];
+    const posts = this.raw.map(p => {
+      const d = `${String(p.day).padStart(2, '0')} ${M[p.m]}`;
+      const cat = C[p.cat];
+      return { key: p.cat, title: p[lang], ex: lang === 'es' ? p.exEs : p.exEn, cat, d, year: p.year, min: p.min,
+        dateLong: `${d} ${p.year}`, meta: `${d} · ${cat} · ${p.min} min` };
+    });
+    const catsBase = ['conc', 'ds', 'life'].map(k => {
+      const ps = posts.filter(p => p.key === k);
+      return { key: k, name: C[k], count: ps.length, posts: ps, searchFor: () => this.setState({ q: C[k] }) };
+    });
+    const chips = [{ key: null, name: t.all, count: '' }, ...catsBase].map(c => ({
+      name: c.name, count: c.count, cls: s.cat === c.key ? 'btn-primary' : 'btn-secondary',
+      pick: () => this.setState({ cat: c.key }),
+    }));
+    const filtered = s.cat ? posts.filter(p => p.key === s.cat) : posts;
+    const years = [2026, 2025].map(year => ({ year, posts: filtered.filter(p => p.year === year) })).filter(y => y.posts.length);
+    const n = this.norm(s.q.trim());
+    const results = (n ? posts.filter(p => this.norm(p.title + ' ' + p.cat + ' ' + p.ex).includes(n)) : posts)
+      .map((p, i) => ({ ...p, hl: i === 0 ? 'var(--color-accent-100)' : 'transparent' }));
+    const ink = 'var(--color-text)', dim = 'var(--color-neutral-600)';
+    return {
+      t, lang, slugPrefix: lang === 'en' ? 'en/' : '',
+      setEs: () => this.setState({ lang: 'es' }), setEn: () => this.setState({ lang: 'en' }),
+      esColor: lang === 'es' ? ink : dim, enColor: lang === 'en' ? ink : dim,
+      feat: posts[0], nextPost: posts[1], rest: posts.slice(1), recent4: posts.slice(1, 5),
+      cats: catsBase, chips, years, toc: t.toc,
+      size: s.size,
+      dec: () => this.setState(x => ({ size: Math.max(15, x.size - 1) })),
+      inc: () => this.setState(x => ({ size: Math.min(24, x.size + 1) })),
+      sheet: s.sheet ?? (this.props.openSheet ?? false),
+      toggleSheet: () => this.setState(x => ({ sheet: !(x.sheet ?? (this.props.openSheet ?? false)) })),
+      copy: () => { this.setState({ copied: true }); clearTimeout(this._ct); this._ct = setTimeout(() => this.setState({ copied: false }), 1600); },
+      copyLabel: s.copied ? t.copied : t.copy, copyIcon: s.copied ? 'ph-check' : 'ph-link',
+      q: s.q, setQ: e => this.setState({ q: e.target.value }), clearQ: () => this.setState({ q: '' }),
+      qEmpty: !n, qHas: !!n, results,
+      nRes: t.res(results.length), nResAll: n ? t.res(results.length) : t.allPosts,
+    };
+  }
+}
+</script>
+</body>
+</html>
