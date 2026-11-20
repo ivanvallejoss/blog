@@ -31,6 +31,11 @@
   <script defer src="{{ url_for('static', path='js/htmx.min.js') }}"></script>
   <script defer src="{{ url_for('static', path='js/toast.js') }}"></script>
   <script defer src="{{ url_for('static', path='js/loading.js') }}"></script>
+  {# dialog.js: foco atrapado, Esc y scroll del fondo para la búsqueda y el
+     panel de lectura. Va antes que los scripts que lo usan (defer respeta el
+     orden). search.js no hace nada hasta que se abre la búsqueda. #}
+  <script defer src="{{ url_for('static', path='js/dialog.js') }}"></script>
+  {% if not hide_search %}<script defer src="{{ url_for('static', path='js/search.js') }}"></script>{% endif %}
   {% block scripts %}{% endblock %}
 </head>
 <body class="{% block body_class %}{% endblock %}">
@@ -57,7 +62,8 @@
         {# nav_active: las páginas lo fijan con {% set nav_active = "archive" %} #}
         <a class="site-nav__link hit desktop-only" href="{{ url_for('archive') }}"
            {%- if nav_active == "archive" %} aria-current="page"{% endif %}>{{ t.archive }}</a>
-        {{ search_button(t) }}
+        {# hide_search: la 500 lo fija, porque la búsqueda depende de la base. #}
+        {% if not hide_search %}{{ search_button(t) }}{% endif %}
         {{ lang_switch(t, lang, langs, lang_switch_enabled) }}
         <a class="site-nav__external hit desktop-only" href="https://ivanvallejos.dev/">{{ t.landing_link }}</a>
         {% endblock %}
@@ -82,6 +88,8 @@
       <span class="toast__message"></span>
     </div>
   </template>
+
+  {% if not hide_search %}{% include "partials/search.html" %}{% endif %}
 
   {% block footer %}
   <footer class="site-footer">

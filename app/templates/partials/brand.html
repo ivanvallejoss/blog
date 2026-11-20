@@ -8,8 +8,8 @@
                   `class` opcional (p. ej. "desktop-only").
   back_button()   flecha atrás de 44×44 (artículo y archivo). Recibe la URL de destino
                   y `class` opcional (p. ej. "mobile-only").
-  search_button() lupa en mobile, «Buscar ⌘K» en desktop. Sin comportamiento todavía:
-                  la búsqueda se engancha por [data-search-open].
+  search_button() lupa en mobile, «Buscar ⌘K» en desktop. Abre la búsqueda
+                  (static/js/search.js) por [data-search-open]. Sin JavaScript no se muestra.
   lang_switch()   ES/EN. Solo se renderiza si el flag está activo (app/config.py).
 
   Las macros importadas no ven el contexto del template, por eso reciben `t`/`lang`.
