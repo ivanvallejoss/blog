@@ -1,8 +1,10 @@
 from notion_client import Client
+from notion_client.helpers import collect_paginated_api
 import os
 from datetime import datetime
 from dotenv import load_dotenv
-import json
+
+from .converter import CHILD_TYPES
 
 load_dotenv()
 
@@ -29,11 +31,21 @@ def get_posts(filtro="Published"):
 
 def get_page_blocks(page_id):
     """
-    funcion que devuelve una pagina especifica dado un page_id de Notion.
-    """
-    response = notion.blocks.children.list(block_id=page_id)
+    Bloques de una página (o de un bloque) de Notion, con sus hijos.
 
-    return response["results"]
+    Notion devuelve como máximo 100 bloques por pedido: se sigue el cursor
+    hasta el final. Los bloques con `has_children` de un tipo que el conversor
+    sabe anidar (listas, citas…, ver `CHILD_TYPES`) traen sus hijos en la
+    clave `children`, pedidos de la misma forma. Los de tipos no soportados no
+    se recorren: no se van a convertir.
+
+    Solo lectura: no escribe nada en Notion.
+    """
+    blocks = collect_paginated_api(notion.blocks.children.list, block_id=page_id)
+    for block in blocks:
+        if block.get("has_children") and block.get("type") in CHILD_TYPES:
+            block["children"] = get_page_blocks(block["id"])
+    return blocks
 
 
 def get_details_from_post(notion_post):
