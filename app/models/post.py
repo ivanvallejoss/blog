@@ -9,6 +9,13 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from typing import Optional
 
 from .base import Base
+from ..render import markdown_to_text
+
+SUMMARY_MAX = 160
+
+# Bloques de markdown que no son un párrafo de texto: títulos, código, citas,
+# listas, tablas, separadores y código sangrado.
+_NOT_PARAGRAPH = re.compile(r"^(#|```|~~~|>|[-*+]\s|\d+\.\s|\||---|\*\*\*|    )")
 
 class Post(Base):
     """
@@ -23,7 +30,8 @@ class Post(Base):
     content_html: Mapped[str] = mapped_column(Text, nullable=False)
 
     # Árbol de headings del post, derivado en el mismo paso que content_html.
-    # Alimenta el rail CONTENTS y el resaltado de sección activa.
+    # Alimenta el bloque «En este artículo» del post (panel de lectura en
+    # mobile, columna lateral en desktop).
     # Forma: [{"level": 2, "id": "el-preflight", "text": "El preflight"}, ...]
     content_toc: Mapped[list[dict]] = mapped_column(
         JSONB, nullable=False, server_default=text("'[]'::jsonb")
@@ -58,17 +66,22 @@ class Post(Base):
     @property
     def summary(self) -> str:
         """
-        Bajada de la fila destacada del listado: primer párrafo real del post,
-        recortado. Es una derivación, no una bajada editorial — el diseño pide
+        Bajada del post (destacado de la portada, búsqueda, OpenGraph): primer
+        párrafo real, recortado a 160 caracteres. Es una derivación, no una bajada editorial — el diseño pide
         el slot y el modelo no tiene el campo. Si más adelante querés escribir
         la bajada a mano, esto se reemplaza por una columna sincronizada desde
         Notion y el template no cambia.
         """
         for block in self.content_markdown.split("\n\n"):
-            block = block.strip()
-            if not block or block.startswith(("#", "```", ">", "-", "|", "*")):
+            if not block.strip() or _NOT_PARAGRAPH.match(block):
                 continue
-            if len(block) <= 180:
+            # El conversor emite formato en línea y escapes: la bajada se
+            # muestra como texto, así que se recorta sobre el texto plano.
+            block = markdown_to_text(block.strip())
+            if not block:
+                continue
+            if len(block) <= SUMMARY_MAX:
                 return block
-            return block[:180].rsplit(" ", 1)[0] + "…"
+            # deja lugar para «…» dentro del límite
+            return block[:SUMMARY_MAX - 1].rsplit(" ", 1)[0].rstrip(",;:—-") + "…"
         return ""

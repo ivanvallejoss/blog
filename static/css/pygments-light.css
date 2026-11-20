@@ -1,0 +1,64 @@
+/* pygments-light.css — reemplaza pygments.css. Tema claro sobre Broadsheet.
+   Requiere blog-tokens.css (--code-*). Misma estructura de selectores que el tema anterior.
+   Ventana 3: medidas en em sobre el tamaño de la prosa (--prose-size), para que el
+   código escale con el tamaño de texto elegido. A 18px dan los valores del diseño:
+   bloque mono 13px / 1.6 con padding 16×18; código en línea con padding 1×5. */
+
+.codehilite {
+  background: var(--code-bg);
+  border-radius: var(--radius-md);
+  padding: calc(16em / 18) 1em;
+  margin: 0 0 calc(1.3em * 13 / 18); /* 1.3em de los 13px del código, como PostBody (16.9px a 18px) */
+  overflow-x: auto;     /* un bloque largo scrollea adentro de su caja, nunca la página */
+}
+.codehilite pre {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: calc(13em / 18);
+  line-height: 1.6;
+  color: var(--code-base);
+}
+.codehilite .hll { background-color: var(--color-accent-100); }
+
+.codehilite .c, .codehilite .ch, .codehilite .cm, .codehilite .cp,
+.codehilite .cpf, .codehilite .c1, .codehilite .cs { color: var(--code-comment); font-style: italic; }
+
+.codehilite .k, .codehilite .kc, .codehilite .kd, .codehilite .kn,
+.codehilite .kp, .codehilite .kr, .codehilite .kt, .codehilite .ow { color: var(--code-kw); }
+
+.codehilite .s, .codehilite .sa, .codehilite .sb, .codehilite .sc,
+.codehilite .dl, .codehilite .sd, .codehilite .s2, .codehilite .se,
+.codehilite .sh, .codehilite .si, .codehilite .sx, .codehilite .sr,
+.codehilite .s1, .codehilite .ss,
+.codehilite .m, .codehilite .mb, .codehilite .mf, .codehilite .mh,
+.codehilite .mi, .codehilite .mo, .codehilite .il, .codehilite .l { color: var(--code-lit); }
+
+.codehilite .nf, .codehilite .fm, .codehilite .nc,
+.codehilite .nd, .codehilite .ne { color: var(--code-fn); font-weight: 600; }
+
+.codehilite .n, .codehilite .na, .codehilite .nb, .codehilite .bp,
+.codehilite .no, .codehilite .ni, .codehilite .nl, .codehilite .nn,
+.codehilite .nx, .codehilite .py, .codehilite .nv, .codehilite .vc,
+.codehilite .vg, .codehilite .vi, .codehilite .vm, .codehilite .nt { color: var(--code-base); }
+
+.codehilite .o, .codehilite .p { color: var(--code-punct); }
+
+.codehilite .err, .codehilite .g, .codehilite .x, .codehilite .esc, .codehilite .w { color: var(--code-base); }
+.codehilite .gd { color: var(--color-accent-2-700); }
+.codehilite .gi { color: var(--code-kw); }
+.codehilite .ge { font-style: italic; }
+.codehilite .gs { font-weight: 600; }
+.codehilite .gh, .codehilite .gu { color: var(--code-fn); font-weight: 600; }
+.codehilite .gp { color: var(--code-comment); }
+
+.codehilite td.linenos .normal,
+.codehilite span.linenos { color: var(--code-comment); background: transparent; padding-inline: 5px; }
+
+/* Código en línea dentro de la prosa */
+.post-content :not(pre) > code {
+  font-family: var(--font-mono);
+  font-size: .85em;
+  background: var(--code-bg);
+  padding: calc(1em / 15.3) calc(5em / 15.3); /* 1×5px sobre los 15.3px de .85em a 18px */
+  border-radius: var(--radius-sm);
+}

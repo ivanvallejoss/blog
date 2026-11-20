@@ -1,804 +1,1236 @@
-/* =============================================================================
-   blog.css — blog.ivanvallejos.dev
-   Sistema 8a. Carga DESPUÉS de tokens.css (handoff, verbatim, no editar).
+/* blog.css — capa del blog sobre Broadsheet.
+   Orden de carga: fonts.css → broadsheet.css → blog-tokens.css → blog.css.
+   broadsheet.css no se edita: acá solo se suma o se ajusta con clases propias.
+   Todo color, radio, sombra y medida sale de una variable de broadsheet.css o
+   blog-tokens.css.
 
-   Fase 2: baseline, header, shell/rail, artículo, prosa, mobile, errores.
-   Fase 3: listado de posts, vista de tag.
-
-   Los valores en px son los del README del handoff. No redondear.
-   ============================================================================= */
-
-
-/* =============================================================================
-   0. BASELINE
-      tokens.css trae un reset mínimo (body, a, .shell). Esto repone lo que el
-      proyecto ya usaba y el handoff no incluye. No son decisiones de diseño.
-   ============================================================================= */
-
-*, *::before, *::after { box-sizing: border-box; }
-
-html { scroll-behavior: smooth; }
-
-body { min-height: 100svh; display: flex; flex-direction: column; }
-
-h1, h2, h3, h4, p, blockquote, figure, dl, dd, pre { margin: 0; }
-
-img, svg { max-width: 100%; height: auto; }
-
-.nowrap { white-space: nowrap; }
+   Mobile primero. Hasta 767px rige el layout de mobile; desde 768px, el de
+   desktop. Las medidas interpolan entre 390px y 1280px (ver blog-tokens.css),
+   así el cambio de layout no salta de golpe. */
 
 
-/* =============================================================================
-   1. HEADER — grid 1fr auto, bordes internos --rule-module
-   ============================================================================= */
+/* ── Reset mínimo ─────────────────────────────────────────────────────────
+   broadsheet.css ya trae box-sizing, márgenes de body/títulos/párrafos, img y
+   :focus-visible. Esto completa sin pisarlo. */
 
-.site-header {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  border-bottom: 1px solid var(--rule-module);
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  background: var(--color-bg);
 }
 
-.site-header a { text-decoration: none; }
-
-.brand {
-  padding: 17px 26px;
-  border-right: 1px solid var(--rule-module);
-  font: 500 var(--mono-nav)/1 var(--font-mono);
-  letter-spacing: .14em;
-  color: var(--text-strong);
+body {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
 }
 
-.site-nav { display: flex; }
+.site-main { flex: 1 0 auto; }
+.site-main:focus-visible { outline: none; } /* destino del «Saltar al contenido» */
 
-.site-nav > * {
+h1 { text-wrap: balance; }
+p { text-wrap: pretty; }
+
+/* Links de texto en accent-700 (README §5). `a:where(:not(.btn))` tiene la misma
+   especificidad que el `a` de broadsheet.css: gana por orden y no le gana a
+   .btn-primary ni a ninguna otra clase. */
+a:where(:not(.btn)) { color: var(--color-accent-700); }
+a:where(:not(.btn)):hover { color: var(--color-accent-600); }
+
+button { font: inherit; }
+
+/* El atributo hidden gana siempre: si no, una clase con display (.btn) lo pisa. */
+[hidden] { display: none !important; }
+
+/* Metadatos: 11.5px en mobile, 12px en desktop (README §5). Extiende la clase
+   de blog-tokens.css. */
+.meta-mono {
+  font-size: clamp(11.5px, calc(11.5px + (100vw - 390px) * 0.5 / 890), 12px);
+}
+
+
+/* ── Utilidades compartidas ──────────────────────────────────────────── */
+
+/* Contenedor de página: 1120px máximo en desktop, márgenes laterales de
+   20px → 40px. */
+.container {
+  width: 100%;
+  max-width: var(--page-max);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+/* Separación entre secciones: 56px → 112px, solo espacio, sin líneas. */
+.section + .section { margin-block-start: var(--section-gap); }
+.mt-section { margin-block-start: var(--section-gap); }
+.pt-section { padding-block-start: var(--section-gap); }
+
+/* Etiqueta de sección: el h6 de Broadsheet en neutral-700, aplicable a
+   cualquier nivel de título para no saltar niveles. */
+.section-label {
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-neutral-700);
+}
+
+/* Lista sin viñetas ni sangría. */
+.list-reset { list-style: none; margin: 0; padding: 0; }
+
+/* Agranda el área táctil a 44×44 sin cambiar el tamaño visible. Solo crece:
+   si el elemento ya mide más, el pseudo-elemento coincide con él. */
+.hit { position: relative; }
+.hit::after {
+  content: "";
+  position: absolute;
+  inset-block: min(0px, calc((100% - var(--hit)) / 2));
+  inset-inline: min(0px, calc((100% - var(--hit)) / 2));
+}
+
+/* Oculto a la vista, presente para lectores de pantalla. */
+.visually-hidden:not(:focus):not(:active) {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Controles que necesitan JavaScript. Sin él no se muestran: base.html marca
+   <html> con .has-js desde un script en línea del <head>. */
+html:not(.has-js) .js-only { display: none !important; }
+
+/* Diálogo modal abierto (búsqueda, panel de lectura): el fondo no scrollea.
+   Lo pone static/js/dialog.js. */
+html.dialog-open,
+html.dialog-open body { overflow: hidden; }
+
+/* «Saltar al contenido»: aparece arriba a la izquierda al recibir foco. */
+.skip-link {
+  position: absolute;
+  top: var(--space-2);
+  left: var(--space-2);
+  z-index: 10;
+  background: var(--color-bg);
+}
+.skip-link:focus { box-shadow: var(--shadow-md); }
+.skip-link:not(:focus) {
+  /* fuera de pantalla sin sacarlo del orden de tabulación */
+  transform: translateY(calc(-100% - var(--space-4)));
+}
+
+
+/* ── Header ────────────────────────────────────────────────────────────
+   Mobile: fila de 44px, padding 8px 12px 8px 20px. Marca a la izquierda;
+   a la derecha el switch ES/EN (si el flag está activo) y la lupa.
+   Desktop: contenedor de 1120px, padding 28px 40px, 32px entre ítems:
+   marca · Archivo · Buscar ⌘K · ES/EN · ivanvallejos.dev ↗. */
+
+.site-header__inner {
+  width: 100%;
+  max-width: var(--page-max);
+  margin-inline: auto;
   display: flex;
   align-items: center;
-  padding: 17px 22px;
-  font: 400 var(--mono-nav)/1 var(--font-mono);
-  letter-spacing: .08em;
-  color: var(--text-muted);
-  transition: color .12s ease;
-}
-
-.site-nav > * + * { border-left: 1px solid var(--rule-module); }
-
-.site-nav a:hover { color: var(--text-title); }
-
-.nav-counter { display: none; }  /* sólo mobile, en la vista de artículo */
-
-
-/* =============================================================================
-   2. SHELL Y RAIL
-      .shell viene de tokens.css: grid var(--rail-w) minmax(0, 1fr).
-      El minmax(0,1fr) es la regla crítica: sin eso el min-content del <pre>
-      estira el track y rompe el layout. No tocar.
-   ============================================================================= */
-
-.shell { flex: 1; }
-
-.rail {
-  border-right: 1px solid var(--rule-module);
-  padding: 32px var(--pad-rail);
-}
-
-/* El rail conserva la altura completa de la fila para que su borde derecho
-   corra toda la página; lo que se pega al scrollear es el contenido.
-   top: 32px espeja el padding superior del propio rail — con top: 0 el
-   contenido queda pegado al borde del viewport.
-   El max-height es la salvaguarda para artículos con muchos headings: sin
-   eso, un CONTENTS más alto que la pantalla no se puede terminar de leer. */
-.rail-inner {
-  position: sticky;
-  top: 32px;
-  display: flex;
-  flex-direction: column;
-  gap: 28px;
-  max-height: calc(100svh - 64px);
-  overflow-y: auto;
-  /* El overflow recortaría el outline de foco de los ítems (offset 2px).
-     Padding + margen negativo le dan lugar sin mover nada de sitio. */
-  padding: 4px;
-  margin: -4px;
-}
-
-.rail-label {
-  margin-bottom: 14px;
-  font: 500 var(--mono-label)/1 var(--font-mono);
-  letter-spacing: .16em;
-  color: var(--text-muted);
-}
-
-.rail-list { display: flex; flex-direction: column; gap: 2px; }
-
-.rail-item {
-  padding: 6px 10px;
-  margin-left: -10px;
-  border-left: 2px solid transparent;
-  font: 400 11.5px/1.45 var(--font-mono);   /* sin token: valor del README */
-  color: var(--text-muted);
-  text-transform: uppercase;
-  text-decoration: none;
-  transition: color .12s ease;
-}
-
-.rail-item:hover { color: var(--text-soft); }
-
-/* estado activo: color + borde. Nunca sólo color. */
-.rail-item.is-active {
-  border-left-color: var(--accent-nav);
-  color: var(--text-strong);
-}
-
-.rail-progress {
-  padding-top: 22px;
-  border-top: 1px solid var(--rule-module);
-}
-
-.progress-track { height: 2px; background: var(--rule-item); }
-
-.progress-fill { height: 2px; width: 0; background: var(--accent-nav); }
-
-.progress-mobile { display: none; }
-
-.col {
-  min-width: 0;                              /* pareja obligada del minmax(0,1fr) */
-  padding: 52px var(--pad-col) 60px;
-}
-
-
-/* =============================================================================
-   3. CABECERA DEL ARTÍCULO — 680px (el cuerpo va a 560, ver §4)
-   ============================================================================= */
-
-.article-head {
-  max-width: var(--read-w-wide);
-  margin-bottom: 36px;
-  padding-bottom: 24px;
-  border-bottom: 1px solid var(--rule-module);
-}
-
-.eyebrow {
-  margin-bottom: 16px;
-  font: 500 var(--mono-meta)/1 var(--font-mono);
-  letter-spacing: .16em;
-  text-transform: uppercase;
-  color: var(--accent-meta);
-}
-
-.article-head h1 {
-  margin-bottom: 20px;
-  font: 400 var(--read-h1)/1.16 var(--font-read);
-  letter-spacing: -.014em;
-  color: var(--text-title);
-  text-wrap: pretty;
-}
-
-/* la única aparición de Geist sans en toda la vista de artículo */
-.byline {
-  font: 400 12.5px/1 var(--font-ui);
-  color: var(--text-muted);
-}
-
-
-/* =============================================================================
-   4. PROSA — los 12 componentes.
-      .prose ocupa el ancho de la columna; la medida de lectura la ponen los
-      hijos. Eso es lo que permite que el escape a ancho completo llegue a los
-      bordes reales de la columna con margin: 0 calc(-1 * var(--pad-col)).
-   ============================================================================= */
-
-.prose > * { max-width: var(--read-w); }
-
-/* --- cuerpo y entrada ----------------------------------------------------- */
-
-.prose p {
-  margin-bottom: 26px;
-  font: 300 var(--read-body)/1.78 var(--font-read);
-  color: var(--text-body);
-  text-wrap: pretty;
-}
-
-.prose > p:first-of-type {
-  margin-bottom: 24px;
-  font: 300 var(--read-lead)/1.64 var(--font-read);
-  color: var(--text-lead);
-}
-
-.prose em { font-style: italic; color: var(--text-strong); }
-.prose strong { font-weight: 500; color: var(--text-strong); }
-
-/* --- headings ------------------------------------------------------------- */
-
-.prose { counter-reset: sec; }
-
-.prose h2,
-.prose h3 {
-  counter-increment: sec;
-  scroll-margin-top: 24px;
-  color: var(--text-title);
-}
-
-.prose h2 {
-  margin: 44px 0 16px;
-  font: 500 var(--read-h2)/1.30 var(--font-read);
-}
-
-/* h3 numerado: el número corre sobre h2+h3 juntos, igual que el rail */
-.prose h3 {
-  display: flex;
-  align-items: baseline;
-  gap: 12px;
-  margin: 40px 0 16px;
-  font: 500 var(--read-h3)/1.35 var(--font-read);
-}
-
-.prose h3::before {
-  content: counter(sec, decimal-leading-zero);
-  flex: none;
-  font: 500 11px/1.6 var(--font-mono);
-  letter-spacing: .16em;
-  color: var(--accent-nav);
-}
-
-.prose h2:first-child,
-.prose h3:first-child { margin-top: 0; }
-
-/* ancla de heading (extensión toc). No está en el diseño; se conserva la
-   funcionalidad existente en el registro más apagado posible. */
-.headerlink {
-  margin-left: 10px;
-  font: 400 13px/1 var(--font-mono);
-  color: var(--text-muted);
-  text-decoration: none;
-  opacity: 0;
-  transition: opacity .12s ease;
-}
-.prose h2:hover .headerlink,
-.prose h3:hover .headerlink,
-.headerlink:focus-visible { opacity: 1; }
-
-/* --- cita ----------------------------------------------------------------- */
-
-.prose blockquote {
-  margin: 34px 0;
-  padding-left: 26px;
-  border-left: 2px solid var(--accent-nav);
-  font-style: normal;      /* sin itálica: en Newsreader 300 queda débil */
-}
-
-.prose blockquote p {
-  margin-bottom: 10px;
-  font: 300 var(--read-quote)/1.48 var(--font-read);
-  color: var(--text-title);
-}
-
-.prose blockquote p:last-child { margin-bottom: 0; }
-
-.prose blockquote .attr {
-  font: 500 10.5px/1 var(--font-mono);
-  letter-spacing: .16em;
-  text-transform: uppercase;
-  color: var(--accent-nav);
-}
-
-/* --- código --------------------------------------------------------------- */
-
-.prose code:not(pre code) {
-  padding: 2px 6px;
-  background: var(--surface-code-inline);
-  font: 400 var(--mono-inline)/1 var(--font-mono);
-  color: var(--text-strong);
-  font-feature-settings: 'liga' 0;
-}
-
-.prose .codehilite {
-  margin-bottom: 26px;
-  border: 1px solid var(--rule-module);
-}
-
-.prose .codehilite pre {
-  min-width: 0;
-  padding: 20px;
-  overflow-x: auto;
-  background: var(--surface-code);
-  font: 400 var(--mono-code)/1.8 var(--font-mono);
-  color: var(--text-body);
-  font-feature-settings: 'liga' 0;
-}
-
-/* barra superior del bloque de código.
-   CONTRATO: markup pendiente de la ventana de pipeline (nombre de archivo
-   desde el caption de Notion, lenguaje desde el fence). */
-.code-bar {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  padding: 10px 16px;
-  border-bottom: 1px solid var(--rule-module);
-}
-.code-file {
-  font: 500 11px/1 var(--font-mono);
-  letter-spacing: .1em;
-  color: var(--text-muted);
-}
-.code-lang {
-  font: 400 10.5px/1 var(--font-mono);
-  letter-spacing: .08em;
-  color: var(--text-muted);
-}
-
-/* --- escape a ancho completo ---------------------------------------------- */
-/* CONTRATO: markup pendiente de la ventana de pipeline. */
-
-.prose > .full-width {
-  max-width: none;
-  min-width: 0;
-  margin: 0 calc(-1 * var(--pad-col)) 26px;
-}
-
-.full-width-label {
-  display: flex;
-  align-items: baseline;
   justify-content: space-between;
-  margin: 0 var(--pad-col) 10px;
-  font: 500 var(--mono-label)/1 var(--font-mono);
-  letter-spacing: .16em;
-  color: var(--text-muted);
+  padding: var(--header-pad-block) var(--header-pad-end) var(--header-pad-block) var(--gutter);
 }
 
-.full-width pre {
-  min-width: 0;
-  padding: 22px 24px;
-  overflow-x: auto;
-  background: var(--surface-code);
-  border: 1px solid var(--rule-module);
-  font: 400 var(--mono-code-wide)/1.7 var(--font-mono);
-  color: var(--text-body);
+/* Con la flecha atrás a la izquierda (artículo y archivo) el padding de inicio
+   es el mismo que el del final: el botón de 44px ya trae su aire. */
+@media (max-width: 767.98px) {
+  .site-header--back .site-header__inner { padding-inline-start: var(--header-pad-end); }
 }
 
-/* --- callout de nota técnica ---------------------------------------------- */
-/* CONTRATO: markup pendiente de la ventana de pipeline. */
-
-.callout {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 16px;
-  margin-bottom: 26px;
-  padding: 18px 20px;
-  border: 1px solid var(--rule-module);
-  border-left: 2px solid var(--accent-tech);
-}
-
-.callout-label {
-  font: 500 10.5px/1.6 var(--font-mono);
-  letter-spacing: .14em;
-  color: var(--accent-tech);
-  white-space: nowrap;
-}
-
-.callout p {
-  margin: 0;
-  font: 300 16.5px/1.7 var(--font-read);
-  color: var(--text-soft);
-}
-
-/* --- glosario ------------------------------------------------------------- */
-
-.prose dl { margin-bottom: 26px; }
-
-.prose dt {
-  padding-top: 16px;
-  border-top: 1px solid var(--rule-item);
-  font: 400 13.5px/1.4 var(--font-mono);
-  color: var(--accent-meta);
-}
-
-.prose dd {
-  margin: 0;
-  padding: 5px 0 16px;
-  font: 300 var(--read-small)/1.68 var(--font-read);
-  color: var(--text-body);
-}
-
-.prose dd:last-of-type { border-bottom: 1px solid var(--rule-item); }
-
-/* --- listas --------------------------------------------------------------- */
-
-.prose ol,
-.prose ul {
-  list-style: none;
-  margin-bottom: 26px;
-  padding: 0;
+.site-header__start,
+.site-header__center,
+.site-header__end {
   display: flex;
-  flex-direction: column;
-  gap: 20px;
-  counter-reset: item;
+  align-items: center;
+}
+.site-header__center:empty { display: none; }
+
+/* Marca: anillo + «IV» + «/blog». Sin el punto «.». */
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--brand-gap);
+  color: var(--color-text);
+  text-decoration: none;
+  font-family: var(--font-heading);
+  font-weight: var(--font-heading-weight);
+  font-size: var(--brand-size);
+}
+.brand__sub {
+  font-family: var(--font-mono);
+  font-weight: 400;
+  font-size: var(--brand-sub-size);
+  color: var(--color-neutral-700);
 }
 
-.prose li {
-  display: grid;
-  grid-template-columns: 34px 1fr;
-  font: 300 18.5px/1.74 var(--font-read);
-  color: var(--text-body);
-  text-wrap: pretty;
+/* Anillo SVG de la marca (mismos tres trazos que el favicon). */
+.brand-ring {
+  display: block;
+  flex: none;
+  width: var(--brand-ring-size);
+  height: var(--brand-ring-size);
+}
+.brand-ring path {
+  fill: none;
+  stroke: var(--brand-ring);
+  stroke-width: 3;
+  stroke-linecap: round;
 }
 
-.prose li p { margin: 0; font: inherit; color: inherit; }
-
-.prose ol > li { counter-increment: item; }
-
-.prose ol > li::before {
-  content: counter(item, decimal-leading-zero);
-  font: 500 12px/1.9 var(--font-mono);
-  color: var(--accent-nav);
+/* Botones de ícono del header (lupa en mobile, flecha atrás). */
+.header-icon-btn {
+  width: var(--hit);
+  height: var(--hit);
+  padding: 0;
+  font-size: 22px;
 }
 
-/* La lista con viñetas no está en el diseño. Misma grilla, marcador sin color
-   (regla del sistema: si no encaja en uno de los tres roles, no lleva color). */
-.prose ul > li::before {
-  content: "·";
-  font: 500 12px/1.74 var(--font-mono);
-  color: var(--text-muted);
+/* Link de texto del header (Archivo). */
+.site-nav__link {
+  font-size: 15px;
+  color: var(--color-text);
+  text-decoration: none;
+}
+a.site-nav__link:hover,
+a.site-nav__link[aria-current="page"] { color: var(--color-accent-700); }
+
+/* Link a la landing: link de texto, sin cortar. */
+.site-nav__external {
+  font-size: 15px;
+  white-space: nowrap;
+  flex: none;
 }
 
-/* --- Q&A anidado ---------------------------------------------------------- */
-/* CONTRATO: markup pendiente de la ventana de pipeline. */
-
-.qa { display: flex; flex-direction: column; gap: 26px; margin-bottom: 32px; }
-
-.qa-item { padding-left: 22px; border-left: 1px solid var(--rule-module); }
-
-.qa-q {
-  margin-bottom: 10px;
-  font: 400 18px/1.5 var(--font-read);
-  color: var(--text-strong);
+/* Botón de búsqueda: el mismo elemento en los dos tamaños.
+   Mobile: .btn-icon de 44×44 con la lupa sola.
+   Desktop: .btn-secondary con «Buscar» y «⌘K» en mono. */
+.site-search {
+  width: var(--hit);
+  height: var(--hit);
+  padding: 0;
+  font-size: 22px;
+  border-color: transparent;
+}
+.site-search__label,
+.site-search__kbd { display: none; }
+.site-search__kbd {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--color-neutral-700);
 }
 
-.qa-a {
-  margin: 0;
-  font: 300 var(--read-small)/1.72 var(--font-read);
-  color: var(--text-soft);
-  text-wrap: pretty;
+/* Switch ES/EN: mono 12px, «/» en neutral-500, activo en --color-text e
+   inactivo en neutral-600. Cada botón mide al menos 44×44: el texto queda
+   pegado a la barra, como en el diseño, y el área sobrante crece hacia afuera. */
+.lang-switch {
+  display: flex;
+  align-items: center;
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+.lang-switch__sep { color: var(--color-neutral-500); }
+.lang-switch__btn {
+  display: inline-flex;
+  align-items: center;
+  min-width: var(--hit);
+  height: var(--hit);
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  cursor: pointer;
+  color: var(--color-neutral-600);
+}
+.lang-switch__btn:first-child { justify-content: flex-end; padding-inline-end: var(--lang-switch-pad-x); }
+.lang-switch__btn:last-child { justify-content: flex-start; padding-inline-start: var(--lang-switch-pad-x); }
+.lang-switch__btn[aria-pressed="true"] { color: var(--color-text); }
+.lang-switch__btn:hover { color: var(--color-text); }
+
+/* Visibilidad por tamaño. Se oculta en el tamaño que no corresponde en vez de
+   "restaurar" el display en el otro: así .btn, grid o flex conservan el suyo. */
+@media (max-width: 767.98px) {
+  .desktop-only { display: none !important; }
+}
+@media (min-width: 768px) {
+  .mobile-only { display: none !important; }
 }
 
-/* --- veredictos ----------------------------------------------------------- */
-/* CONTRATO: markup pendiente de la ventana de pipeline. */
+@media (min-width: 768px) {
+  .site-header__end { gap: var(--header-gap); }
 
-.verdicts { display: flex; flex-direction: column; margin-bottom: 32px; }
+  .site-search {
+    width: auto;
+    height: auto;
+    padding: var(--space-2) calc(var(--space-3) * 1.2);
+    font-size: 14px;
+    gap: var(--space-2);
+    border-color: var(--color-divider);
+  }
+  .site-search__label,
+  .site-search__kbd { display: inline; }
 
-.verdict {
-  display: grid;
-  grid-template-columns: 118px 1fr;
-  gap: 22px;
-  padding: 18px 0;
-  border-top: 1px solid var(--rule-item);
+  /* En desktop el switch es más compacto (padding 6px 4px); el área táctil
+     de 44px la da .hit, hacia afuera de la barra para no pisarse. */
+  .lang-switch__btn {
+    min-width: 0;
+    height: auto;
+    padding: var(--lang-switch-pad-y) var(--lang-switch-pad-x);
+  }
+  .lang-switch__btn::after { inset-block: min(0px, calc((100% - var(--hit)) / 2)); width: var(--hit); }
+  .lang-switch__btn:first-child,
+  .lang-switch__btn:last-child { padding: var(--lang-switch-pad-y) var(--lang-switch-pad-x); }
+  .lang-switch__btn:first-child::after { inset-inline: auto 0; }
+  .lang-switch__btn:last-child::after { inset-inline: 0 auto; }
 }
 
-.verdict:last-child { border-bottom: 1px solid var(--rule-item); }
-
-.verdict-q {
-  margin-bottom: 6px;
-  font: 500 11px/1 var(--font-mono);
-  letter-spacing: .1em;
-  color: var(--text-muted);
-}
-
-/* el veredicto siempre lleva texto, no sólo color */
-.verdict-tag {
-  font: 500 10.5px/1 var(--font-mono);
-  letter-spacing: .14em;
-}
-.verdict-tag.is-ok      { color: var(--accent-tech); }
-.verdict-tag.is-partial { color: var(--accent-meta); }
-
-.verdict p {
-  margin: 0;
-  font: 300 var(--read-small)/1.7 var(--font-read);
-  color: var(--text-body);
+/* En mobile el switch va antes de la lupa; en desktop, después de «Buscar». */
+@media (max-width: 767.98px) {
+  .site-header__end .lang-switch { order: -1; }
 }
 
 
-/* =============================================================================
-   5. FOOTER
-      No está en el diseño. Mínimo coherente: una regla de módulo y mono muted.
-      Ver "desvíos" en el informe de la fase.
-   ============================================================================= */
+/* ── Footer ────────────────────────────────────────────────────────────
+   13px neutral-700, 16px entre ítems: © año · RSS · ivanvallejos.dev ↗.
+   Mobile: padding 64px 20px 40px (prototipo). Desktop: mismo contenedor que
+   el header. */
 
 .site-footer {
+  width: 100%;
+  max-width: var(--page-max);
+  margin-inline: auto;
+  padding: var(--footer-pad-top) var(--gutter) var(--space-8);
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
   flex-wrap: wrap;
-  padding: 18px var(--pad-col);
-  border-top: 1px solid var(--rule-module);
-  font: 400 var(--mono-nav)/1 var(--font-mono);
-  letter-spacing: .08em;
-  color: var(--text-muted);
+  align-items: center;
+  column-gap: var(--footer-gap);
+  row-gap: var(--space-1);
+  font-size: 13px;
+  color: var(--color-neutral-700);
 }
-
-.site-footer a { color: var(--text-muted); text-decoration: none; }
-.site-footer a:hover { color: var(--text-title); }
+.site-footer a { white-space: nowrap; }
 
 
-/* =============================================================================
-   6. PÁGINAS DE ERROR — sugerencia del README (§6), no pantalla diseñada
-   ============================================================================= */
+/* ── Filas y estados compartidos ─────────────────────────────────────── */
 
-.error-page { max-width: var(--read-w-wide); }
-
-.error-page h1 {
-  margin-bottom: 16px;
-  font: 400 34px/1.2 var(--font-read);
-  color: var(--text-title);
-  text-wrap: balance;
-}
-
-.error-page p {
-  margin-bottom: 24px;
-  font: 300 var(--read-body)/1.78 var(--font-read);
-  color: var(--text-body);
-}
-
-.error-code {
-  display: block;
-  margin-bottom: 16px;
-  font: 500 var(--mono-meta)/1 var(--font-mono);
-  letter-spacing: .16em;
-  color: var(--text-muted);
-}
-
-
-/* =============================================================================
-   7. MOBILE — único breakpoint: 640px
-   ============================================================================= */
-
-@media (max-width: 640px) {
-
-  .shell { grid-template-columns: minmax(0, 1fr); }
-
-  .rail { display: none; }
-
-  .brand { padding: 16px var(--pad-mobile); }
-
-  .site-nav > * { padding: 16px var(--pad-mobile); font-size: 11.5px; }
-
-  /* en el artículo el header deja lugar al retorno + contador de sección */
-  .page-post .brand { display: none; }
-  .page-post .site-header { grid-template-columns: 1fr; }
-  .page-post .site-nav { justify-content: space-between; }
-  .page-post .site-nav > * + * { border-left: none; }
-  .nav-counter { display: flex; }
-
-  .progress-mobile { display: block; height: 2px; background: var(--rule-item); }
-
-  .col { padding: 32px var(--pad-mobile) 40px; }
-
-  .article-head { margin-bottom: 26px; padding-bottom: 20px; }
-  .article-head h1 { font-size: var(--read-h1-m); line-height: 1.18; letter-spacing: -.012em; }
-  .eyebrow { margin-bottom: 12px; font-size: 10.5px; }
-  .byline { font-size: 12px; }
-
-  .prose > * { max-width: none; }
-  .prose p { margin-bottom: 20px; font-size: var(--read-body-m); line-height: 1.76; }
-  .prose > p:first-of-type { font-size: var(--read-lead-m); line-height: 1.70; }
-  .prose h2 { margin: 32px 0 14px; font-size: var(--read-h2-m); line-height: 1.32; }
-  .prose h3 { margin: 30px 0 14px; font-size: 19px; }
-  .prose blockquote { margin: 26px 0; padding-left: 18px; }
-  .prose blockquote p { font-size: var(--read-quote-m); line-height: 1.50; }
-  .prose .codehilite pre { padding: 14px; font-size: var(--mono-code-m); line-height: 1.75; }
-  .prose code:not(pre code) { font-size: 14.5px; padding: 2px 5px; }
-
-  .prose > .full-width { margin: 0 calc(-1 * var(--pad-mobile)) 22px; }
-  .full-width-label { margin: 0 var(--pad-mobile) 10px; }
-
-  .callout { gap: 6px; grid-template-columns: 1fr; padding: 16px 18px; }
-  .callout p { font-size: 15.5px; line-height: 1.68; }
-
-  .verdict { grid-template-columns: 1fr; gap: 10px; }
-
-  .site-footer { padding: 18px var(--pad-mobile); }
-}
-
-
-/* =============================================================================
-   8. REDUCED MOTION
-      Las únicas transiciones del sistema son hovers de 120ms. Igual se envuelven.
-   ============================================================================= */
-
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
-    animation-duration: .01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: .01ms !important;
-  }
-  html { scroll-behavior: auto; }
-}
-
-/* =============================================================================
-   9. LISTADO — índice y vista de tag
-      Misma shell y mismo rail que el artículo; cambia el contenido del rail
-      y el padding de la columna (--pad-mod, no --pad-col).
-   ============================================================================= */
-
-.col-list { padding: 34px var(--pad-mod) 44px; margin: -52px calc(-1 * var(--pad-col)) -60px; }
-
-.page-flat .shell { grid-template-columns: minmax(0, 1fr); }
-.page-flat .rail { display: none; }
-
-/* --- rail del listado ----------------------------------------------------- */
-
-.rail-item--tag {
-  padding: 7px 10px;
-  font: 400 var(--mono-row)/1 var(--font-mono);
-  text-transform: uppercase;
-}
-
-.rail-dates {
-  display: flex;
-  flex-direction: column;
-  gap: 9px;
-  font: 400 var(--mono-row)/1.3 var(--font-mono);
-  color: var(--text-muted);
-}
-
-/* --- cabecera del listado ------------------------------------------------- */
-
-.list-head h1 {
-  margin-bottom: 8px;
-  max-width: 26ch;
-  font: 400 34px/1.2 var(--font-read);
-  color: var(--text-title);
-  text-wrap: balance;
-}
-
-.list-head p {
-  margin-bottom: 32px;
-  padding-bottom: 22px;
-  border-bottom: 1px solid var(--rule-module);
-  max-width: 48ch;
-  font: 300 16.5px/1.7 var(--font-read);
-  color: var(--text-dim);
-  text-wrap: pretty;
-}
-
-/* --- filas ---------------------------------------------------------------- */
-
-.post-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-}
-
+/* Fila de lista (Recientes): link en bloque, título + metadatos, sin bordes. */
 .post-row {
-  border-bottom: 1px solid var(--rule-item);
-  transition: border-color .12s ease;
+  display: flex;
+  flex-direction: column;
+  gap: var(--row-gap);
+  padding-block: var(--row-pad-y);
+  color: var(--color-text);
+  text-decoration: none;
 }
-
-.post-row:hover { border-bottom-color: var(--rule-module); }
-
-.post-row > a { display: block; text-decoration: none; }
-
-.row-title {
-  font: 400 var(--read-item)/1.3 var(--font-read);
-  color: var(--text-lead);
-  text-wrap: pretty;
-  transition: color .12s ease;
+a.post-row { color: var(--color-text); }
+.post-row__title {
+  font-weight: var(--font-heading-weight);
+  font-size: clamp(19px, calc(20px - (100vw - 390px) * 1 / 890), 20px);
+  line-height: 1.2;
 }
+.post-row:hover .post-row__title { color: var(--color-accent-700); }
+.post-row__meta { font-size: 11.5px; } /* en filas queda en 11.5 también en desktop (diseño) */
 
-.post-row:hover .row-title { color: var(--text-title); }
+/* Estado vacío: título 26px, texto 17px. */
+.empty-state { padding-block-start: var(--empty-pad-top); }
+.empty-state__title { font-size: 26px; margin: 0 0 var(--empty-title-gap); }
+.empty-state__body { font-size: 17px; color: var(--color-neutral-800); margin: 0; }
 
-.row-eyebrow {
-  margin-bottom: 6px;
-  font: 500 var(--mono-label)/1 var(--font-mono);
-  letter-spacing: .14em;
+
+/* ── Portada ───────────────────────────────────────────────────────────
+   Mobile: destacado, Recientes (todas las filas) y «Ver archivo completo».
+   Desktop: grilla 7fr | 4fr con 96px; abajo, a 112px, un bloque por tema. */
+
+.home { padding-block-start: var(--featured-pad-top); }
+
+.featured__kicker {
+  margin: 0;
+  font-size: clamp(12px, calc(12px + (100vw - 390px) * 1 / 890), 13px);
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--text-muted);
+  color: var(--color-accent-2-700);
+}
+.featured__title {
+  margin: var(--featured-kicker-gap) 0 var(--featured-title-gap);
+  font-size: clamp(34px, calc(34px + (100vw - 390px) * 24 / 890), 58px);
+  /* 34px / 1.1 → 58px / 1.04, interpolado en px (un interlineado sin unidad
+     no se puede interpolar con vw) */
+  line-height: clamp(37.4px, calc(37.4px + (100vw - 390px) * 22.92 / 890), 60.32px);
+}
+.featured__title a { color: var(--color-text); text-decoration: none; }
+.featured__title a:hover { color: var(--color-accent-700); }
+.featured__summary {
+  margin: 0 0 var(--featured-title-gap);
+  max-width: var(--featured-summary-max);
+  font-size: clamp(17px, calc(17px + (100vw - 390px) * 4 / 890), 21px);
+  /* 17px / 1.55 (el del body) → 21px / 1.5 */
+  line-height: clamp(26.35px, calc(26.35px + (100vw - 390px) * 5.15 / 890), 31.5px);
+  color: var(--color-neutral-800);
+}
+.featured__foot { display: flex; align-items: center; gap: var(--featured-cta-gap); }
+.featured__meta { margin: 0; }
+.featured__cta { font-size: 15px; }
+
+.recent__label { margin: 0 0 var(--recent-label-gap); }
+.see-archive {
+  margin: var(--space-2) 0 0 var(--see-archive-nudge);
+  min-height: var(--hit);
+  font-size: 15px;
 }
 
-/* fila destacada: sin fondo, sólo escala y el eyebrow en ámbar */
-.post-row--featured > a { padding: 0 0 26px; }
+.topics { padding-block-start: var(--section-gap); }
 
-.post-row--featured .row-eyebrow {
-  margin-bottom: 9px;
-  font-size: 10.5px;
-  color: var(--accent-meta);
-}
-
-.post-row--featured .row-title {
-  margin-bottom: 9px;
-  font-size: var(--read-feat);
-  line-height: 1.24;
-}
-
-.row-summary {
-  max-width: 54ch;
-  font: 300 16.5px/1.7 var(--font-read);
-  color: var(--text-dim);
-  text-wrap: pretty;
-}
-
-/* filas siguientes */
-.post-row--item > a {
-  display: grid;
-  grid-template-columns: 1fr 104px;
-  gap: 24px;
-  align-items: baseline;
-  padding: 24px 0;
-}
-
-.row-meta {
-  font: 400 11px/1.6 var(--font-mono);
-  text-align: right;
-  text-transform: uppercase;
-  white-space: nowrap;
-  color: var(--text-muted);
-}
-
-.row-meta-inline { display: none; }   /* sólo mobile */
-
-.post-row--empty > p {
-  padding: 24px 0;
-  font: 300 var(--read-body)/1.78 var(--font-read);
-  color: var(--text-muted);
-}
-
-/* --- fila de tags de mobile ----------------------------------------------- */
-
-.tags-row { display: none; }
-
-@media (max-width: 640px) {
-
-  .col-list { padding: 34px var(--pad-mobile) 34px; margin: -32px calc(-1 * var(--pad-mobile)) -40px; }
-
-  .list-head h1 { margin-bottom: 10px; font-size: 27px; line-height: 1.22; }
-
-  .list-head p {
-    margin-bottom: 0;
-    padding-bottom: 18px;
-    border-bottom: none;
-    max-width: none;
-    font-size: 15.5px;
-    line-height: 1.68;
+@media (min-width: 768px) {
+  .home__top {
+    display: grid;
+    grid-template-columns: 7fr 4fr;
+    gap: var(--home-columns-gap);
+    align-items: start;
   }
+  .recent__label { margin: var(--recent-label-gap) 0 var(--space-2); }
+  .post-row__title { line-height: 1.25; }
 
-  .tags-row {
-    display: flex;
-    gap: 22px;
-    margin: -4px calc(-1 * var(--pad-mobile)) 26px;
-    padding: 4px var(--pad-mobile) 18px;
-    border-bottom: 1px solid var(--rule-module);
-    overflow-x: auto;
-    scrollbar-width: none;
-    font: 400 11px/1 var(--font-mono);
-    letter-spacing: .1em;
-    text-transform: uppercase;
+  .topics {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--topics-gap);
   }
-
-  .tags-row::-webkit-scrollbar { display: none; }
-
-  .tags-row a {
-    padding-bottom: 8px;
-    border-bottom: 2px solid transparent;
-    white-space: nowrap;
-    color: var(--text-muted);
+  .topic { display: flex; flex-direction: column; gap: var(--topic-gap); }
+  .topic__title { margin: 0; }
+  .topic__title a { color: var(--color-text); text-decoration: none; }
+  .topic__title a:hover { color: var(--color-accent-700); }
+  .topic__count {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--color-neutral-700);
+  }
+  .topic__list { display: flex; flex-direction: column; gap: var(--topic-gap); }
+  .topic__post {
+    font-size: 17px;
+    line-height: 1.35;
+    color: var(--color-text);
     text-decoration: none;
   }
+  a.topic__post { color: var(--color-text); }
+  a.topic__post:hover { color: var(--color-accent-700); }
+  .topic__more { font-size: 15px; }
+}
 
-  /* activo: color + underline, nunca sólo color */
-  .tags-row a.is-active {
-    border-bottom-color: var(--accent-nav);
-    color: var(--text-strong);
+/* Apilados en mobile, los recientes van a una separación de sección del
+   destacado; en la grilla de desktop son columna y no la llevan. */
+@media (max-width: 767.98px) {
+  .recent { margin-block-start: var(--section-gap); }
+}
+
+
+/* ── Archivo ───────────────────────────────────────────────────────────
+   Mobile: título, conteo, filtros en fila con scroll horizontal y lista por
+   año en grilla 60px | 1fr. Desktop: lateral de 220px con título, conteo y
+   filtros en columna; lista en grilla 72px | 1fr | 150px | 56px. */
+
+.archive { padding-block-start: var(--archive-pad-top); }
+
+.archive__title {
+  margin: 0 0 var(--archive-title-gap);
+  font-size: clamp(36px, calc(36px + (100vw - 390px) * 6 / 890), 42px);
+}
+.archive__count { margin: 0; font-size: 15px; color: var(--color-neutral-700); }
+
+.archive-filters {
+  display: flex;
+  gap: var(--filter-gap);
+  /* la fila corre de borde a borde de la pantalla y scrollea */
+  margin-inline: calc(var(--gutter) * -1);
+  padding: var(--archive-count-gap) var(--gutter) var(--filter-row-pad-bottom);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.archive-filters::-webkit-scrollbar { display: none; }
+
+.archive-filter {
+  flex: none;
+  min-height: var(--filter-height);
+  font-size: 14px;
+  white-space: nowrap;
+}
+.archive-filter__count {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 400;
+  opacity: 0.75;
+}
+.archive-filter__spinner { display: none; }
+
+.archive__listing { padding-block-start: var(--archive-count-gap); }
+.archive-year + .archive-year { margin-block-start: var(--years-gap); }
+.archive-year__label { margin: 0 0 var(--archive-title-gap); }
+
+.archive-row {
+  display: grid;
+  grid-template-columns: var(--archive-date-col) minmax(0, 1fr);
+  row-gap: var(--space-1);
+  padding-block: var(--archive-row-pad-y);
+  color: var(--color-text);
+  text-decoration: none;
+}
+a.archive-row { color: var(--color-text); }
+.archive-row:hover .archive-row__title { color: var(--color-accent-700); }
+.archive-row__date,
+.archive-row__meta {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  letter-spacing: 0.04em;
+  color: var(--color-neutral-700);
+}
+.archive-row__date { padding-block-start: var(--space-1); }
+.archive-row__title {
+  font-weight: var(--font-heading-weight);
+  font-size: 18px;
+  line-height: 1.25;
+}
+.archive-row__meta { grid-column: 2; text-transform: uppercase; }
+
+@media (min-width: 768px) {
+  .archive {
+    display: grid;
+    grid-template-columns: var(--archive-side) minmax(0, 1fr);
+    gap: var(--archive-columns-gap);
+    align-items: start;
+  }
+  .archive__side {
+    display: flex;
+    flex-direction: column;
+    gap: var(--row-gap);
+    padding-block-start: var(--archive-side-pad);
+  }
+  .archive__title { margin-block-end: var(--archive-title-gap-d); }
+  .archive__count { margin-block-end: var(--archive-count-gap); }
+
+  .archive-filters {
+    flex-direction: column;
+    gap: var(--row-gap);
+    margin: 0;
+    padding: 0;
+    overflow: visible;
+  }
+  .archive-filter { justify-content: space-between; font-size: 15px; }
+
+  .archive__listing { padding-block-start: 0; max-width: var(--archive-list-max); }
+  .archive-year__label { margin-block-end: var(--recent-label-gap); }
+
+  .archive-row {
+    grid-template-columns: var(--archive-date-col-d) minmax(0, 1fr) var(--archive-cat-col) var(--archive-min-col);
+    align-items: baseline;
+    column-gap: var(--archive-row-gap);
+  }
+  .archive-row__date { font-size: 12px; padding-block-start: 0; }
+  .archive-row__title { font-size: 20px; }
+  .archive-row__meta { display: contents; }
+  .archive-row__sep { display: none; }
+  .archive-row__min { font-size: 12px; text-transform: none; text-align: right; }
+}
+
+
+/* ── Carga con HTMX ────────────────────────────────────────────────────
+   loading.js marca <html> con .is-loading y la lista destino con aria-busy.
+   HTMX le pone .htmx-request al filtro que disparó el pedido. Sin skeletons. */
+
+.load-bar {
+  position: fixed;
+  inset: 0 auto auto 0;
+  z-index: 30;
+  width: 0;
+  height: var(--load-bar-height);
+  background: var(--color-accent);
+  opacity: 0;
+  pointer-events: none;
+}
+.is-loading .load-bar {
+  opacity: 1;
+  width: 85%;
+  transition: width 3s cubic-bezier(0.1, 0.6, 0.3, 1);
+}
+
+[aria-busy="true"] {
+  opacity: var(--loading-opacity);
+  transition: opacity 0.15s ease;
+}
+
+/* El filtro elegido pasa a activo en cuanto se toca, con el ícono girando. */
+.archive-filter.htmx-request {
+  background: var(--color-accent);
+  color: var(--color-bg);
+  border-color: transparent;
+}
+.archive-filter.htmx-request .archive-filter__spinner {
+  display: block;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .is-loading .load-bar { width: 100%; transition: none; }
+  [aria-busy="true"] { transition: none; }
+  .archive-filter.htmx-request .archive-filter__spinner { animation: none; }
+}
+
+
+/* ── Toasts ────────────────────────────────────────────────────────────
+   A 16px de los costados y 40px del borde inferior; el segundo se apila
+   arriba (a 118px). Fondo neutral-100, sombra lg, radio lg, 15px. */
+
+.toasts {
+  position: fixed;
+  inset: auto var(--toast-inset) var(--toast-bottom);
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  gap: var(--toast-stack-gap);
+  pointer-events: none;
+}
+.toast {
+  display: flex;
+  align-items: center;
+  gap: var(--toast-gap);
+  padding: var(--toast-pad);
+  border-radius: var(--radius-lg);
+  background: var(--color-neutral-100);
+  box-shadow: var(--shadow-lg);
+  font-size: 15px;
+  pointer-events: auto;
+}
+.toast__icon { flex: none; font-size: 20px; }
+.toast--success .toast__icon { color: var(--color-accent-700); }
+.toast--error .toast__icon { color: var(--color-accent-2-700); }
+.toast__message { flex: 1; min-height: var(--hit); display: flex; align-items: center; }
+.toast__action { min-height: var(--hit); font-size: 15px; }
+.toast[hidden] { display: none; }
+
+@media (min-width: 768px) {
+  .toasts {
+    left: 50%;
+    right: auto;
+    width: min(var(--toast-max), calc(100% - var(--toast-inset) * 2));
+    transform: translateX(-50%);
+  }
+}
+
+
+
+/* ── Artículo ──────────────────────────────────────────────────────────
+   Mobile: cabecera, prosa y «Siguiente» a lo ancho; los controles de
+   lectura van en un panel inferior que abre el botón flotante.
+   Desktop: grilla 220px | 680px con 80px; los controles en la columna
+   lateral, sticky a 24px del borde. */
+
+.article { padding-block-start: var(--article-pad-top); }
+.article__main { min-width: 0; }
+
+.article__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--article-meta-gap);
+  margin: 0 0 var(--article-meta-mb);
+}
+a.article__tag { text-decoration: none; }
+a.article__tag:hover { color: var(--color-accent-800); text-decoration: underline; }
+
+.article__title {
+  margin: 0 0 var(--article-title-mb);
+  font-size: clamp(32px, calc(32px + (100vw - 390px) * 16 / 890), 48px);
+  /* 32px / 1.12 → 48px / 1.08, interpolado en px */
+  line-height: clamp(35.84px, calc(35.84px + (100vw - 390px) * 16 / 890), 51.84px);
+}
+.article__author {
+  margin: 0 0 var(--article-author-mb);
+  font-size: clamp(15px, calc(15px + (100vw - 390px) * 1 / 890), 16px);
+  color: var(--color-neutral-700);
+}
+
+.article__next {
+  display: flex;
+  flex-direction: column;
+  gap: var(--article-next-gap);
+  margin-block-start: var(--article-next-mt);
+}
+.article__next-link {
+  font-size: clamp(22px, calc(22px + (100vw - 390px) * 4 / 890), 26px);
+  font-weight: var(--font-heading-weight);
+  line-height: 1.2;
+  text-decoration: none;
+  text-wrap: balance;
+}
+
+/* Con el botón flotante, el footer deja lugar abajo para que no lo tape. */
+@media (max-width: 767.98px) {
+  .has-js .page-article .site-footer {
+    padding-block-end: calc(var(--fab-bottom) + var(--fab-size) + var(--space-4));
+  }
+}
+
+
+/* ── Prosa ─────────────────────────────────────────────────────────────
+   Tamaño por --prose-size (15–24, 18 por defecto), interlineado y medida
+   por sus tokens. Todo lo demás en em: escala con el tamaño elegido.
+   El código (bloque y en línea) está en pygments-light.css. */
+
+.post-content {
+  max-width: var(--measure);
+  font-size: var(--prose-size);
+  line-height: var(--prose-leading);
+  color: var(--color-neutral-900);
+  overflow-wrap: break-word;
+}
+.post-content > :first-child { margin-block-start: 0; }
+.post-content > :last-child { margin-block-end: 0; }
+
+.post-content p { margin: 0 0 1.1em; }
+
+.post-content h2,
+.post-content h3 { scroll-margin-top: var(--anchor-offset); }
+.post-content h2 { font-size: 1.3em; margin: 1.8em 0 0.5em; }
+.post-content h3 { font-size: 1.1em; margin: 1.6em 0 0.45em; }
+.post-content h2 + h3 { margin-block-start: 1em; }
+
+/* Ancla del título (permalink «#» del renderer): aparece al pasar o con foco. */
+.post-content .headerlink {
+  margin-inline-start: 0.3em;
+  font-weight: 400;
+  color: var(--color-neutral-600);
+  text-decoration: none;
+  opacity: 0;
+}
+.post-content :is(h2, h3):hover .headerlink,
+.post-content .headerlink:focus-visible { opacity: 1; }
+.post-content .headerlink:hover { color: var(--color-accent-700); }
+
+/* Cita: itálica, más grande, neutral-800, sin borde lateral. */
+.post-content blockquote {
+  margin: 1.5em 0;
+  padding: 0;
+  font-style: italic;
+  font-size: 1.15em;
+  line-height: 1.5;
+  color: var(--color-neutral-800);
+}
+.post-content blockquote p { margin: 0 0 0.6em; }
+.post-content blockquote > :last-child { margin-block-end: 0; }
+.post-content blockquote :is(code, pre) { font-style: normal; }
+.post-content blockquote em { font-style: normal; } /* itálica dentro de itálica: se invierte */
+
+/* Listas: con y sin orden, anidadas. Python-Markdown emite <li><p>… cuando
+   un ítem tiene más de un bloque; se ve igual que una lista compacta. */
+.post-content :is(ul, ol) {
+  margin: 0 0 1.1em;
+  padding-inline-start: 1.3em;
+}
+.post-content li { padding-inline-start: 0.2em; }
+.post-content li + li { margin-block-start: 0.35em; }
+.post-content li::marker { color: var(--color-neutral-700); }
+.post-content ol > li::marker { font-variant-numeric: tabular-nums; }
+.post-content li > :is(ul, ol) { margin: 0.35em 0 0; }
+.post-content li > p { margin: 0; }
+.post-content li > * + :is(p, blockquote, .codehilite) { margin-block-start: 0.5em; }
+.post-content li > :last-child { margin-block-end: 0; }
+
+/* En línea. La romana va de 400 a 600: la negrita es 600. */
+.post-content :is(strong, b) { font-weight: 600; }
+.post-content :is(em, i) { font-style: italic; }
+.post-content del {
+  color: var(--color-neutral-700);
+  text-decoration-thickness: 0.06em;
+}
+.post-content a:not(.headerlink) {
+  color: var(--color-accent-700);
+  text-decoration-thickness: 0.06em;
+  text-underline-offset: 0.18em;
+}
+.post-content a:not(.headerlink):hover { color: var(--color-accent-600); }
+
+/* Separador: la regla de Broadsheet (.hr), con aire de sección corta. */
+.post-content hr {
+  height: 1px;
+  margin: 2em 0;
+  border: 0;
+  background: var(--color-divider);
+}
+
+
+/* ── Controles de lectura ──────────────────────────────────────────────
+   Un solo marcado (#reader). Mobile: panel inferior, cerrado fuera de la
+   vista y del árbol de accesibilidad (visibility: hidden); article.js lo
+   abre con .is-open. Desktop: columna lateral sticky. */
+
+.reader {
+  position: fixed;
+  inset: auto 0 0;
+  z-index: 35;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sheet-gap);
+  max-height: var(--sheet-max-h);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: var(--sheet-pad-top) var(--sheet-pad-x) calc(var(--sheet-pad-bottom) + env(safe-area-inset-bottom));
+  background: var(--color-bg);
+  border-radius: var(--sheet-radius) var(--sheet-radius) 0 0;
+  box-shadow: var(--shadow-lg);
+  visibility: hidden;
+  transform: translateY(100%);
+  transition: transform var(--sheet-duration) ease, visibility 0s linear var(--sheet-duration);
+}
+.reader.is-open {
+  visibility: visible;
+  transform: none;
+  transition: transform var(--sheet-duration) ease;
+}
+.reader:focus { outline: none; } /* recibe el foco al abrir; no es un control */
+
+/* Tirador 40×4, que también cierra el panel (área táctil de 44px). */
+.reader__handle {
+  flex: none;
+  align-self: center;
+  width: var(--sheet-handle-w);
+  height: var(--sheet-handle-h);
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: var(--color-neutral-300);
+  cursor: pointer;
+}
+
+.reader__block {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sheet-block-gap);
+}
+/* En el panel el orden es tamaño, compartir, índice (en el marcado, el
+   índice va primero, como en el lateral de desktop). */
+.reader__block--size { order: 1; }
+.reader__block--share { order: 2; }
+.reader__block--toc { order: 3; gap: var(--sheet-toc-gap); }
+
+.reader__label { font-size: 13px; color: var(--color-neutral-700); }
+.reader__block--toc .reader__label { margin-block-end: var(--sheet-toc-gap); }
+
+.reader-toc { display: flex; flex-direction: column; gap: var(--sheet-toc-gap); }
+.reader-toc__link {
+  display: block;
+  padding-block: var(--sheet-toc-link-pad); /* 42px de alto; .hit lo lleva a 44 sin tocar el paso */
+  font-size: 17px;
+  text-decoration: none;
+}
+
+.reader-size {
+  display: flex;
+  align-items: center;
+  gap: var(--sheet-btn-gap);
+}
+.reader-size__btn { flex: 1; min-height: var(--hit); }
+.reader-size__btn--dec { font-size: 14px; }
+.reader-size__btn--inc { font-size: 19px; }
+.reader-size__btn[aria-disabled="true"] { opacity: 0.45; cursor: not-allowed; }
+.reader-size__btn[aria-disabled="true"]:is(:hover, :active) { background: transparent; }
+.reader-size__value {
+  flex: none;
+  width: var(--sheet-value-w);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  text-align: center;
+}
+
+.reader-share { display: flex; gap: var(--sheet-btn-gap); }
+.reader-share__btn { flex: 1; min-height: var(--hit); }
+.reader-share__btn--icon { flex: none; width: var(--hit); padding: 0; }
+
+/* Botón flotante: círculo de 56px a 20px del borde derecho y 32px del de abajo. */
+.reader-fab {
+  position: fixed;
+  right: var(--fab-right);
+  bottom: calc(var(--fab-bottom) + env(safe-area-inset-bottom));
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  width: var(--fab-size);
+  height: var(--fab-size);
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--color-accent);
+  color: var(--color-bg);
+  font-size: var(--fab-icon);
+  box-shadow: var(--shadow-md);
+  cursor: pointer;
+}
+.reader-fab:hover { background: var(--color-accent-600); }
+.reader-fab:active { background: var(--color-accent-700); }
+
+/* Velo: tocarlo cierra el panel. */
+.reader-veil {
+  position: fixed;
+  inset: 0;
+  z-index: 34;
+  background: color-mix(in srgb, var(--color-neutral-900) var(--veil-mix), transparent);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity var(--sheet-duration) ease, visibility 0s linear var(--sheet-duration);
+}
+.reader-veil.is-open {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity var(--sheet-duration) ease;
+}
+
+
+@media (prefers-reduced-motion: reduce) {
+  .reader,
+  .reader.is-open,
+  .reader-veil,
+  .reader-veil.is-open { transition: none; }
+}
+
+@media (min-width: 768px) {
+  .article {
+    display: grid;
+    grid-template-columns: var(--article-side) minmax(0, var(--measure));
+    gap: var(--article-columns-gap);
+    align-items: start;
   }
 
-  .post-row--featured > a { padding-bottom: 22px; }
-  .post-row--featured .row-eyebrow { font-size: 10px; }
-  .post-row--featured .row-title { font-size: 21px; line-height: 1.26; }
-  .row-summary { max-width: none; font-size: 15px; line-height: 1.66; }
+  .reader {
+    position: sticky;
+    inset: auto;
+    top: var(--reader-sticky-top);
+    z-index: auto;
+    gap: var(--reader-blocks-gap);
+    max-height: none;
+    overflow: visible;
+    padding: var(--reader-side-pad-top) 0 0;
+    background: none;
+    border-radius: 0;
+    box-shadow: none;
+    visibility: visible;
+    transform: none;
+    transition: none;
+  }
+  .reader-veil { display: none; }
 
-  .post-row--item > a { grid-template-columns: minmax(0, 1fr); gap: 0; padding: 20px 0; }
-  .post-row--item .row-title { font-size: 18px; line-height: 1.32; }
-  .row-meta { display: none; }
-  .row-meta-inline { display: inline; }
+  .reader__block,
+  .reader__block--toc { order: 0; gap: var(--reader-block-gap); }
+  .reader__block--toc .reader__label { margin-block-end: 0; }
+
+  /* Índice: 15px con 8px entre links. El área de cada link ocupa todo el
+     paso (el aire entre links incluido); 44px no entra sin cambiar el
+     espaciado del diseño, así que se agranda solo con puntero táctil. */
+  .reader-toc {
+    --toc-link-pad: calc(var(--reader-block-gap) / 2);
+    gap: 0;
+    margin-block: calc(var(--toc-link-pad) * -1);
+  }
+  .reader-toc__link {
+    padding-block: var(--toc-link-pad);
+    font-size: 15px;
+  }
+  .reader-toc__link.hit::after { content: none; }
+
+  .reader-size { gap: var(--reader-size-gap); }
+  .reader-size__btn { flex: none; min-height: 0; }
+  .reader-size__btn--dec { font-size: 13px; }
+  .reader-size__btn--inc { font-size: 17px; }
+  .reader-size__value { width: var(--reader-value-w); font-size: 12px; }
+  .reader-size__unit { display: none; }
+
+  .reader-share { gap: var(--reader-share-gap); }
+  .reader-share__btn {
+    flex: none;
+    width: var(--reader-icon-btn);
+    height: var(--reader-icon-btn);
+    min-height: 0;
+    padding: 0;
+  }
+  /* En el lateral los botones son solo ícono: el texto queda para el lector
+     de pantalla (mismo marcado que el panel, donde se ve). */
+  .reader-share__label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
+
+@media (min-width: 768px) and (pointer: coarse) {
+  .reader-toc { --toc-link-pad: calc((var(--hit) - 1lh) / 2); }
+}
+
+
+/* ── Campo de búsqueda ─────────────────────────────────────────────────
+   .input de Broadsheet con la lupa adentro. 16px: iOS no hace zoom al
+   enfocarlo. Lo usan la búsqueda y la 404. */
+
+.search-field { position: relative; flex: 1; min-width: 0; }
+.search-field__icon {
+  position: absolute;
+  left: var(--search-field-icon-x);
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: var(--search-field-icon);
+  color: var(--color-neutral-700);
+  pointer-events: none;
+}
+.search-field__input {
+  min-height: var(--hit);
+  padding-inline-start: var(--search-field-pad);
+  font-size: 16px;
+}
+/* Sin la cruz nativa de type=search: el diseño no la tiene. */
+.search-field__input::-webkit-search-cancel-button { -webkit-appearance: none; appearance: none; }
+
+
+/* ── Búsqueda ──────────────────────────────────────────────────────────
+   Mobile: pantalla completa; arriba el campo y «Cancelar». Campo vacío:
+   temas como etiquetas. Con texto: cantidad y filas (título, bajada, meta).
+   Desktop: diálogo de 640px a 96px del borde, sobre un velo al 45 %;
+   resultados con alto máximo y scroll; pie con las ayudas de teclado. Campo
+   vacío: todos los posts (D4). El estado lo pone search.js en data-state. */
+
+.search {
+  position: fixed;
+  inset: 0;
+  z-index: 38; /* sobre el panel de lectura, debajo de los toasts */
+}
+.search__veil { display: none; }
+
+.search__panel {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: var(--color-bg);
+}
+
+.search__bar {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: var(--search-bar-gap);
+  padding: var(--search-bar-pad-y) var(--search-bar-pad-end) var(--search-bar-pad-y) var(--gutter);
+  background: var(--color-bg);
+}
+.search__cancel { min-height: var(--hit); font-size: 15px; }
+
+.search__body {
+  padding: var(--search-body-pad-top) var(--gutter) var(--search-body-pad-bottom);
+}
+
+.search__count {
+  margin: 0 0 var(--search-count-gap);
+  font-size: 13px;
+  color: var(--color-neutral-700);
+}
+
+.search-option {
+  display: flex;
+  flex-direction: column;
+  gap: var(--search-row-gap);
+  margin-inline: calc(var(--search-row-bleed) * -1);
+  padding: var(--search-row-pad-y) var(--search-row-bleed);
+  border-radius: var(--radius-md);
+  text-decoration: none;
+}
+a.search-option { color: var(--color-text); }
+.search-option__title { font-size: 19px; font-weight: var(--font-heading-weight); line-height: 1.2; }
+.search-option__excerpt { font-size: 15px; line-height: 1.45; color: var(--color-neutral-800); }
+.search-option__date { display: none; }
+.search-option .meta-mono { font-size: 11.5px; }
+a.search-option:hover .search-option__title { color: var(--color-accent-700); }
+/* En mobile el activo se resalta solo si se usan las flechas (teclado externo). */
+.search.uses-keys .search-option[aria-selected="true"] { background: var(--color-accent-100); }
+
+.search__none,
+.search__topics { display: none; }
+.search__none { padding-block-start: var(--search-none-pad-top); }
+.search__none-title { margin: 0 0 var(--search-none-title-gap); font-size: 26px; }
+.search__none-body { margin: 0 0 var(--search-none-body-gap); font-size: 17px; color: var(--color-neutral-800); }
+.search__topics-label { margin: 0 0 var(--search-topics-label-gap); }
+.search__chips { display: flex; flex-wrap: wrap; gap: var(--search-chip-gap); }
+.search-chip {
+  padding: var(--search-chip-pad);
+  border: 0;
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+.search-chip:hover { box-shadow: inset 0 0 0 1px var(--color-accent); }
+
+/* Estados (mobile) */
+.search:is([data-state="loading"], [data-state="idle"], [data-state="none"]) :is(.search__count, .search__results) { display: none; }
+.search:is([data-state="idle"], [data-state="none"]) .search__topics { display: block; }
+.search[data-state="none"] .search__none { display: block; }
+
+.search:not([hidden]) .search__panel { animation: search-in var(--search-duration) ease-out; }
+@keyframes search-in {
+  from { opacity: 0; transform: translateY(8px); }
+}
+
+@media (min-width: 768px) {
+  .search__veil {
+    display: block;
+    position: absolute;
+    inset: 0;
+    background: color-mix(in srgb, var(--color-neutral-900) var(--search-veil-mix), transparent);
+  }
+  .search:not([hidden]) .search__veil { animation: search-veil-in var(--search-duration) ease-out; }
+
+  .search__panel {
+    position: relative;
+    inset: auto;
+    width: min(var(--search-dialog-w), calc(100% - var(--gutter) * 2));
+    max-height: calc(100dvh - var(--search-dialog-top) - var(--space-4));
+    margin: var(--search-dialog-top) auto 0;
+    overflow: hidden;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+  }
+
+  .search__bar { position: relative; padding: var(--search-dialog-pad); }
+  .search__field .search-field__icon { left: var(--search-dialog-icon-x); font-size: var(--search-dialog-icon); }
+  .search__field .search-field__input {
+    min-height: var(--search-dialog-input-h);
+    padding-inline-start: var(--search-dialog-input-pad);
+    font-size: 18px;
+  }
+
+  .search__body {
+    flex: 0 1 auto;
+    min-height: 0;
+    max-height: var(--search-results-max);
+    overflow-y: auto;
+    padding: var(--search-results-pad);
+  }
+  .search__count { margin: 0; padding: 0 var(--search-option-pad) 6px; }
+
+  .search-option {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: var(--search-option-gap);
+    margin-inline: 0;
+    padding: var(--search-option-pad);
+  }
+  .search-option__title { font-size: 18px; line-height: 1.25; }
+  .search-option__date { display: block; padding-block-start: var(--space-1); }
+  .search-option__excerpt { grid-column: 1; line-height: 1.4; }
+  .search-option__meta { display: none; }
+  .search-option[aria-selected="true"],
+  a.search-option:hover { background: var(--color-accent-100); }
+  a.search-option:hover .search-option__title { color: inherit; }
+
+  /* Campo vacío en desktop: todos los posts, sin temas (D4). */
+  .search[data-state="idle"] :is(.search__count, .search__results) { display: block; }
+  .search[data-state="idle"] .search__topics { display: none; }
+  .search__none { padding: var(--search-option-pad) var(--search-option-pad) 0; }
+  .search__topics { padding: 0 var(--search-option-pad) var(--search-option-pad); }
+
+  .search__foot {
+    display: flex;
+    gap: var(--search-foot-gap);
+    padding: var(--search-foot-pad);
+    background: var(--color-surface);
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    color: var(--color-neutral-700);
+  }
+  .search__foot kbd { font: inherit; }
+}
+@keyframes search-veil-in { from { opacity: 0; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .search:not([hidden]) :is(.search__panel, .search__veil) { animation: none; }
+}
+
+
+/* ── Páginas de error ──────────────────────────────────────────────────
+   Número en planchas (.cmyk-num de Broadsheet) 132px → 220px, H1, texto.
+   404: campo que abre la búsqueda (con «Buscar» en desktop), «Quizás
+   buscabas» y «Volver al inicio»; en desktop, grilla 7fr | 4fr con 96px.
+   500 y genérico: «Reintentar», «Volver al inicio» y la referencia. */
+
+.error-page { padding-block-start: var(--error-pad-top); }
+
+.error-page__number {
+  font-size: clamp(132px, calc(132px + (100vw - 390px) * 88 / 890), 220px);
+  font-weight: var(--font-heading-weight);
+  letter-spacing: -0.03em;
+}
+.error-page__title {
+  margin: var(--error-title-gap) 0 var(--error-body-gap);
+  font-size: clamp(32px, calc(32px + (100vw - 390px) * 16 / 890), 48px);
+}
+.error-page__body {
+  margin: 0 0 var(--error-field-gap);
+  font-size: clamp(17px, calc(17px + (100vw - 390px) * 3 / 890), 20px);
+  color: var(--color-neutral-800);
+}
+
+.error-search {
+  display: flex;
+  gap: var(--error-search-gap);
+  max-width: var(--error-search-max);
+}
+.error-search__button { font-size: 15px; }
+
+.error-page__side { margin-block-start: var(--error-side-gap); }
+.error-page__label { margin: 0 0 var(--recent-label-gap); }
+.post-row--compact { padding-block: var(--error-row-pad-y); }
+.post-row--compact .post-row__title { font-size: 19px; }
+.error-page__home {
+  min-height: var(--hit);
+  margin: var(--error-home-gap) 0 0 var(--see-archive-nudge);
+  font-size: 15px;
+}
+
+.error-page--generic .error-page__body { margin-block-end: var(--error-actions-gap-top); }
+.error-page__actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--error-actions-gap);
+}
+.error-page__action { min-height: var(--error-action-h); font-size: 16px; }
+.error-page__ref {
+  margin: var(--error-ref-gap) 0 0;
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--color-neutral-700);
+}
+
+@media (min-width: 768px) {
+  .error-page--404 {
+    display: grid;
+    grid-template-columns: 7fr 4fr;
+    gap: var(--error-columns-gap);
+    align-items: start;
+  }
+  .error-page__side { margin-block-start: 0; padding-block-start: var(--error-side-pad-top); }
+
+  /* El 500 de desktop no está diseñado: la columna de la 404 y los botones en fila. */
+  .error-page--generic .error-page__main { max-width: var(--featured-summary-max); }
+  .error-page__actions { flex-direction: row; }
 }

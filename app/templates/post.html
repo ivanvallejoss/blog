@@ -1,69 +1,140 @@
 {% extends "base.html" %}
+{% from "partials/brand.html" import brand, back_button, ring %}
+{% from "partials/posts.html" import post_url with context %}
 
-{% block title %}{{ post.title }} — blog · Iván Vallejos{% endblock %}
-
-{% block body_class %}page-post{% endblock %}
+{% block title %}{{ post.title }} — {{ t.site_title }}{% endblock %}
 
 {% block head %}
-<link rel="stylesheet" href="{{ url_for('static', path='css/pygments.css') }}">
+{#
+  Tamaño de texto antes del primer pintado (README §8): si el lector eligió
+  uno, se aplica como --prose-size en <html> y la prosa no salta al cargar.
+  Sin JavaScript la prosa queda en los 18px del token (.has-js lo pone base.html).
+#}
+<script>
+  (function (root) {
+    try {
+      var size = parseInt(localStorage.getItem({{ text_size.key | tojson }}), 10);
+      if (size >= {{ text_size.min }} && size <= {{ text_size.max }}) {
+        root.style.setProperty("--prose-size", size + "px");
+      }
+    } catch (e) {}
+  })(document.documentElement);
+</script>
+<link rel="stylesheet" href="{{ url_for('static', path='css/pygments-light.css') }}">
+{% endblock %}
+
+{% block scripts %}
 <script defer src="{{ url_for('static', path='js/article.js') }}"></script>
 {% endblock %}
 
-{% block nav %}
-<a class="nowrap" href="{{ url_for('post_list') }}">← ALL POSTS</a>
-{% if post.content_toc %}
-{# eco visual del rail: para un lector de pantalla es ruido, no información #}
-<span class="nav-counter nowrap" data-toc-counter aria-hidden="true">01 / {{ '%02d' % post.content_toc|length }}</span>
-{% endif %}
-{% endblock %}
+{% block body_class %}page-article{% endblock %}
 
-{% block subheader %}
-<div class="progress-mobile" aria-hidden="true">
-  <div class="progress-fill" data-progress></div>
-</div>
+{# Mobile: flecha atrás y el anillo solo al centro. Desktop: el header de
+   siempre, como en el archivo (sin ítem activo). #}
+{% block header_modifier %}site-header--back{% endblock %}
+{% block header_start %}
+{{ back_button(t, url_for('post_list'), class="mobile-only") }}
+{{ brand(t, url_for('post_list'), class="desktop-only") }}
 {% endblock %}
-
-{% block rail %}
-<nav class="rail" aria-label="Contenidos">
-  <div class="rail-inner">
-    {% if post.content_toc %}
-    <div class="rail-group">
-      <p class="rail-label">CONTENTS</p>
-      <div class="rail-list">
-        {% for item in post.content_toc %}
-        <a class="rail-item{% if loop.first %} is-active{% endif %}"
-           {% if loop.first %}aria-current="true"{% endif %}
-           href="#{{ item.id }}"
-           data-toc-link="{{ item.id }}">{{ '%02d' % loop.index }} {{ item.text }}</a>
-        {% endfor %}
-      </div>
-    </div>
-    {% endif %}
-
-    <div class="rail-group rail-progress" aria-hidden="true">
-      <p class="rail-label">PROGRESS</p>
-      <div class="progress-track">
-        <div class="progress-fill" data-progress></div>
-      </div>
-    </div>
-  </div>
-</nav>
-{% endblock %}
+{% block header_center %}{{ ring(class="brand-ring mobile-only") }}{% endblock %}
 
 {% block content %}
-<article class="article" data-article>
-  <header class="article-head">
-    <p class="eyebrow">
-      {{ post.category.name }} ·
-      <time datetime="{{ post.published_at.isoformat() }}">{{ post.published_at | format_date }}</time> ·
-      {{ post.reading_minutes }} min de lectura
-    </p>
-    <h1>{{ post.title }}</h1>
-    <p class="byline">Iván Vallejos</p>
-  </header>
+{# «En este artículo»: solo los h2, tal como los guardó el renderer. #}
+{% set toc = post.content_toc | selectattr("level", "equalto", 2) | list %}
+<div class="container article">
+  {#
+    Controles de lectura: un solo marcado para los dos anchos.
+      Mobile: panel inferior. Cerrado no se ve ni está en el árbol de
+      accesibilidad (visibility: hidden); article.js lo abre desde el botón
+      flotante y le pone role="dialog" y aria-modal mientras está abierto.
+      Desktop: columna lateral sticky, siempre visible.
+    El orden del marcado es el de desktop (índice, tamaño, compartir); en el
+    panel, CSS lleva el índice al final como en el diseño.
+  #}
+  <aside id="reader" class="reader" aria-label="{{ t.reading_opts }}"
+         data-size-min="{{ text_size.min }}" data-size-max="{{ text_size.max }}"
+         data-size-default="{{ text_size.default }}" data-size-key="{{ text_size.key }}"
+         data-copy-label="{{ t.copy }}" data-copied-label="{{ t.copied }}"
+         data-copied-message="{{ t.link_copied }}" data-copy-failed="{{ t.copy_failed }}"
+         data-share-title="{{ post.title }}">
+    {# Tirador del panel: es también el botón para cerrarlo (el diseño no trae otro). #}
+    <button type="button" class="reader__handle js-only mobile-only hit" aria-label="{{ t.close_reading_opts }}" data-reader-close></button>
 
-  <div class="prose">
-    {{ post.content_html | safe }}
-  </div>
-</article>
+    {% if toc %}
+    <nav class="reader__block reader__block--toc" aria-labelledby="reader-toc-label">
+      <span class="reader__label" id="reader-toc-label">{{ t.in_article }}</span>
+      <ul class="list-reset reader-toc">
+        {% for item in toc %}
+        <li><a class="reader-toc__link hit" href="#{{ item.id }}" data-reader-toc>{{ item.text }}</a></li>
+        {% endfor %}
+      </ul>
+    </nav>
+    {% endif %}
+
+    <div class="reader__block reader__block--size js-only" role="group" aria-labelledby="reader-size-label">
+      <span class="reader__label" id="reader-size-label">{{ t.text_size }}</span>
+      <div class="reader-size">
+        <button type="button" class="btn btn-secondary reader-size__btn reader-size__btn--dec hit"
+                aria-label="{{ t.text_smaller }}" data-size-step="-1">{{ t.text_smaller_mark }}</button>
+        <output class="reader-size__value" aria-live="polite"><span data-size-value>{{ text_size.default }}</span><span class="reader-size__unit"> {{ t.text_size_unit }}</span></output>
+        <button type="button" class="btn btn-secondary reader-size__btn reader-size__btn--inc hit"
+                aria-label="{{ t.text_larger }}" data-size-step="1">{{ t.text_larger_mark }}</button>
+      </div>
+    </div>
+
+    <div class="reader__block reader__block--share" role="group" aria-labelledby="reader-share-label">
+      <span class="reader__label" id="reader-share-label">{{ t.share }}</span>
+      <div class="reader-share">
+        <button type="button" class="btn btn-secondary reader-share__btn js-only hit" data-copy-link>
+          <i class="ph-duotone ph-link" aria-hidden="true" data-copy-icon></i>
+          <span class="reader-share__label" data-copy-text>{{ t.copy }}</span>
+        </button>
+        <a class="btn btn-secondary reader-share__btn hit" aria-label="{{ t.share_on_linkedin }}"
+           href="https://www.linkedin.com/sharing/share-offsite/?url={{ share_url | urlencode }}"
+           target="_blank" rel="noopener">
+          <i class="ph-duotone ph-linkedin-logo" aria-hidden="true"></i>
+          <span class="reader-share__label">{{ t.linkedin }}</span>
+        </a>
+        <a class="btn btn-secondary reader-share__btn reader-share__btn--icon desktop-only hit" aria-label="{{ t.share_on_x }}"
+           href="https://x.com/intent/post?url={{ share_url | urlencode }}&amp;text={{ post.title | urlencode }}"
+           target="_blank" rel="noopener">
+          <i class="ph-duotone ph-x-logo" aria-hidden="true"></i>
+        </a>
+        {# Menú nativo: article.js lo muestra solo si existe navigator.share. #}
+        <button type="button" class="btn btn-secondary reader-share__btn reader-share__btn--icon mobile-only" aria-label="{{ t.more }}" data-native-share hidden>
+          <i class="ph-duotone ph-export" aria-hidden="true"></i>
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <article class="article__main">
+    <header class="article__head">
+      <div class="article__meta">
+        <a class="tag tag-accent article__tag hit" href="{{ url_for('get_category', category_slug=post.category.slug) }}">{{ post.category.name }}</a>
+        <span class="meta-mono"><time datetime="{{ post.published_at.date().isoformat() }}">{{ post.published_at | format_date(lang) }}</time> · {{ t.minutes.format(n=post.reading_minutes) }}</span>
+      </div>
+      <h1 class="article__title">{{ post.title }}</h1>
+      <p class="article__author">{{ t.author }}</p>
+    </header>
+
+    <div class="post-content">
+      {{ post.content_html | safe }}
+    </div>
+
+    {% if next_post %}
+    <nav class="article__next" aria-labelledby="next-label">
+      <span class="article__next-label meta-mono" id="next-label">{{ t.next }}</span>
+      <a class="article__next-link" href="{{ post_url(next_post) }}" rel="next">{{ next_post.title }}<span aria-hidden="true"> →</span></a>
+    </nav>
+    {% endif %}
+  </article>
+</div>
+
+{# Botón flotante y velo del panel (solo mobile, solo con JavaScript). #}
+<button type="button" class="reader-fab js-only mobile-only" aria-label="{{ t.reading_opts }}"
+        aria-controls="reader" aria-expanded="false" aria-haspopup="dialog" data-reader-open>
+  <i class="ph-duotone ph-text-aa" aria-hidden="true"></i>
+</button>
+<div class="reader-veil js-only mobile-only" data-reader-veil></div>
 {% endblock %}

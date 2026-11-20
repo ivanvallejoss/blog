@@ -1,0 +1,204 @@
+/* Extensiones del blog sobre Broadsheet (broadsheet.css).
+   Únicos tokens no canónicos. Cargar DESPUÉS de broadsheet.css. */
+:root {
+  --font-mono: "Geist Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+
+  /* Marca: anillo ámbar. Solo para el anillo (nav, favicon, OG). */
+  --brand-ring: oklch(0.72 0.15 68);       /* nav / OG sobre papel */
+  --brand-ring-small: oklch(0.68 0.15 66); /* favicon y touch icon */
+
+  /* Lectura */
+  --measure: 680px;
+  --prose-size: 18px;        /* ajustable 15–24 por el usuario */
+  --prose-leading: 1.7;
+
+  /* Código (pygments-light.css) — sobre --color-surface #eae9e9 */
+  --code-bg: var(--color-surface);
+  --code-base: var(--color-text);            /* #201e1d */
+  --code-comment: var(--color-neutral-700);  /* #605d5d */
+  --code-kw: var(--color-accent-700);        /* #006786 */
+  --code-lit: oklch(0.52 0.12 65);           /* ámbar profundo, herencia CIMIENTO */
+  --code-fn: var(--color-text);              /* + font-weight 600 */
+  --code-punct: var(--color-neutral-700);
+}
+
+/* Metadatos (fecha · tema · minutos) */
+.meta-mono {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--color-neutral-700);
+}
+
+/* ── Layout del blog (ventana base, nov 2026) ─────────────────────────────
+   Agregado al archivo del handoff para que blog.css no tenga medidas sueltas.
+   Valores de mobile a 390px y de desktop a 1280px; entre ambos, interpolación
+   lineal: clamp(m, m + (d − m) · (100vw − 390px) / 890, d). */
+:root {
+  --page-max: 1120px;                 /* contenedor de desktop, padding incluido */
+  --hit: 44px;                        /* área táctil mínima */
+
+  --gutter: clamp(20px, calc(20px + (100vw - 390px) * 20 / 890), 40px);
+  --section-gap: clamp(56px, calc(56px + (100vw - 390px) * 56 / 890), 112px);
+
+  /* header: mobile 8px 12px 8px 20px → desktop 28px 40px */
+  --header-pad-block: clamp(8px, calc(8px + (100vw - 390px) * 20 / 890), 28px);
+  --header-pad-end: clamp(12px, calc(12px + (100vw - 390px) * 28 / 890), 40px);
+  --header-gap: 32px;
+
+  /* marca: anillo 20→22, «IV» 18→20, «/blog» 14→15 */
+  --brand-ring-size: clamp(20px, calc(20px + (100vw - 390px) * 2 / 890), 22px);
+  --brand-size: clamp(18px, calc(18px + (100vw - 390px) * 2 / 890), 20px);
+  --brand-sub-size: clamp(14px, calc(14px + (100vw - 390px) * 1 / 890), 15px);
+  --brand-gap: 8px;
+
+  /* switch ES/EN: aire entre cada código y la barra; alto del botón en desktop */
+  --lang-switch-pad-x: 4px;
+  --lang-switch-pad-y: 6px;
+
+  /* footer: 64px arriba en mobile (prototipo) → la separación de sección en desktop */
+  --footer-gap: 16px;
+  --footer-pad-top: clamp(64px, calc(64px + (100vw - 390px) * 48 / 890), 112px);
+
+  /* ── Portada y archivo (ventana 2) ── */
+  --row-pad-y: clamp(12px, calc(14px - (100vw - 390px) * 2 / 890), 14px); /* 14 mobile → 12 desktop */
+  --row-gap: 6px;                     /* título ↔ metadatos en una fila */
+
+  --featured-pad-top: clamp(20px, calc(20px + (100vw - 390px) * 44 / 890), 64px);
+  --featured-kicker-gap: clamp(10px, calc(10px + (100vw - 390px) * 4 / 890), 14px);
+  --featured-title-gap: clamp(12px, calc(12px + (100vw - 390px) * 8 / 890), 20px);
+  --featured-summary-max: 580px;
+  --featured-cta-gap: 20px;
+  --home-columns-gap: 96px;           /* destacado 7fr | recientes 4fr */
+  --recent-label-gap: 8px;            /* rótulo ↔ primera fila (10 en desktop) */
+  --see-archive-nudge: -5px;          /* alinea el texto del .btn-ghost con la columna */
+  --topics-gap: 56px;
+  --topic-gap: 10px;
+
+  --archive-pad-top: clamp(12px, calc(12px + (100vw - 390px) * 36 / 890), 48px);
+  --archive-side: 220px;
+  --archive-columns-gap: 80px;
+  --archive-side-pad: 12px;           /* el lateral arranca 12px más abajo que la lista */
+  --archive-list-max: 760px;
+  --archive-count-gap: 24px;          /* conteo ↔ filtros */
+  --archive-title-gap: 6px;           /* «Archivo» ↔ conteo en mobile */
+  --archive-title-gap-d: 4px;         /* en desktop, más los 6px de la columna */
+  --filter-height: 40px;
+  --filter-gap: 8px;                  /* 6 en desktop, en columna */
+  --filter-row-pad-bottom: 8px;
+  --years-gap: clamp(32px, calc(32px + (100vw - 390px) * 8 / 890), 40px);
+  --archive-row-pad-y: 12px;
+  --archive-row-gap: 16px;            /* columnas de la fila en desktop */
+  --archive-date-col: 60px;           /* 72 en desktop */
+  --archive-date-col-d: 72px;
+  --archive-cat-col: 150px;
+  --archive-min-col: 56px;
+  --empty-pad-top: 48px;
+  --empty-title-gap: 10px;
+
+  /* ── Estados ── */
+  --load-bar-height: 2px;
+  --loading-opacity: 0.4;
+  --toast-inset: 16px;                /* a los costados */
+  --toast-bottom: 40px;               /* sobre la zona del pulgar */
+  --toast-stack-gap: 22px;            /* el segundo queda a 118px del borde */
+  --toast-max: 480px;                 /* ancho máximo en desktop */
+  --toast-pad: 6px 6px 6px 16px;
+  --toast-gap: 8px;
+
+  /* ── Artículo (ventana 3) ── */
+  --article-pad-top: clamp(16px, calc(16px + (100vw - 390px) * 24 / 890), 40px);
+  --article-side: 220px;              /* columna lateral de desktop */
+  --article-columns-gap: 80px;
+  --article-meta-gap: 10px;           /* tag ↔ fecha y minutos */
+  --article-meta-mb: clamp(14px, calc(14px + (100vw - 390px) * 2 / 890), 16px);
+  --article-title-mb: clamp(10px, calc(10px + (100vw - 390px) * 4 / 890), 14px);
+  --article-author-mb: clamp(32px, calc(32px + (100vw - 390px) * 8 / 890), 40px);
+  --article-next-mt: clamp(56px, calc(56px + (100vw - 390px) * 8 / 890), 64px);
+  --article-next-gap: 6px;
+  --anchor-offset: 24px;              /* aire sobre un título al llegar por su ancla (el header no es fijo) */
+
+  /* controles de lectura: lateral de desktop */
+  --reader-sticky-top: 24px;
+  --reader-side-pad-top: 8px;
+  --reader-blocks-gap: 32px;
+  --reader-block-gap: 8px;            /* rótulo ↔ contenido, y entre links del índice */
+  --reader-size-gap: 6px;
+  --reader-share-gap: 4px;
+  --reader-value-w: 44px;
+  --reader-icon-btn: 36px;            /* compartir: .btn-icon de Broadsheet */
+
+  /* controles de lectura: panel inferior de mobile */
+  --sheet-radius: 18px;
+  --sheet-pad-top: 12px;
+  --sheet-pad-x: 24px;
+  --sheet-pad-bottom: 36px;
+  --sheet-gap: 22px;
+  --sheet-block-gap: 10px;
+  --sheet-btn-gap: 8px;
+  --sheet-value-w: 56px;
+  --sheet-toc-gap: 4px;
+  --sheet-toc-link-pad: 8px;
+  --sheet-handle-w: 40px;
+  --sheet-handle-h: 4px;
+  --sheet-max-h: calc(100dvh - 48px);
+  --veil-mix: 40%;                    /* velo: neutral-900 al 40 % */
+  --fab-size: 56px;
+  --fab-icon: 26px;
+  --fab-right: 20px;
+  --fab-bottom: 32px;
+  --sheet-duration: 0.22s;
+
+  /* ── Búsqueda (ventana 4) ── */
+  --search-field-icon-x: 12px;        /* lupa dentro del campo */
+  --search-field-icon: 18px;
+  --search-field-pad: 38px;           /* texto después de la lupa */
+  --search-bar-pad-y: 8px;            /* barra de mobile: 8px 12px 8px 20px, como el header */
+  --search-bar-pad-end: 12px;
+  --search-bar-gap: 8px;
+  --search-body-pad-top: 24px;
+  --search-body-pad-bottom: 40px;
+  --search-count-gap: 8px;
+  --search-row-pad-y: 14px;
+  --search-row-gap: 6px;
+  --search-row-bleed: 8px;            /* el resaltado sobresale del texto, que no se mueve */
+  --search-chip-pad: 10px 14px;
+  --search-chip-gap: 8px;
+  --search-topics-label-gap: 12px;
+  --search-none-pad-top: 24px;        /* + el padding del cuerpo: 48px bajo la barra */
+  --search-none-title-gap: 10px;
+  --search-none-body-gap: 28px;
+  --search-dialog-w: 640px;           /* desktop: diálogo ⌘K */
+  --search-dialog-top: 96px;
+  --search-dialog-pad: 16px;
+  --search-dialog-icon-x: 14px;       /* 30px del borde del diálogo */
+  --search-dialog-icon: 20px;
+  --search-dialog-input-h: 48px;
+  --search-dialog-input-pad: 44px;
+  --search-results-pad: 4px 16px 8px;
+  --search-results-max: 440px;
+  --search-option-pad: 12px;
+  --search-option-gap: 4px 16px;
+  --search-foot-pad: 12px 28px;
+  --search-foot-gap: 20px;
+  --search-veil-mix: 45%;
+  --search-duration: 0.16s;
+
+  /* ── Páginas de error (ventana 4) ── */
+  --error-pad-top: clamp(48px, calc(48px + (100vw - 390px) * 24 / 890), 72px);
+  --error-columns-gap: 96px;          /* 404 en desktop: 7fr | 4fr */
+  --error-title-gap: clamp(32px, calc(32px + (100vw - 390px) * 12 / 890), 44px); /* número ↔ H1 */
+  --error-body-gap: clamp(10px, calc(10px + (100vw - 390px) * 2 / 890), 12px);   /* H1 ↔ texto */
+  --error-field-gap: clamp(24px, calc(24px + (100vw - 390px) * 4 / 890), 28px);  /* texto ↔ campo */
+  --error-actions-gap-top: 28px;      /* texto ↔ botones (500) */
+  --error-search-max: 520px;
+  --error-search-gap: 10px;
+  --error-actions-gap: 10px;
+  --error-action-h: 48px;
+  --error-ref-gap: 40px;
+  --error-side-gap: 48px;             /* mobile: «Quizás buscabas» debajo */
+  --error-side-pad-top: 24px;         /* desktop: columna derecha */
+  --error-row-pad-y: 12px;
+  --error-home-gap: 12px;
+}

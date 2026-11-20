@@ -1,0 +1,74 @@
+{#
+  Búsqueda (README §6 M4/D4). Un solo marcado para los dos anchos:
+    Mobile: pantalla completa, con el campo y «Cancelar» arriba.
+    Desktop: diálogo de 640px sobre un velo, con el pie de ayudas de teclado.
+  static/js/search.js lo abre desde cualquier [data-search-open], con ⌘K/Ctrl+K
+  y desde un formulario [data-search-form] (la 404). Cerrado está hidden: ni se
+  ve ni está en el árbol de accesibilidad. Sin JavaScript nunca se abre (y el
+  botón del header no se muestra).
+
+  Estado en data-state, que maneja el script y lee el CSS:
+    loading   todavía no llegó el índice
+    idle      campo vacío: temas en mobile, todos los posts en desktop
+    results   hay resultados
+    none      «Nada sobre «…» todavía» + temas
+  Los textos los pone este template; el script no tiene ninguno escrito.
+#}
+<div id="search" class="search" data-state="loading" hidden
+     data-index-url="{{ url_for('search_index') }}?lang={{ lang }}"
+     data-results-none="{{ t.results_none }}" data-results-one="{{ t.results_one }}"
+     data-results-many="{{ t.results_many }}" data-all-posts="{{ t.all_posts }}"
+     data-no-results="{{ t.no_results_title }}"
+     data-failed="{{ t.search_failed }}" data-retry="{{ t.retry }}">
+  <div class="search__veil" data-search-close></div>
+  <div class="search__panel" role="dialog" aria-modal="true" aria-label="{{ t.search }}">
+    <div class="search__bar">
+      <div class="search-field search__field">
+        <i class="ph-duotone ph-magnifying-glass search-field__icon" aria-hidden="true"></i>
+        <input id="search-input" class="input search-field__input" type="search"
+               role="combobox" aria-autocomplete="list" aria-expanded="false"
+               aria-controls="search-results" aria-label="{{ t.search_ph }}"
+               placeholder="{{ t.search_ph }}" autocomplete="off" autocapitalize="off"
+               spellcheck="false" enterkeyhint="search">
+      </div>
+      <button type="button" class="btn btn-ghost search__cancel mobile-only" data-search-close>{{ t.cancel }}</button>
+    </div>
+
+    <div class="search__body" data-search-body>
+      {# La cantidad visible no se anuncia: la anuncia la región viva de abajo,
+         con una pausa, para no leer un número por cada tecla. #}
+      <p class="search__count" aria-hidden="true" data-search-count></p>
+      <div id="search-results" class="search__results" role="listbox" aria-label="{{ t.search_results }}"></div>
+
+      <div class="search__none">
+        <h2 class="search__none-title" data-search-none-title></h2>
+        <p class="search__none-body">{{ t.no_results_body }}</p>
+      </div>
+
+      <div class="search__topics">
+        <h2 class="section-label search__topics-label">{{ t.topics }}</h2>
+        <div class="search__chips" data-search-chips></div>
+      </div>
+    </div>
+
+    <div class="search__foot desktop-only" aria-hidden="true">
+      <span><kbd>{{ t.kbd_navigate }}</kbd> {{ t.navigate }}</span>
+      <span><kbd>{{ t.kbd_open }}</kbd> {{ t.open }}</span>
+      <span><kbd>{{ t.kbd_close }}</kbd> {{ t.close }}</span>
+    </div>
+
+    <p class="visually-hidden" role="status" data-search-status></p>
+  </div>
+
+  <template id="search-option-template">
+    <a class="search-option" role="option" tabindex="-1" aria-selected="false">
+      <span class="search-option__title"></span>
+      <span class="search-option__date meta-mono"></span>
+      <span class="search-option__excerpt"></span>
+      <span class="search-option__meta meta-mono"></span>
+    </a>
+  </template>
+  <template id="search-chip-template">
+    <button type="button" class="tag tag-accent search-chip hit"></button>
+  </template>
+</div>

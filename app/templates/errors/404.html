@@ -1,16 +1,46 @@
 {% extends "base.html" %}
+{% from "partials/errors.html" import plate_number %}
+{% from "partials/posts.html" import post_row with context %}
 
-{% block title %}404 — blog · Iván Vallejos{% endblock %}
+{% block title %}{{ t.not_found_title }} — {{ t.site_title }}{% endblock %}
 
-{% block body_class %}page-flat{% endblock %}
-
-{% block rail %}{% endblock %}
-
+{#
+  404 (README §7, Extras E1a/E1c). `detail` es el texto del diccionario que
+  eligió el router (o None); `recent`, los posts para «Quizás buscabas», vacío
+  si la base no respondió: la página sale igual, sin ese bloque.
+#}
 {% block content %}
-<div class="error-page">
-  <span class="error-code">ERROR 404</span>
-  <h1>Página no encontrada</h1>
-  <p>{{ detail or "El contenido que buscás no existe o fue movido." }}</p>
-  <a href="{{ url_for('post_list') }}">Volver al índice</a>
+<div class="container error-page error-page--404">
+  <div class="error-page__main">
+    {{ plate_number("404") }}
+    <h1 class="error-page__title">{{ t.not_found_title }}</h1>
+    <p class="error-page__body">{{ detail or t.not_found_body }}</p>
+    {# Abre la búsqueda con lo escrito (search.js, [data-search-form]). Sin
+       JavaScript no hay búsqueda, así que el campo no se muestra. #}
+    <form class="error-search js-only" role="search" data-search-form>
+      <div class="search-field error-search__field">
+        <i class="ph-duotone ph-magnifying-glass search-field__icon" aria-hidden="true"></i>
+        <input class="input search-field__input" type="search" name="q"
+               aria-label="{{ t.search_ph }}" placeholder="{{ t.search_ph }}"
+               autocomplete="off" enterkeyhint="search">
+      </div>
+      <button type="submit" class="btn btn-primary error-search__button desktop-only">{{ t.search }}</button>
+    </form>
+  </div>
+
+  <div class="error-page__side">
+    {% if recent %}
+    <section aria-labelledby="maybe-label">
+      <h2 class="section-label error-page__label" id="maybe-label">{{ t.maybe_looking }}</h2>
+      <ol class="list-reset">
+        {% for post in recent %}
+        {# Dos en mobile, tres en desktop (diseño). #}
+        <li{% if loop.index > 2 %} class="desktop-only"{% endif %}>{{ post_row(post, class="post-row--compact") }}</li>
+        {% endfor %}
+      </ol>
+    </section>
+    {% endif %}
+    <a class="btn btn-ghost error-page__home" href="{{ url_for('post_list') }}">{{ t.back_home }} <i class="ph-duotone ph-arrow-right" aria-hidden="true"></i></a>
+  </div>
 </div>
 {% endblock %}

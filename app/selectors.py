@@ -1,7 +1,6 @@
-from sqlalchemy import func
+from sqlalchemy import and_, func, or_
 from sqlalchemy.orm import joinedload, selectinload
 
-from app.dates import MONTHS
 from app.models.post import Post
 from app.models.category import Category
 
@@ -21,6 +20,21 @@ def get_published_posts(db):
                 ).all()
     
     return posts
+
+
+def get_recent_posts(db, limit=None):
+    """
+    Posts del más nuevo al más viejo, sin adelantar el destacado (índice de
+    búsqueda, «Quizás buscabas» de la 404). Con `limit`, solo los primeros.
+    """
+    query = (
+        db.query(Post)
+        .options(joinedload(Post.category))
+        .order_by(Post.published_at.desc(), Post.id.desc())
+    )
+    if limit is not None:
+        query = query.limit(limit)
+    return query.all()
 
 
 def get_category_by_slug(db, slug):
@@ -56,9 +70,10 @@ def get_post_by_slugs(db, category_slug, post_slug):
 
 def get_tag_counts(db):
     """
-    Grupo TAGS del rail: cada categoría con su cantidad de posts, más el
-    total como entrada 'ALL'. 'ALL' lleva slug None — es lo que hace que
-    el chequeo de activo en el template funcione sin un caso especial.
+    Temas con su cantidad de posts, de más a menos posts y por nombre:
+    [{"name": "concurrencia", "slug": "concurrencia", "count": 3}, ...]
+    Solo temas con al menos un post. El «Todo» de los filtros no sale de acá:
+    lo arma el template con el texto del diccionario y el total.
     """
     rows = (
         db.query(Category.name, Category.slug, func.count(Post.id))
@@ -67,33 +82,58 @@ def get_tag_counts(db):
         .order_by(func.count(Post.id).desc(), Category.name)
         .all()
     )
-
-    tags = [{"name": name, "slug": slug, "count": count} for name, slug, count in rows]
-    total = sum(tag["count"] for tag in tags)
-
-    return [{"name": "ALL", "slug": None, "count": total}] + tags
+    return [{"name": name, "slug": slug, "count": count} for name, slug, count in rows]
 
 
-def get_archive_counts(db):
+def get_posts_by_year(db, category_id=None):
     """
-    Grupo de año del rail: [{"year": 2026, "months": [{"label": "JUN", "count": 4}]}]
-    Agrupado en SQL y agrupado por año en Python — el template no arma nada.
+    Posts del archivo agrupados por año, del más nuevo al más viejo:
+    [{"year": 2026, "posts": [Post, ...]}, ...]
+    Con `category_id`, solo los de ese tema. Dentro de cada año, por fecha
+    descendente: en el archivo el destacado no se adelanta.
     """
-    year = func.extract("year", Post.published_at)
-    month = func.extract("month", Post.published_at)
-
-    rows = (
-        db.query(year, month, func.count(Post.id))
-        .group_by(year, month)
-        .order_by(year.desc(), month.desc())
-        .all()
-    )
+    query = db.query(Post).options(joinedload(Post.category))
+    if category_id is not None:
+        query = query.filter(Post.category_id == category_id)
+    posts = query.order_by(Post.published_at.desc()).all()
 
     groups = []
-    for raw_year, raw_month, count in rows:
-        y, m = int(raw_year), int(raw_month)
-        if not groups or groups[-1]["year"] != y:
-            groups.append({"year": y, "months": []})
-        groups[-1]["months"].append({"label": MONTHS[m - 1].upper(), "count": count})
-
+    for post in posts:
+        year = post.published_at.year
+        if not groups or groups[-1]["year"] != year:
+            groups.append({"year": year, "posts": []})
+        groups[-1]["posts"].append(post)
     return groups
+
+
+def group_posts_by_tag(posts, tags):
+    """
+    Bloques por tema de la portada: cada tema de `tags` (en ese orden) con sus
+    posts de `posts` (en el orden recibido). No consulta la base: reusa la
+    lista que la portada ya trajo.
+    """
+    by_slug = {}
+    for post in posts:
+        by_slug.setdefault(post.category.slug, []).append(post)
+    return [{**tag, "posts": by_slug.get(tag["slug"], [])} for tag in tags]
+
+
+def get_next_post(db, post):
+    """
+    «Siguiente» al pie del artículo: el post publicado inmediatamente antes
+    que `post` (se lee del más nuevo al más viejo, como el archivo). Con la
+    misma fecha desempata el id, para que el orden sea total. None si `post`
+    es el más viejo.
+    """
+    return (
+        db.query(Post)
+        .options(joinedload(Post.category))
+        .filter(
+            or_(
+                Post.published_at < post.published_at,
+                and_(Post.published_at == post.published_at, Post.id < post.id),
+            )
+        )
+        .order_by(Post.published_at.desc(), Post.id.desc())
+        .first()
+    )
