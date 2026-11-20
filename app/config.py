@@ -1,0 +1,20 @@
+"""
+Flags de configuración del sitio, leídos del entorno una sola vez.
+"""
+import os
+
+from dotenv import load_dotenv
+
+load_dotenv()
+
+
+def _flag(name: str, default: bool = False) -> bool:
+    raw = os.environ.get(name)
+    if raw is None:
+        return default
+    return raw.strip().lower() in {"1", "true", "yes", "on"}
+
+
+# Switch ES/EN del header. Apagado hasta la ventana de idioma: no se muestra
+# un control que todavía no hace nada (CORRECCIONES §4).
+LANG_SWITCH_ENABLED = _flag("BLOG_LANG_SWITCH", default=False)
