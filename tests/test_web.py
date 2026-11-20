@@ -144,6 +144,27 @@ class Web(unittest.TestCase):
         html = self.client.get("/a/b/c/").text
         self.assertNotRegex(html, r'(href|src|hx-get)="https?://testserver')
 
+    # — share_url —
+
+    def post_page(self):
+        post = POSTS[0]
+        post.content_toc = []
+        with mock.patch("app.routers.blog.get_post_by_slugs", return_value=post), \
+             mock.patch("app.routers.blog.get_next_post", return_value=POSTS[1]):
+            return self.client.get("/concurrencia/concurrencia-sin-miedo/").text
+
+    def test_share_url_from_the_request_without_base_url(self):
+        with mock.patch("app.routers.blog.BASE_URL", None):
+            html = self.post_page()
+        self.assertIn("share-offsite/?url=http%3A//testserver/concurrencia/concurrencia-sin-miedo/", html)
+
+    def test_share_url_from_base_url(self):
+        with mock.patch("app.routers.blog.BASE_URL", "https://blog.ivanvallejos.dev"):
+            html = self.post_page()
+        self.assertIn("share-offsite/?url=https%3A//blog.ivanvallejos.dev/concurrencia/concurrencia-sin-miedo/", html)
+        # «Siguiente» sigue siendo solo la ruta.
+        self.assertIn('href="/design-system/un-design-system/" rel="next"', html)
+
     # — 500 y genérico —
 
     def test_unhandled_exception_is_500_with_reference(self):
