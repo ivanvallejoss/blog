@@ -6,7 +6,7 @@ services:
       POSTGRES_PASSWORD: blog_password
       POSTGRES_DB: blog_db
     ports:
-      - "5434:5432"
+      - "5435:5432"
       # host : contenedor
     volumes:
       - postgres_data:/var/lib/postgresql/data
