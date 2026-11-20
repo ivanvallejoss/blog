@@ -1,17 +1,12 @@
 {% extends "base.html" %}
 
-{% block title %}{{ category.name }} — blog · Iván Vallejos{% endblock %}
-
-{% block rail %}{% include "partials/rail_listing.html" %}{% endblock %}
+{% block title %}{{ category.name }} — {{ t.site_title }}{% endblock %}
 
 {% block content %}
-<div class="col-list">
-  <header class="list-head">
-    <h1>Notes from inside the systems I build.</h1>
-    <p>The problem as it actually appeared, the decision as it was actually made.</p>
-  </header>
-
-  {% include "partials/tags_row.html" %}
-  {% include "partials/post_list.html" %}
+<div class="container">
+  <section class="section">
+    <h1>{{ category.name }}</h1>
+    {% include "partials/post_list.html" %}
+  </section>
 </div>
 {% endblock %}

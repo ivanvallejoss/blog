@@ -1,804 +1,304 @@
-/* =============================================================================
-   blog.css — blog.ivanvallejos.dev
-   Sistema 8a. Carga DESPUÉS de tokens.css (handoff, verbatim, no editar).
+/* blog.css — capa del blog sobre Broadsheet.
+   Orden de carga: fonts.css → broadsheet.css → blog-tokens.css → blog.css.
+   broadsheet.css no se edita: acá solo se suma o se ajusta con clases propias.
+   Todo color, radio, sombra y medida sale de una variable de broadsheet.css o
+   blog-tokens.css.
 
-   Fase 2: baseline, header, shell/rail, artículo, prosa, mobile, errores.
-   Fase 3: listado de posts, vista de tag.
-
-   Los valores en px son los del README del handoff. No redondear.
-   ============================================================================= */
-
-
-/* =============================================================================
-   0. BASELINE
-      tokens.css trae un reset mínimo (body, a, .shell). Esto repone lo que el
-      proyecto ya usaba y el handoff no incluye. No son decisiones de diseño.
-   ============================================================================= */
-
-*, *::before, *::after { box-sizing: border-box; }
-
-html { scroll-behavior: smooth; }
-
-body { min-height: 100svh; display: flex; flex-direction: column; }
-
-h1, h2, h3, h4, p, blockquote, figure, dl, dd, pre { margin: 0; }
-
-img, svg { max-width: 100%; height: auto; }
-
-.nowrap { white-space: nowrap; }
+   Mobile primero. Hasta 767px rige el layout de mobile; desde 768px, el de
+   desktop. Las medidas interpolan entre 390px y 1280px (ver blog-tokens.css),
+   así el cambio de layout no salta de golpe. */
 
 
-/* =============================================================================
-   1. HEADER — grid 1fr auto, bordes internos --rule-module
-   ============================================================================= */
+/* ── Reset mínimo ─────────────────────────────────────────────────────────
+   broadsheet.css ya trae box-sizing, márgenes de body/títulos/párrafos, img y
+   :focus-visible. Esto completa sin pisarlo. */
 
-.site-header {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  border-bottom: 1px solid var(--rule-module);
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  background: var(--color-bg);
 }
 
-.site-header a { text-decoration: none; }
-
-.brand {
-  padding: 17px 26px;
-  border-right: 1px solid var(--rule-module);
-  font: 500 var(--mono-nav)/1 var(--font-mono);
-  letter-spacing: .14em;
-  color: var(--text-strong);
+body {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
 }
 
-.site-nav { display: flex; }
+.site-main { flex: 1 0 auto; }
+.site-main:focus-visible { outline: none; } /* destino del «Saltar al contenido» */
 
-.site-nav > * {
+h1 { text-wrap: balance; }
+p { text-wrap: pretty; }
+
+/* Links de texto en accent-700 (README §5). `a:where(:not(.btn))` tiene la misma
+   especificidad que el `a` de broadsheet.css: gana por orden y no le gana a
+   .btn-primary ni a ninguna otra clase. */
+a:where(:not(.btn)) { color: var(--color-accent-700); }
+a:where(:not(.btn)):hover { color: var(--color-accent-600); }
+
+button { font: inherit; }
+
+/* Metadatos: 11.5px en mobile, 12px en desktop (README §5). Extiende la clase
+   de blog-tokens.css. */
+.meta-mono {
+  font-size: clamp(11.5px, calc(11.5px + (100vw - 390px) * 0.5 / 890), 12px);
+}
+
+
+/* ── Utilidades compartidas ──────────────────────────────────────────── */
+
+/* Contenedor de página: 1120px máximo en desktop, márgenes laterales de
+   20px → 40px. */
+.container {
+  width: 100%;
+  max-width: var(--page-max);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+/* Separación entre secciones: 56px → 112px, solo espacio, sin líneas. */
+.section + .section { margin-block-start: var(--section-gap); }
+.mt-section { margin-block-start: var(--section-gap); }
+.pt-section { padding-block-start: var(--section-gap); }
+
+/* Etiqueta de sección: el h6 de Broadsheet en neutral-700, aplicable a
+   cualquier nivel de título para no saltar niveles. */
+.section-label {
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-neutral-700);
+}
+
+/* Lista sin viñetas ni sangría. */
+.list-reset { list-style: none; margin: 0; padding: 0; }
+
+/* Agranda el área táctil a 44×44 sin cambiar el tamaño visible. Solo crece:
+   si el elemento ya mide más, el pseudo-elemento coincide con él. */
+.hit { position: relative; }
+.hit::after {
+  content: "";
+  position: absolute;
+  inset-block: min(0px, calc((100% - var(--hit)) / 2));
+  inset-inline: min(0px, calc((100% - var(--hit)) / 2));
+}
+
+/* Oculto a la vista, presente para lectores de pantalla. */
+.visually-hidden:not(:focus):not(:active) {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* «Saltar al contenido»: aparece arriba a la izquierda al recibir foco. */
+.skip-link {
+  position: absolute;
+  top: var(--space-2);
+  left: var(--space-2);
+  z-index: 10;
+  background: var(--color-bg);
+}
+.skip-link:focus { box-shadow: var(--shadow-md); }
+.skip-link:not(:focus) {
+  /* fuera de pantalla sin sacarlo del orden de tabulación */
+  transform: translateY(calc(-100% - var(--space-4)));
+}
+
+
+/* ── Header ────────────────────────────────────────────────────────────
+   Mobile: fila de 44px, padding 8px 12px 8px 20px. Marca a la izquierda;
+   a la derecha el switch ES/EN (si el flag está activo) y la lupa.
+   Desktop: contenedor de 1120px, padding 28px 40px, 32px entre ítems:
+   marca · Archivo · Buscar ⌘K · ES/EN · ivanvallejos.dev ↗. */
+
+.site-header__inner {
+  width: 100%;
+  max-width: var(--page-max);
+  margin-inline: auto;
   display: flex;
   align-items: center;
-  padding: 17px 22px;
-  font: 400 var(--mono-nav)/1 var(--font-mono);
-  letter-spacing: .08em;
-  color: var(--text-muted);
-  transition: color .12s ease;
-}
-
-.site-nav > * + * { border-left: 1px solid var(--rule-module); }
-
-.site-nav a:hover { color: var(--text-title); }
-
-.nav-counter { display: none; }  /* sólo mobile, en la vista de artículo */
-
-
-/* =============================================================================
-   2. SHELL Y RAIL
-      .shell viene de tokens.css: grid var(--rail-w) minmax(0, 1fr).
-      El minmax(0,1fr) es la regla crítica: sin eso el min-content del <pre>
-      estira el track y rompe el layout. No tocar.
-   ============================================================================= */
-
-.shell { flex: 1; }
-
-.rail {
-  border-right: 1px solid var(--rule-module);
-  padding: 32px var(--pad-rail);
-}
-
-/* El rail conserva la altura completa de la fila para que su borde derecho
-   corra toda la página; lo que se pega al scrollear es el contenido.
-   top: 32px espeja el padding superior del propio rail — con top: 0 el
-   contenido queda pegado al borde del viewport.
-   El max-height es la salvaguarda para artículos con muchos headings: sin
-   eso, un CONTENTS más alto que la pantalla no se puede terminar de leer. */
-.rail-inner {
-  position: sticky;
-  top: 32px;
-  display: flex;
-  flex-direction: column;
-  gap: 28px;
-  max-height: calc(100svh - 64px);
-  overflow-y: auto;
-  /* El overflow recortaría el outline de foco de los ítems (offset 2px).
-     Padding + margen negativo le dan lugar sin mover nada de sitio. */
-  padding: 4px;
-  margin: -4px;
-}
-
-.rail-label {
-  margin-bottom: 14px;
-  font: 500 var(--mono-label)/1 var(--font-mono);
-  letter-spacing: .16em;
-  color: var(--text-muted);
-}
-
-.rail-list { display: flex; flex-direction: column; gap: 2px; }
-
-.rail-item {
-  padding: 6px 10px;
-  margin-left: -10px;
-  border-left: 2px solid transparent;
-  font: 400 11.5px/1.45 var(--font-mono);   /* sin token: valor del README */
-  color: var(--text-muted);
-  text-transform: uppercase;
-  text-decoration: none;
-  transition: color .12s ease;
-}
-
-.rail-item:hover { color: var(--text-soft); }
-
-/* estado activo: color + borde. Nunca sólo color. */
-.rail-item.is-active {
-  border-left-color: var(--accent-nav);
-  color: var(--text-strong);
-}
-
-.rail-progress {
-  padding-top: 22px;
-  border-top: 1px solid var(--rule-module);
-}
-
-.progress-track { height: 2px; background: var(--rule-item); }
-
-.progress-fill { height: 2px; width: 0; background: var(--accent-nav); }
-
-.progress-mobile { display: none; }
-
-.col {
-  min-width: 0;                              /* pareja obligada del minmax(0,1fr) */
-  padding: 52px var(--pad-col) 60px;
-}
-
-
-/* =============================================================================
-   3. CABECERA DEL ARTÍCULO — 680px (el cuerpo va a 560, ver §4)
-   ============================================================================= */
-
-.article-head {
-  max-width: var(--read-w-wide);
-  margin-bottom: 36px;
-  padding-bottom: 24px;
-  border-bottom: 1px solid var(--rule-module);
-}
-
-.eyebrow {
-  margin-bottom: 16px;
-  font: 500 var(--mono-meta)/1 var(--font-mono);
-  letter-spacing: .16em;
-  text-transform: uppercase;
-  color: var(--accent-meta);
-}
-
-.article-head h1 {
-  margin-bottom: 20px;
-  font: 400 var(--read-h1)/1.16 var(--font-read);
-  letter-spacing: -.014em;
-  color: var(--text-title);
-  text-wrap: pretty;
-}
-
-/* la única aparición de Geist sans en toda la vista de artículo */
-.byline {
-  font: 400 12.5px/1 var(--font-ui);
-  color: var(--text-muted);
-}
-
-
-/* =============================================================================
-   4. PROSA — los 12 componentes.
-      .prose ocupa el ancho de la columna; la medida de lectura la ponen los
-      hijos. Eso es lo que permite que el escape a ancho completo llegue a los
-      bordes reales de la columna con margin: 0 calc(-1 * var(--pad-col)).
-   ============================================================================= */
-
-.prose > * { max-width: var(--read-w); }
-
-/* --- cuerpo y entrada ----------------------------------------------------- */
-
-.prose p {
-  margin-bottom: 26px;
-  font: 300 var(--read-body)/1.78 var(--font-read);
-  color: var(--text-body);
-  text-wrap: pretty;
-}
-
-.prose > p:first-of-type {
-  margin-bottom: 24px;
-  font: 300 var(--read-lead)/1.64 var(--font-read);
-  color: var(--text-lead);
-}
-
-.prose em { font-style: italic; color: var(--text-strong); }
-.prose strong { font-weight: 500; color: var(--text-strong); }
-
-/* --- headings ------------------------------------------------------------- */
-
-.prose { counter-reset: sec; }
-
-.prose h2,
-.prose h3 {
-  counter-increment: sec;
-  scroll-margin-top: 24px;
-  color: var(--text-title);
-}
-
-.prose h2 {
-  margin: 44px 0 16px;
-  font: 500 var(--read-h2)/1.30 var(--font-read);
-}
-
-/* h3 numerado: el número corre sobre h2+h3 juntos, igual que el rail */
-.prose h3 {
-  display: flex;
-  align-items: baseline;
-  gap: 12px;
-  margin: 40px 0 16px;
-  font: 500 var(--read-h3)/1.35 var(--font-read);
-}
-
-.prose h3::before {
-  content: counter(sec, decimal-leading-zero);
-  flex: none;
-  font: 500 11px/1.6 var(--font-mono);
-  letter-spacing: .16em;
-  color: var(--accent-nav);
-}
-
-.prose h2:first-child,
-.prose h3:first-child { margin-top: 0; }
-
-/* ancla de heading (extensión toc). No está en el diseño; se conserva la
-   funcionalidad existente en el registro más apagado posible. */
-.headerlink {
-  margin-left: 10px;
-  font: 400 13px/1 var(--font-mono);
-  color: var(--text-muted);
-  text-decoration: none;
-  opacity: 0;
-  transition: opacity .12s ease;
-}
-.prose h2:hover .headerlink,
-.prose h3:hover .headerlink,
-.headerlink:focus-visible { opacity: 1; }
-
-/* --- cita ----------------------------------------------------------------- */
-
-.prose blockquote {
-  margin: 34px 0;
-  padding-left: 26px;
-  border-left: 2px solid var(--accent-nav);
-  font-style: normal;      /* sin itálica: en Newsreader 300 queda débil */
-}
-
-.prose blockquote p {
-  margin-bottom: 10px;
-  font: 300 var(--read-quote)/1.48 var(--font-read);
-  color: var(--text-title);
-}
-
-.prose blockquote p:last-child { margin-bottom: 0; }
-
-.prose blockquote .attr {
-  font: 500 10.5px/1 var(--font-mono);
-  letter-spacing: .16em;
-  text-transform: uppercase;
-  color: var(--accent-nav);
-}
-
-/* --- código --------------------------------------------------------------- */
-
-.prose code:not(pre code) {
-  padding: 2px 6px;
-  background: var(--surface-code-inline);
-  font: 400 var(--mono-inline)/1 var(--font-mono);
-  color: var(--text-strong);
-  font-feature-settings: 'liga' 0;
-}
-
-.prose .codehilite {
-  margin-bottom: 26px;
-  border: 1px solid var(--rule-module);
-}
-
-.prose .codehilite pre {
-  min-width: 0;
-  padding: 20px;
-  overflow-x: auto;
-  background: var(--surface-code);
-  font: 400 var(--mono-code)/1.8 var(--font-mono);
-  color: var(--text-body);
-  font-feature-settings: 'liga' 0;
-}
-
-/* barra superior del bloque de código.
-   CONTRATO: markup pendiente de la ventana de pipeline (nombre de archivo
-   desde el caption de Notion, lenguaje desde el fence). */
-.code-bar {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  padding: 10px 16px;
-  border-bottom: 1px solid var(--rule-module);
-}
-.code-file {
-  font: 500 11px/1 var(--font-mono);
-  letter-spacing: .1em;
-  color: var(--text-muted);
-}
-.code-lang {
-  font: 400 10.5px/1 var(--font-mono);
-  letter-spacing: .08em;
-  color: var(--text-muted);
-}
-
-/* --- escape a ancho completo ---------------------------------------------- */
-/* CONTRATO: markup pendiente de la ventana de pipeline. */
-
-.prose > .full-width {
-  max-width: none;
-  min-width: 0;
-  margin: 0 calc(-1 * var(--pad-col)) 26px;
-}
-
-.full-width-label {
-  display: flex;
-  align-items: baseline;
   justify-content: space-between;
-  margin: 0 var(--pad-col) 10px;
-  font: 500 var(--mono-label)/1 var(--font-mono);
-  letter-spacing: .16em;
-  color: var(--text-muted);
+  padding: var(--header-pad-block) var(--header-pad-end) var(--header-pad-block) var(--gutter);
 }
 
-.full-width pre {
-  min-width: 0;
-  padding: 22px 24px;
-  overflow-x: auto;
-  background: var(--surface-code);
-  border: 1px solid var(--rule-module);
-  font: 400 var(--mono-code-wide)/1.7 var(--font-mono);
-  color: var(--text-body);
-}
+/* Con la flecha atrás a la izquierda (artículo y archivo) el padding de inicio
+   es el mismo que el del final: el botón de 44px ya trae su aire. */
+.site-header--back .site-header__inner { padding-inline-start: var(--header-pad-end); }
 
-/* --- callout de nota técnica ---------------------------------------------- */
-/* CONTRATO: markup pendiente de la ventana de pipeline. */
-
-.callout {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 16px;
-  margin-bottom: 26px;
-  padding: 18px 20px;
-  border: 1px solid var(--rule-module);
-  border-left: 2px solid var(--accent-tech);
-}
-
-.callout-label {
-  font: 500 10.5px/1.6 var(--font-mono);
-  letter-spacing: .14em;
-  color: var(--accent-tech);
-  white-space: nowrap;
-}
-
-.callout p {
-  margin: 0;
-  font: 300 16.5px/1.7 var(--font-read);
-  color: var(--text-soft);
-}
-
-/* --- glosario ------------------------------------------------------------- */
-
-.prose dl { margin-bottom: 26px; }
-
-.prose dt {
-  padding-top: 16px;
-  border-top: 1px solid var(--rule-item);
-  font: 400 13.5px/1.4 var(--font-mono);
-  color: var(--accent-meta);
-}
-
-.prose dd {
-  margin: 0;
-  padding: 5px 0 16px;
-  font: 300 var(--read-small)/1.68 var(--font-read);
-  color: var(--text-body);
-}
-
-.prose dd:last-of-type { border-bottom: 1px solid var(--rule-item); }
-
-/* --- listas --------------------------------------------------------------- */
-
-.prose ol,
-.prose ul {
-  list-style: none;
-  margin-bottom: 26px;
-  padding: 0;
+.site-header__start,
+.site-header__center,
+.site-header__end {
   display: flex;
-  flex-direction: column;
-  gap: 20px;
-  counter-reset: item;
+  align-items: center;
+}
+.site-header__center:empty { display: none; }
+
+/* Marca: anillo + «IV» + «/blog». Sin el punto «.». */
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--brand-gap);
+  color: var(--color-text);
+  text-decoration: none;
+  font-family: var(--font-heading);
+  font-weight: var(--font-heading-weight);
+  font-size: var(--brand-size);
+}
+.brand__sub {
+  font-family: var(--font-mono);
+  font-weight: 400;
+  font-size: var(--brand-sub-size);
+  color: var(--color-neutral-700);
 }
 
-.prose li {
-  display: grid;
-  grid-template-columns: 34px 1fr;
-  font: 300 18.5px/1.74 var(--font-read);
-  color: var(--text-body);
-  text-wrap: pretty;
+/* Anillo SVG de la marca (mismos tres trazos que el favicon). */
+.brand-ring {
+  display: block;
+  flex: none;
+  width: var(--brand-ring-size);
+  height: var(--brand-ring-size);
+}
+.brand-ring path {
+  fill: none;
+  stroke: var(--brand-ring);
+  stroke-width: 3;
+  stroke-linecap: round;
 }
 
-.prose li p { margin: 0; font: inherit; color: inherit; }
-
-.prose ol > li { counter-increment: item; }
-
-.prose ol > li::before {
-  content: counter(item, decimal-leading-zero);
-  font: 500 12px/1.9 var(--font-mono);
-  color: var(--accent-nav);
+/* Botones de ícono del header (lupa en mobile, flecha atrás). */
+.header-icon-btn {
+  width: var(--hit);
+  height: var(--hit);
+  padding: 0;
+  font-size: 22px;
 }
 
-/* La lista con viñetas no está en el diseño. Misma grilla, marcador sin color
-   (regla del sistema: si no encaja en uno de los tres roles, no lleva color). */
-.prose ul > li::before {
-  content: "·";
-  font: 500 12px/1.74 var(--font-mono);
-  color: var(--text-muted);
+/* Link de texto del header (Archivo). */
+.site-nav__link {
+  font-size: 15px;
+  color: var(--color-text);
+  text-decoration: none;
+}
+a.site-nav__link:hover { color: var(--color-accent-700); }
+
+/* Link a la landing: link de texto, sin cortar. */
+.site-nav__external {
+  font-size: 15px;
+  white-space: nowrap;
+  flex: none;
 }
 
-/* --- Q&A anidado ---------------------------------------------------------- */
-/* CONTRATO: markup pendiente de la ventana de pipeline. */
-
-.qa { display: flex; flex-direction: column; gap: 26px; margin-bottom: 32px; }
-
-.qa-item { padding-left: 22px; border-left: 1px solid var(--rule-module); }
-
-.qa-q {
-  margin-bottom: 10px;
-  font: 400 18px/1.5 var(--font-read);
-  color: var(--text-strong);
+/* Botón de búsqueda: el mismo elemento en los dos tamaños.
+   Mobile: .btn-icon de 44×44 con la lupa sola.
+   Desktop: .btn-secondary con «Buscar» y «⌘K» en mono. */
+.site-search {
+  width: var(--hit);
+  height: var(--hit);
+  padding: 0;
+  font-size: 22px;
+  border-color: transparent;
+}
+.site-search__label,
+.site-search__kbd { display: none; }
+.site-search__kbd {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--color-neutral-700);
 }
 
-.qa-a {
-  margin: 0;
-  font: 300 var(--read-small)/1.72 var(--font-read);
-  color: var(--text-soft);
-  text-wrap: pretty;
+/* Switch ES/EN: mono 12px, «/» en neutral-500, activo en --color-text e
+   inactivo en neutral-600. Cada botón mide al menos 44×44: el texto queda
+   pegado a la barra, como en el diseño, y el área sobrante crece hacia afuera. */
+.lang-switch {
+  display: flex;
+  align-items: center;
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+.lang-switch__sep { color: var(--color-neutral-500); }
+.lang-switch__btn {
+  display: inline-flex;
+  align-items: center;
+  min-width: var(--hit);
+  height: var(--hit);
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  cursor: pointer;
+  color: var(--color-neutral-600);
+}
+.lang-switch__btn:first-child { justify-content: flex-end; padding-inline-end: var(--lang-switch-pad-x); }
+.lang-switch__btn:last-child { justify-content: flex-start; padding-inline-start: var(--lang-switch-pad-x); }
+.lang-switch__btn[aria-pressed="true"] { color: var(--color-text); }
+.lang-switch__btn:hover { color: var(--color-text); }
+
+/* Lo que solo existe en desktop. */
+.desktop-only { display: none; }
+
+@media (min-width: 768px) {
+  .site-header__end { gap: var(--header-gap); }
+
+  .desktop-only { display: revert; }
+  .mobile-only { display: none; }
+
+  .site-search {
+    width: auto;
+    height: auto;
+    padding: var(--space-2) calc(var(--space-3) * 1.2);
+    font-size: 14px;
+    gap: var(--space-2);
+    border-color: var(--color-divider);
+  }
+  .site-search__label,
+  .site-search__kbd { display: inline; }
+
+  /* En desktop el switch es más compacto (padding 6px 4px); el área táctil
+     de 44px la da .hit, hacia afuera de la barra para no pisarse. */
+  .lang-switch__btn {
+    min-width: 0;
+    height: auto;
+    padding: var(--lang-switch-pad-y) var(--lang-switch-pad-x);
+  }
+  .lang-switch__btn::after { inset-block: min(0px, calc((100% - var(--hit)) / 2)); width: var(--hit); }
+  .lang-switch__btn:first-child,
+  .lang-switch__btn:last-child { padding: var(--lang-switch-pad-y) var(--lang-switch-pad-x); }
+  .lang-switch__btn:first-child::after { inset-inline: auto 0; }
+  .lang-switch__btn:last-child::after { inset-inline: 0 auto; }
 }
 
-/* --- veredictos ----------------------------------------------------------- */
-/* CONTRATO: markup pendiente de la ventana de pipeline. */
-
-.verdicts { display: flex; flex-direction: column; margin-bottom: 32px; }
-
-.verdict {
-  display: grid;
-  grid-template-columns: 118px 1fr;
-  gap: 22px;
-  padding: 18px 0;
-  border-top: 1px solid var(--rule-item);
-}
-
-.verdict:last-child { border-bottom: 1px solid var(--rule-item); }
-
-.verdict-q {
-  margin-bottom: 6px;
-  font: 500 11px/1 var(--font-mono);
-  letter-spacing: .1em;
-  color: var(--text-muted);
-}
-
-/* el veredicto siempre lleva texto, no sólo color */
-.verdict-tag {
-  font: 500 10.5px/1 var(--font-mono);
-  letter-spacing: .14em;
-}
-.verdict-tag.is-ok      { color: var(--accent-tech); }
-.verdict-tag.is-partial { color: var(--accent-meta); }
-
-.verdict p {
-  margin: 0;
-  font: 300 var(--read-small)/1.7 var(--font-read);
-  color: var(--text-body);
+/* En mobile el switch va antes de la lupa; en desktop, después de «Buscar». */
+@media (max-width: 767.98px) {
+  .site-header__end .lang-switch { order: -1; }
 }
 
 
-/* =============================================================================
-   5. FOOTER
-      No está en el diseño. Mínimo coherente: una regla de módulo y mono muted.
-      Ver "desvíos" en el informe de la fase.
-   ============================================================================= */
+/* ── Footer ────────────────────────────────────────────────────────────
+   13px neutral-700, 16px entre ítems: © año · RSS · ivanvallejos.dev ↗.
+   Mobile: padding 64px 20px 40px (prototipo). Desktop: mismo contenedor que
+   el header. */
 
 .site-footer {
+  width: 100%;
+  max-width: var(--page-max);
+  margin-inline: auto;
+  padding: var(--footer-pad-top) var(--gutter) var(--space-8);
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
   flex-wrap: wrap;
-  padding: 18px var(--pad-col);
-  border-top: 1px solid var(--rule-module);
-  font: 400 var(--mono-nav)/1 var(--font-mono);
-  letter-spacing: .08em;
-  color: var(--text-muted);
+  align-items: center;
+  column-gap: var(--footer-gap);
+  row-gap: var(--space-1);
+  font-size: 13px;
+  color: var(--color-neutral-700);
 }
-
-.site-footer a { color: var(--text-muted); text-decoration: none; }
-.site-footer a:hover { color: var(--text-title); }
-
-
-/* =============================================================================
-   6. PÁGINAS DE ERROR — sugerencia del README (§6), no pantalla diseñada
-   ============================================================================= */
-
-.error-page { max-width: var(--read-w-wide); }
-
-.error-page h1 {
-  margin-bottom: 16px;
-  font: 400 34px/1.2 var(--font-read);
-  color: var(--text-title);
-  text-wrap: balance;
-}
-
-.error-page p {
-  margin-bottom: 24px;
-  font: 300 var(--read-body)/1.78 var(--font-read);
-  color: var(--text-body);
-}
-
-.error-code {
-  display: block;
-  margin-bottom: 16px;
-  font: 500 var(--mono-meta)/1 var(--font-mono);
-  letter-spacing: .16em;
-  color: var(--text-muted);
-}
-
-
-/* =============================================================================
-   7. MOBILE — único breakpoint: 640px
-   ============================================================================= */
-
-@media (max-width: 640px) {
-
-  .shell { grid-template-columns: minmax(0, 1fr); }
-
-  .rail { display: none; }
-
-  .brand { padding: 16px var(--pad-mobile); }
-
-  .site-nav > * { padding: 16px var(--pad-mobile); font-size: 11.5px; }
-
-  /* en el artículo el header deja lugar al retorno + contador de sección */
-  .page-post .brand { display: none; }
-  .page-post .site-header { grid-template-columns: 1fr; }
-  .page-post .site-nav { justify-content: space-between; }
-  .page-post .site-nav > * + * { border-left: none; }
-  .nav-counter { display: flex; }
-
-  .progress-mobile { display: block; height: 2px; background: var(--rule-item); }
-
-  .col { padding: 32px var(--pad-mobile) 40px; }
-
-  .article-head { margin-bottom: 26px; padding-bottom: 20px; }
-  .article-head h1 { font-size: var(--read-h1-m); line-height: 1.18; letter-spacing: -.012em; }
-  .eyebrow { margin-bottom: 12px; font-size: 10.5px; }
-  .byline { font-size: 12px; }
-
-  .prose > * { max-width: none; }
-  .prose p { margin-bottom: 20px; font-size: var(--read-body-m); line-height: 1.76; }
-  .prose > p:first-of-type { font-size: var(--read-lead-m); line-height: 1.70; }
-  .prose h2 { margin: 32px 0 14px; font-size: var(--read-h2-m); line-height: 1.32; }
-  .prose h3 { margin: 30px 0 14px; font-size: 19px; }
-  .prose blockquote { margin: 26px 0; padding-left: 18px; }
-  .prose blockquote p { font-size: var(--read-quote-m); line-height: 1.50; }
-  .prose .codehilite pre { padding: 14px; font-size: var(--mono-code-m); line-height: 1.75; }
-  .prose code:not(pre code) { font-size: 14.5px; padding: 2px 5px; }
-
-  .prose > .full-width { margin: 0 calc(-1 * var(--pad-mobile)) 22px; }
-  .full-width-label { margin: 0 var(--pad-mobile) 10px; }
-
-  .callout { gap: 6px; grid-template-columns: 1fr; padding: 16px 18px; }
-  .callout p { font-size: 15.5px; line-height: 1.68; }
-
-  .verdict { grid-template-columns: 1fr; gap: 10px; }
-
-  .site-footer { padding: 18px var(--pad-mobile); }
-}
-
-
-/* =============================================================================
-   8. REDUCED MOTION
-      Las únicas transiciones del sistema son hovers de 120ms. Igual se envuelven.
-   ============================================================================= */
-
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
-    animation-duration: .01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: .01ms !important;
-  }
-  html { scroll-behavior: auto; }
-}
-
-/* =============================================================================
-   9. LISTADO — índice y vista de tag
-      Misma shell y mismo rail que el artículo; cambia el contenido del rail
-      y el padding de la columna (--pad-mod, no --pad-col).
-   ============================================================================= */
-
-.col-list { padding: 34px var(--pad-mod) 44px; margin: -52px calc(-1 * var(--pad-col)) -60px; }
-
-.page-flat .shell { grid-template-columns: minmax(0, 1fr); }
-.page-flat .rail { display: none; }
-
-/* --- rail del listado ----------------------------------------------------- */
-
-.rail-item--tag {
-  padding: 7px 10px;
-  font: 400 var(--mono-row)/1 var(--font-mono);
-  text-transform: uppercase;
-}
-
-.rail-dates {
-  display: flex;
-  flex-direction: column;
-  gap: 9px;
-  font: 400 var(--mono-row)/1.3 var(--font-mono);
-  color: var(--text-muted);
-}
-
-/* --- cabecera del listado ------------------------------------------------- */
-
-.list-head h1 {
-  margin-bottom: 8px;
-  max-width: 26ch;
-  font: 400 34px/1.2 var(--font-read);
-  color: var(--text-title);
-  text-wrap: balance;
-}
-
-.list-head p {
-  margin-bottom: 32px;
-  padding-bottom: 22px;
-  border-bottom: 1px solid var(--rule-module);
-  max-width: 48ch;
-  font: 300 16.5px/1.7 var(--font-read);
-  color: var(--text-dim);
-  text-wrap: pretty;
-}
-
-/* --- filas ---------------------------------------------------------------- */
-
-.post-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-}
-
-.post-row {
-  border-bottom: 1px solid var(--rule-item);
-  transition: border-color .12s ease;
-}
-
-.post-row:hover { border-bottom-color: var(--rule-module); }
-
-.post-row > a { display: block; text-decoration: none; }
-
-.row-title {
-  font: 400 var(--read-item)/1.3 var(--font-read);
-  color: var(--text-lead);
-  text-wrap: pretty;
-  transition: color .12s ease;
-}
-
-.post-row:hover .row-title { color: var(--text-title); }
-
-.row-eyebrow {
-  margin-bottom: 6px;
-  font: 500 var(--mono-label)/1 var(--font-mono);
-  letter-spacing: .14em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-}
-
-/* fila destacada: sin fondo, sólo escala y el eyebrow en ámbar */
-.post-row--featured > a { padding: 0 0 26px; }
-
-.post-row--featured .row-eyebrow {
-  margin-bottom: 9px;
-  font-size: 10.5px;
-  color: var(--accent-meta);
-}
-
-.post-row--featured .row-title {
-  margin-bottom: 9px;
-  font-size: var(--read-feat);
-  line-height: 1.24;
-}
-
-.row-summary {
-  max-width: 54ch;
-  font: 300 16.5px/1.7 var(--font-read);
-  color: var(--text-dim);
-  text-wrap: pretty;
-}
-
-/* filas siguientes */
-.post-row--item > a {
-  display: grid;
-  grid-template-columns: 1fr 104px;
-  gap: 24px;
-  align-items: baseline;
-  padding: 24px 0;
-}
-
-.row-meta {
-  font: 400 11px/1.6 var(--font-mono);
-  text-align: right;
-  text-transform: uppercase;
-  white-space: nowrap;
-  color: var(--text-muted);
-}
-
-.row-meta-inline { display: none; }   /* sólo mobile */
-
-.post-row--empty > p {
-  padding: 24px 0;
-  font: 300 var(--read-body)/1.78 var(--font-read);
-  color: var(--text-muted);
-}
-
-/* --- fila de tags de mobile ----------------------------------------------- */
-
-.tags-row { display: none; }
-
-@media (max-width: 640px) {
-
-  .col-list { padding: 34px var(--pad-mobile) 34px; margin: -32px calc(-1 * var(--pad-mobile)) -40px; }
-
-  .list-head h1 { margin-bottom: 10px; font-size: 27px; line-height: 1.22; }
-
-  .list-head p {
-    margin-bottom: 0;
-    padding-bottom: 18px;
-    border-bottom: none;
-    max-width: none;
-    font-size: 15.5px;
-    line-height: 1.68;
-  }
-
-  .tags-row {
-    display: flex;
-    gap: 22px;
-    margin: -4px calc(-1 * var(--pad-mobile)) 26px;
-    padding: 4px var(--pad-mobile) 18px;
-    border-bottom: 1px solid var(--rule-module);
-    overflow-x: auto;
-    scrollbar-width: none;
-    font: 400 11px/1 var(--font-mono);
-    letter-spacing: .1em;
-    text-transform: uppercase;
-  }
-
-  .tags-row::-webkit-scrollbar { display: none; }
-
-  .tags-row a {
-    padding-bottom: 8px;
-    border-bottom: 2px solid transparent;
-    white-space: nowrap;
-    color: var(--text-muted);
-    text-decoration: none;
-  }
-
-  /* activo: color + underline, nunca sólo color */
-  .tags-row a.is-active {
-    border-bottom-color: var(--accent-nav);
-    color: var(--text-strong);
-  }
-
-  .post-row--featured > a { padding-bottom: 22px; }
-  .post-row--featured .row-eyebrow { font-size: 10px; }
-  .post-row--featured .row-title { font-size: 21px; line-height: 1.26; }
-  .row-summary { max-width: none; font-size: 15px; line-height: 1.66; }
-
-  .post-row--item > a { grid-template-columns: minmax(0, 1fr); gap: 0; padding: 20px 0; }
-  .post-row--item .row-title { font-size: 18px; line-height: 1.32; }
-  .row-meta { display: none; }
-  .row-meta-inline { display: inline; }
-}
+.site-footer a { white-space: nowrap; }

@@ -1,27 +1,15 @@
-<ol class="post-list">
+{# Lista mínima de posts sobre la base Broadsheet. El diseño de filas
+   (portada, archivo) lo hace la ventana de portada y archivo. #}
+<ol class="post-list list-reset">
   {% for post in posts %}
-    {% if loop.first %}
-    <li class="post-row post-row--featured">
-      <a href="{{ url_for('get_post', category_slug=post.category.slug, post_slug=post.slug) }}">
-        <p class="row-eyebrow">{{ post.category.name }} · {{ post.published_at | format_date }} · {{ post.reading_minutes }} min</p>
-        <p class="row-title">{{ post.title }}</p>
-        {% if post.summary %}<p class="row-summary">{{ post.summary }}</p>{% endif %}
-      </a>
-    </li>
-    {% else %}
-    <li class="post-row post-row--item">
-      <a href="{{ url_for('get_post', category_slug=post.category.slug, post_slug=post.slug) }}">
-        <div>
-          <p class="row-eyebrow">{{ post.category.name }}<span class="row-meta-inline"> · {{ post.published_at | format_date_short }} · {{ post.reading_minutes }} min</span></p>
-          <p class="row-title">{{ post.title }}</p>
-        </div>
-        <p class="row-meta">{{ post.published_at | format_date_short }}<br>{{ post.reading_minutes }} min</p>
-      </a>
-    </li>
-    {% endif %}
+  <li>
+    <a href="{{ url_for('get_post', category_slug=post.category.slug, post_slug=post.slug) }}">{{ post.title }}</a>
+    <p class="meta-mono">
+      <time datetime="{{ post.published_at.date().isoformat() }}">{{ post.published_at | format_date_short(lang) }}</time>
+      · {{ post.category.name }} · {{ t.minutes.format(n=post.reading_minutes) }}
+    </p>
+  </li>
   {% else %}
-    <li class="post-row post-row--empty">
-      <p>No hay posts publicados todavía.</p>
-    </li>
+  <li><p>{{ t.no_posts }}</p></li>
   {% endfor %}
 </ol>

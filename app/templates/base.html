@@ -1,58 +1,74 @@
 <!DOCTYPE html>
-<html lang="es">
+{% from "partials/brand.html" import brand, search_button, lang_switch -%}
+<html lang="{{ lang }}">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{% block title %}blog — Iván Vallejos{% endblock %}</title>
+  <title>{% block title %}{{ t.site_title }}{% endblock %}</title>
+  {% block meta %}{% endblock %}
 
   <link rel="icon" type="image/svg+xml" href="{{ url_for('static', path='public/favicon.svg') }}">
 
   {#
-    Sistema 8a — propio del blog (handoff de diseño, 2026-07-30).
-    tokens.css es el archivo del handoff, verbatim: no editar acá.
-    blog.css implementa layout, componentes y prosa sobre esos tokens.
-    Ya NO se sincroniza con la landing — ver ADR de supersesión.
+    Broadsheet (ADR broadsheet-en-el-blog). Orden de carga del README §4:
+    fuentes → broadsheet.css (del design system, no se edita) → blog-tokens.css
+    (extensiones del blog) → blog.css. Las hojas propias de una página van en
+    {% block head %} (post.html: pygments-light.css).
+    Se precargan las dos fuentes que pinta toda página; la itálica se baja sola
+    cuando aparece un <em>.
   #}
-  <link rel="preload" href="{{ url_for('static', path='fonts/Geist-Variable.woff2') }}" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="{{ url_for('static', path='fonts/SourceSerif4-Variable.woff2') }}" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="{{ url_for('static', path='fonts/GeistMono-Variable.woff2') }}" as="font" type="font/woff2" crossorigin>
-  <link rel="preload" href="{{ url_for('static', path='fonts/Newsreader-Variable.woff2') }}" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="{{ url_for('static', path='css/fonts.css') }}">
-  <link rel="stylesheet" href="{{ url_for('static', path='css/tokens.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', path='css/broadsheet.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', path='css/blog-tokens.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', path='css/blog.css') }}">
-
   {% block head %}{% endblock %}
+  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/duotone/style.css">
+
+  <script defer src="{{ url_for('static', path='js/htmx.min.js') }}"></script>
+  {% block scripts %}{% endblock %}
 </head>
 <body class="{% block body_class %}{% endblock %}">
+  <a class="btn btn-secondary skip-link" href="#main">{{ t.skip_to_content }}</a>
 
   {#
-    Header a ancho completo: grid 1fr auto con bordes internos --rule-module.
-    El bloque `nav` cambia por pantalla (ARCHIVE/LANDING en listado,
-    ← ALL POSTS + contador de sección en artículo).
+    Header. Tres zonas reemplazables por página:
+      header_start   marca (por defecto) o flecha atrás (artículo, archivo).
+      header_center  vacía; el artículo pone ahí el anillo solo.
+      header_end     acciones: Archivo y landing (desktop), búsqueda, switch ES/EN.
+    header_modifier agrega clases al <header>; con la flecha atrás usar
+    "site-header--back" para igualar el padding de los dos lados.
   #}
-  <header class="site-header">
-    <a class="brand" href="{{ url_for('post_list') }}">IV · BLOG</a>
-    <nav class="site-nav">
-      {% block nav %}
-      <a href="{{ url_for('post_list') }}">ARCHIVE</a>
-      <a class="nowrap" href="https://ivanvallejos.dev/">LANDING ↗</a>
-      {% endblock %}
-    </nav>
+  <header class="site-header {% block header_modifier %}{% endblock %}">
+    <div class="site-header__inner">
+      <div class="site-header__start">
+        {% block header_start %}{{ brand(t, url_for('post_list')) }}{% endblock %}
+      </div>
+      <div class="site-header__center">{% block header_center %}{% endblock %}</div>
+      <nav class="site-header__end" aria-label="{{ t.main_nav }}">
+        {% block header_end %}
+        {# Archivo apunta a la portada hasta que exista la ruta del archivo. #}
+        <a class="site-nav__link hit desktop-only" href="{{ url_for('post_list') }}">{{ t.archive }}</a>
+        {{ search_button(t) }}
+        {{ lang_switch(t, lang, langs, lang_switch_enabled) }}
+        <a class="site-nav__external hit desktop-only" href="https://ivanvallejos.dev/">{{ t.landing_link }}</a>
+        {% endblock %}
+      </nav>
+    </div>
   </header>
 
-  {# barra de progreso mobile: va pegada bajo el header, fuera del shell #}
-  {% block subheader %}{% endblock %}
+  <main id="main" class="site-main" tabindex="-1">
+    {% block content %}{% endblock %}
+  </main>
 
-  <div class="shell">
-    {% block rail %}<div class="rail rail--empty"></div>{% endblock %}
-    <div class="col">
-      {% block content %}{% endblock %}
-    </div>
-  </div>
-
+  {% block footer %}
   <footer class="site-footer">
-    <span>© 2026 IVÁN VALLEJOS</span>
-    <a class="nowrap" href="https://ivanvallejos.dev/">IVANVALLEJOS.DEV ↗</a>
+    <span>{{ t.copyright.format(year=current_year) }}</span>
+    {# RSS solo aparece cuando exista una ruta llamada "rss" (ver app/templating.py). #}
+    {% if rss_url %}<a class="hit" href="{{ rss_url }}">{{ t.rss }}</a>{% endif %}
+    <a class="hit" href="https://ivanvallejos.dev/">{{ t.landing_link }}</a>
   </footer>
-
+  {% endblock %}
 </body>
 </html>

@@ -1,7 +1,6 @@
 from sqlalchemy import func
 from sqlalchemy.orm import joinedload, selectinload
 
-from app.dates import MONTHS
 from app.models.post import Post
 from app.models.category import Category
 
@@ -76,8 +75,9 @@ def get_tag_counts(db):
 
 def get_archive_counts(db):
     """
-    Grupo de año del rail: [{"year": 2026, "months": [{"label": "JUN", "count": 4}]}]
-    Agrupado en SQL y agrupado por año en Python — el template no arma nada.
+    Posts por año y mes: [{"year": 2026, "months": [{"month": 6, "count": 4}]}]
+    Agrupado en SQL y agrupado por año en Python. El mes va como número: el
+    rótulo depende del idioma y lo pone el template (`app.dates.month_label`).
     """
     year = func.extract("year", Post.published_at)
     month = func.extract("month", Post.published_at)
@@ -94,6 +94,6 @@ def get_archive_counts(db):
         y, m = int(raw_year), int(raw_month)
         if not groups or groups[-1]["year"] != y:
             groups.append({"year": y, "months": []})
-        groups[-1]["months"].append({"label": MONTHS[m - 1].upper(), "count": count})
+        groups[-1]["months"].append({"month": m, "count": count})
 
     return groups

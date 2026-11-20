@@ -1,0 +1,57 @@
+{#
+  Piezas del header reutilizables por las páginas que reemplazan sus bloques.
+
+    {% from "partials/brand.html" import ring, brand, back_button, search_button, lang_switch %}
+
+  ring()          anillo SVG de la marca (decorativo).
+  brand()         anillo + «IV» + «/blog», link a la portada. Lado izquierdo por defecto.
+  back_button()   flecha atrás de 44×44 (artículo y archivo). Recibe la URL de destino.
+  search_button() lupa en mobile, «Buscar ⌘K» en desktop. Sin comportamiento todavía:
+                  la búsqueda se engancha por [data-search-open].
+  lang_switch()   ES/EN. Solo se renderiza si el flag está activo (app/config.py).
+
+  Las macros importadas no ven el contexto del template, por eso reciben `t`/`lang`.
+#}
+
+{% macro ring(class="brand-ring") -%}
+<svg class="{{ class }}" viewBox="0 0 32 32" aria-hidden="true" focusable="false">
+  <path d="M 16.00 28.50 A 12.5 12.5 0 0 1 3.98 19.45"/>
+  <path d="M 3.62 14.26 A 12.5 12.5 0 0 1 14.26 3.62"/>
+  <path d="M 19.45 3.98 A 12.5 12.5 0 0 1 28.50 16.00"/>
+</svg>
+{%- endmacro %}
+
+{% macro brand(t, href) -%}
+<a class="brand hit" href="{{ href }}">
+  {{ ring() }}
+  <span>{{ t.brand_mark }}</span><span class="brand__sub">{{ t.brand_sub }}</span>
+</a>
+{%- endmacro %}
+
+{% macro back_button(t, href) -%}
+<a class="btn btn-icon header-icon-btn" href="{{ href }}" aria-label="{{ t.back }}">
+  <i class="ph-duotone ph-arrow-left" aria-hidden="true"></i>
+</a>
+{%- endmacro %}
+
+{% macro search_button(t) -%}
+<button type="button" class="btn btn-secondary site-search hit" aria-label="{{ t.search }}" data-search-open>
+  <i class="ph-duotone ph-magnifying-glass" aria-hidden="true"></i>
+  <span class="site-search__label">{{ t.search }}</span>
+  <kbd class="site-search__kbd" aria-hidden="true">{{ t.search_kbd }}</kbd>
+</button>
+{%- endmacro %}
+
+{% macro lang_switch(t, lang, langs, enabled) -%}
+{% if enabled %}
+<div class="lang-switch" role="group" aria-label="{{ t.language }}">
+  {% for code in langs %}
+  {% if not loop.first %}<span class="lang-switch__sep" aria-hidden="true">/</span>{% endif %}
+  <button type="button" class="lang-switch__btn hit" lang="{{ code }}"
+          aria-pressed="{{ 'true' if code == lang else 'false' }}"
+          aria-label="{{ t['lang_' ~ code] }}"
+          data-lang="{{ code }}">{{ code | upper }}</button>
+  {% endfor %}
+</div>
+{% endif %}
+{%- endmacro %}
