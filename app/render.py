@@ -16,7 +16,7 @@ md = markdown.Markdown(
 def _flatten_toc(tokens: list[dict]) -> list[dict]:
     """
     Aplana el árbol de md.toc_tokens a una lista lineal.
-    El rail del diseño numera 01..NN corrido sobre h2 y h3 juntos, sin
+    El bloque «En este artículo» lista h2 y h3 en una sola columna, sin
     jerarquía visual, así que la anidación no aporta nada acá.
     """
     flat = []
@@ -34,7 +34,7 @@ def render_markdown(content_markdown: str) -> tuple[str, list[dict]]:
     """
     Deriva content_markdown -> (content_html, content_toc).
 
-    Único punto del sistema que lee md.toc_tokens: los ids del rail son
+    Único punto del sistema que lee md.toc_tokens: los ids de «En este artículo» son
     literalmente los que el renderer puso en los headings, no una lista
     paralela mantenida a mano.
     """
