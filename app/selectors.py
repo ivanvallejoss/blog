@@ -22,6 +22,21 @@ def get_published_posts(db):
     return posts
 
 
+def get_recent_posts(db, limit=None):
+    """
+    Posts del más nuevo al más viejo, sin adelantar el destacado (índice de
+    búsqueda, «Quizás buscabas» de la 404). Con `limit`, solo los primeros.
+    """
+    query = (
+        db.query(Post)
+        .options(joinedload(Post.category))
+        .order_by(Post.published_at.desc(), Post.id.desc())
+    )
+    if limit is not None:
+        query = query.limit(limit)
+    return query.all()
+
+
 def get_category_by_slug(db, slug):
     "Obtiene el objeto category y los posts relacionadas a este."
     category = db.query(

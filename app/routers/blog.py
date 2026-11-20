@@ -1,9 +1,12 @@
 from fastapi import APIRouter, Depends, Request, HTTPException
+from fastapi.responses import JSONResponse
 
 from sqlalchemy.orm import Session
 
 from app.config import BASE_URL
 from app.database import get_db
+from app.i18n import DEFAULT_LANG, LANGS
+from app.search import build_search_index
 from app.templating import templates
 
 from ..selectors import (
@@ -12,6 +15,7 @@ from ..selectors import (
     get_post_by_slugs,
     get_posts_by_year,
     get_published_posts,
+    get_recent_posts,
     get_tag_counts,
     group_posts_by_tag,
 )
@@ -82,7 +86,31 @@ def _archive_response(request: Request, db: Session, category=None):
         )
 
 
-# Ruta fija registrada ANTES que /{category_slug}/ (CORRECCIONES §6).
+# Rutas fijas registradas ANTES que /{category_slug}/ (CORRECCIONES §6).
+
+# El índice cambia solo con un sync: unos minutos de caché alcanzan y evitan
+# pedirlo de nuevo en cada página que abre la búsqueda.
+SEARCH_CACHE = "public, max-age=300"
+
+
+@router.get("/search.json", name="search_index")
+def search_index(
+    request: Request,
+    lang: str = DEFAULT_LANG,
+    db: Session = Depends(get_db)
+    ):
+    if lang not in LANGS:
+        lang = DEFAULT_LANG
+    index = build_search_index(
+        get_recent_posts(db),
+        lang,
+        lambda post: request.url_for(
+            "get_post", category_slug=post.category.slug, post_slug=post.slug
+        ).path,
+    )
+    return JSONResponse(index, headers={"Cache-Control": SEARCH_CACHE})
+
+
 @router.get("/archivo/", name="archive")
 def archive(
     request: Request,
