@@ -17,6 +17,13 @@ las dos listas, una anidada, formato en línea, un link y texto que se escapa.
 Además deja un tema sin posts (`EMPTY_TOPICS`) para probar el estado vacío:
 no aparece como filtro, pero su URL responde.
 
+En inglés (`POSTS_EN`) van cinco de los siete, con los títulos y bajadas en
+inglés del prototipo (`raw[].en` y `exEn`). La bajada se guarda en `excerpt`,
+como la escribiría la propiedad «Resumen» de Notion, y el cuerpo empieza con
+otro párrafo: así se ve que gana la bajada escrita a mano. `life` queda solo
+en español, como en el prototipo (Extras E3b): `/en/life/` muestra el estado
+«sin posts en este idioma». Cada versión en inglés es otro post, con su slug.
+
 Todos llevan `notion_id` con prefijo `seed-`: así se reconocen y se borran
 sin tocar lo que vino de Notion. `sync` también los borra, porque Notion es la
 fuente de verdad y estos posts no existen allá.
@@ -202,6 +209,117 @@ Seguir escribiendo, con menos miedo a que esté incompleto.
     ),
 ]
 
+# Versiones en inglés: (título, tema, día, mes, año, minutos, bajada, cuerpo).
+# El tema es el mismo de Notion (en español); su nombre en inglés sale de
+# app/i18n.py · TOPIC_NAMES. El primero es el destacado en inglés.
+POSTS_EN = [
+    (
+        "Fearless concurrency: async in Python 3.14", "concurrencia", 14, 11, 2026, 12,
+        "TaskGroup, cancellation and why the event loop isn't magic: what I learned moving the Notion sync to async.",
+        """For months the Notion sync ran serially: one page, one request, one wait. It worked, but every new post added seconds.
+
+## The problem
+
+The Notion API is slow and paginated. The bottleneck was never the CPU, it was **waiting**. That is exactly what *asyncio* is good at.
+
+```python
+async def fetch_all(urls):
+    async with asyncio.TaskGroup() as tg:
+        tasks = [tg.create_task(get(u)) for u in urls]
+    return [t.result() for t in tasks]
+```
+
+> Concurrency doesn't make code faster; it makes waiting stop being your problem.
+
+## The event loop in five minutes
+
+One thread, one task queue and one rule: nobody blocks.
+
+1. A task runs until its first `await`.
+2. It yields and the loop moves another ready task forward.
+3. When the response arrives, the task goes back to the queue.
+
+## When not to use async
+
+If the work is CPU-bound, async doesn't help. That's where processes, or now free-threading, come in.
+""",
+    ),
+    (
+        "One design system, two sites", "design system", 2, 11, 2026, 8,
+        "How the landing and the blog share tokens without sharing code.",
+        """The landing and the blog have different jobs: one introduces, the other is read.
+
+## Tokens, not components
+
+What gets shared are decisions: colors by role, a spacing scale, radii and type.
+
+```css
+:root {
+  --color-accent: #0088b0;
+  --space-4: 20px;
+}
+```
+
+## What breaks and what doesn't
+
+When one site changes a component, the other doesn't notice, and that's fine.
+""",
+    ),
+    (
+        "Locks, queues and other ways to wait", "concurrencia", 21, 10, 2026, 10,
+        "Synchronization primitives, with examples that actually fail.",
+        """Most concurrency bugs are waits done wrong.
+
+## A lock that isn't enough
+
+A lock protects a critical section only if everyone who touches it uses it.
+
+```python
+lock = asyncio.Lock()
+
+async def increment(counter):
+    async with lock:
+        counter["n"] += 1
+```
+
+## Queues as a contract
+
+What goes in comes out, in order, exactly once.
+""",
+    ),
+    (
+        "Tokens that survive a redesign", "design system", 18, 9, 2026, 7,
+        "Naming by role, not by color: the decision that made this change possible.",
+        """A token called `--amber` dies with the amber.
+
+## The redesign as a test
+
+Going from a dark theme to a light one was mostly changing values without touching names.
+
+## What didn't survive
+
+The tokens that described a look instead of a role.
+""",
+    ),
+    (
+        "The GIL is no longer an excuse", "concurrencia", 30, 8, 2026, 9,
+        "Free-threading in practice: honest benchmarks on an ordinary machine.",
+        """With the free-threaded build, several Python threads can run bytecode at the same time.
+
+## An honest benchmark
+
+```python
+with ThreadPoolExecutor(max_workers=4) as pool:
+    results = list(pool.map(work, [5_000_000] * 4))
+```
+
+## When it pays off
+
+When the work is CPU-bound and splits well. If the bottleneck is the network, the GIL was never the problem.
+""",
+    ),
+]
+
 # — El destacado, como bloques de Notion (la forma de la API, solo las claves
 #   que lee el conversor) —
 
@@ -277,6 +395,14 @@ FEATURED_BLOCKS = [
 
 
 # Párrafos de relleno para acercar los minutos de lectura a los del diseño.
+FILLER_EN = [
+    "This paragraph is development filler: it gives the post the length the design shows, so reading, the table of contents and scrolling can be tested.",
+    "The idea repeats on purpose. A long text shows how the reading column behaves, along with the adjustable text size and the panel with the article's index.",
+    "When a real post replaces this one, the filler goes away with it. Until then, it helps review the vertical rhythm of the prose and the space between sections.",
+    "One more paragraph to add words. Reading time assumes about two hundred words per minute and leaves out code blocks, which are studied more than read.",
+]
+DEV_NOTES = {"es": "Notas de desarrollo", "en": "Development notes"}
+
 FILLER = [
     "Este párrafo es relleno de desarrollo: existe para que el post tenga el largo que muestra el diseño y se puedan probar la lectura, el índice y el desplazamiento.",
     "La idea se repite a propósito. Un texto largo deja ver cómo se comporta la columna de lectura, el tamaño de letra ajustable y el panel con el índice del artículo.",
@@ -291,20 +417,31 @@ def _words(markdown: str) -> int:
     return len(re.sub(r"```.*?```", "", markdown, flags=re.S).split())
 
 
-def _body(excerpt: str, body: str, minutes: int) -> str:
-    """Bajada como primer párrafo (Post.summary la toma de ahí) + cuerpo + relleno."""
-    text = f"{excerpt}\n\n{body.strip()}\n"
+def _body(excerpt: str | None, body: str, minutes: int, lang: str = "es") -> str:
+    """
+    Cuerpo + relleno hasta los minutos del diseño. Con `excerpt`, la bajada va
+    como primer párrafo (Post.summary la deriva de ahí); sin él, el cuerpo
+    empieza directo (la bajada va en la columna `excerpt`).
+    """
+    text = f"{excerpt}\n\n{body.strip()}\n" if excerpt else f"{body.strip()}\n"
     target = minutes * WORDS_PER_MINUTE
     if _words(text) < target:
-        text += "\n## Notas de desarrollo\n"
-        fill = cycle(FILLER)
+        text += f"\n## {DEV_NOTES[lang]}\n"
+        fill = cycle(FILLER_EN if lang == "en" else FILLER)
         while _words(text) < target:
             text += f"\n{next(fill)}\n"
     return text
 
 
+def _entries():
+    """(lang, destacado, título, tema, fecha, minutos, bajada, cuerpo) de los dos idiomas."""
+    for lang, posts in (("es", POSTS), ("en", POSTS_EN)):
+        for index, (title, cat_name, day, month, year, minutes, excerpt, body) in enumerate(posts):
+            yield lang, index == 0, title, cat_name, datetime(year, month, day, 10, 0), minutes, excerpt, body
+
+
 def seed_posts(db) -> list[Post]:
-    """Inserta o actualiza los posts de muestra. Idempotente."""
+    """Inserta o actualiza los posts de muestra de los dos idiomas. Idempotente."""
     categories = {c.name: c for c in db.query(Category).all()}
     existing = {
         p.notion_id: p
@@ -313,7 +450,7 @@ def seed_posts(db) -> list[Post]:
     now = datetime.now()
     result = []
 
-    for index, (title, cat_name, day, month, year, minutes, excerpt, body) in enumerate(POSTS):
+    for lang, featured, title, cat_name, published_at, minutes, excerpt, body in _entries():
         category = categories.get(cat_name)
         if category is None:
             category = Category(name=cat_name, slug=slugify(cat_name))
@@ -323,18 +460,25 @@ def seed_posts(db) -> list[Post]:
         slug = slugify(title)
         if body is None:
             body = blocks_to_markdown(FEATURED_BLOCKS)
-        markdown = _body(excerpt, body, minutes)
-        content_html, content_toc = render_markdown(markdown)
+        if lang == "es":
+            # En español la bajada es el primer párrafo: se deriva.
+            markdown, stored_excerpt = _body(excerpt, body, minutes, lang), None
+        else:
+            # En inglés va escrita a mano, como la daría «Resumen».
+            markdown, stored_excerpt = _body(None, body, minutes, lang), excerpt
+        content_html, content_toc = render_markdown(markdown, lang)
         notion_id = f"{SEED_PREFIX}{slug}"[:36]
 
         post = existing.get(notion_id) or Post(notion_id=notion_id)
         post.title = title
         post.slug = slug
+        post.lang = lang
+        post.excerpt = stored_excerpt
         post.content_markdown = markdown
         post.content_html = content_html
         post.content_toc = content_toc
-        post.published_at = datetime(year, month, day, 10, 0)
-        post.featured = index == 0
+        post.published_at = published_at
+        post.featured = featured
         post.synced_at = now
         post.category = category
         db.add(post)

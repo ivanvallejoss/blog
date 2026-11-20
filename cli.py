@@ -50,11 +50,13 @@ def seed_dev(
     clear: bool = typer.Option(False, "--clear", help="Borrar los posts seed-… y los temas que queden vacíos, sin volver a cargarlos."),
 ):
     """
-    Carga los siete posts de muestra del diseño (solo desarrollo local).
+    Carga los posts de muestra del diseño (solo desarrollo local).
 
     Inserta o actualiza los posts del prototipo Broadsheet con notion_id
-    "seed-…": tres temas, dos años, uno destacado, y un tema sin posts
-    («herramientas») para el estado vacío.
+    "seed-…": los siete en español y cinco de ellos en inglés, con su bajada
+    en `excerpt`. Tres temas, dos años y un destacado por idioma; «life»
+    queda solo en español y «herramientas» sin posts, para los estados
+    vacíos.
 
     Necesita las dos cosas: BLOG_ALLOW_SEED=1 en el entorno y DATABASE_URL
     apuntando a localhost o 127.0.0.1. En el servidor no se define
@@ -83,7 +85,8 @@ def seed_dev(
             return
         posts = seed_posts(db)
         for post in posts:
-            typer.echo(f"{post.published_at:%Y-%m-%d}  {post.category.slug}/{post.slug}  ({post.reading_minutes} min)")
+            prefix = "en/" if post.lang == "en" else ""
+            typer.echo(f"{post.published_at:%Y-%m-%d}  {prefix}{post.category.slug}/{post.slug}  ({post.reading_minutes} min)")
         typer.echo(f"{len(posts)} posts de muestra cargados.")
 
 @app.command()
