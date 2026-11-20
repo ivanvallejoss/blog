@@ -14,7 +14,9 @@ def sync(
 
     Un post solo se reconvierte si cambió en Notion; con --force se
     reconvierten todos, por ejemplo después de cambiar el conversor.
-    Al final informa los tipos de bloque que el conversor no soporta, por post.
+    Al final informa los tipos de bloque que el conversor no soporta, por post,
+    los valores de Idioma que no reconoce y los temas cuyo slug choca con una
+    ruta fija del sitio.
     """
     with SessionLocal() as db:
         report = sync_posts(db, force=force)
@@ -25,6 +27,10 @@ def sync(
     for title, notion_id, kinds in report.unsupported:
         detail = ", ".join(f"{kind} ×{n}" for kind, n in sorted(kinds.items()))
         typer.echo(f"  No soportado en «{title}» ({notion_id}): {detail}")
+    for title, notion_id, value in report.unknown_lang:
+        typer.echo(f"  Idioma desconocido en «{title}» ({notion_id}): «{value}». Quedó en español; los valores válidos son «es» y «en».")
+    for name, slug in report.reserved_topics:
+        typer.echo(f"  El tema «{name}» tiene el slug «{slug}», que choca con una ruta fija del sitio: renombralo en Notion.")
 
 @app.command()
 def feature(slug: str, off: bool = typer.Option(False, "--off", help="Quitar el destacado")):

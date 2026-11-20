@@ -10,6 +10,7 @@ from notion.client import get_posts, get_page_blocks, get_details_from_post
 from notion.converter import convert_blocks
 
 from app.render import render_markdown
+from app.urls import RESERVED_TOPIC_SLUGS
 
 from app.models.category import Category
 from app.models.post import Post
@@ -26,12 +27,18 @@ class SyncReport:
     Resultado de un sync, para que `cli.py` lo muestre.
     `unsupported`: por post reconvertido, lo que el conversor no pudo emitir
     [(título, notion_id, Counter(tipo → cantidad)), ...].
+    `unknown_lang`: posts cuyo `Idioma` no es «es» ni «en» y quedaron en
+    español [(título, notion_id, valor), ...].
+    `reserved_topics`: temas cuyo slug choca con una ruta fija (app/urls.py)
+    [(nombre, slug), ...]: sus páginas quedan tapadas en al menos un idioma.
     """
     created: int = 0
     updated: int = 0
     deleted: int = 0
     skipped: int = 0  # sin cambios en Notion desde el último sync
     unsupported: list[tuple[str, str, Counter]] = field(default_factory=list)
+    unknown_lang: list[tuple[str, str, str]] = field(default_factory=list)
+    reserved_topics: list[tuple[str, str]] = field(default_factory=list)
 
 
 def _get_or_create_category(name, db, db_categories):
@@ -63,6 +70,8 @@ def _create_post(db, full_post):
         content_markdown=full_post["content_markdown"],
         content_html=full_post["content_html"],
         content_toc=full_post["content_toc"],
+        lang=full_post["lang"],
+        excerpt=full_post["excerpt"],
         published_at=full_post["published_at"],
         notion_id=full_post["notion_id"],
         synced_at=full_post["synced_at"],
@@ -83,6 +92,8 @@ def _update_post(post, full_post):
     post.content_markdown = full_post["content_markdown"]
     post.content_html = full_post["content_html"]
     post.content_toc = full_post["content_toc"]
+    post.lang = full_post["lang"]
+    post.excerpt = full_post["excerpt"]
     post.published_at = full_post["published_at"]
     post.synced_at = full_post["synced_at"]
     post.category = full_post["category"]
@@ -102,7 +113,8 @@ def _get_full_post(db, post_details, db_categories, report) -> dict:
     page_blocks = get_page_blocks(page_id)
     conversion = convert_blocks(page_blocks)
     content_markdown = conversion.markdown
-    content_html, content_toc = render_markdown(content_markdown)
+    # El título de las anclas queda escrito en el HTML: en el idioma del post.
+    content_html, content_toc = render_markdown(content_markdown, post_details["lang"])
 
     # Lo que no se pudo convertir se informa y el sync sigue: el post se
     # publica sin esos bloques.
@@ -139,9 +151,21 @@ def sync_posts(db, force=False) -> SyncReport:
     notion_posts = get_posts()
     seen_ids = set()
 
+    topic_names = set()
+
     for notion_post in notion_posts:
         post_details = get_details_from_post(notion_post)
         notion_id = post_details["notion_id"]
+
+        # Un Idioma desconocido no corta el sync: el post queda en español y
+        # se informa. Se informa en cada sync, cambie o no el post, hasta que
+        # se corrija en Notion.
+        if post_details["lang_unknown"] is not None:
+            report.unknown_lang.append((post_details["title"], notion_id, post_details["lang_unknown"]))
+            logger.warning(
+                "Post %r (%s): Idioma desconocido %r, queda en español",
+                post_details["title"], notion_id, post_details["lang_unknown"],
+            )
 
         # CATCH de error en el caso de que este venga vacio.
         try:
@@ -152,6 +176,7 @@ def sync_posts(db, force=False) -> SyncReport:
             # Cualquier post existente que se actualice sin categoria va a ser eliminado de la pagina.
             # Y, es mediante esta linea que se evita o se permite que el post se elimine de los de db.
             seen_ids.add(notion_id)
+            topic_names.add(post_details["category_name"])
 
         except CategoriaFaltanteError as e:
             db.add(SyncError(notion_id=notion_id, message=str(e)))
@@ -178,4 +203,14 @@ def sync_posts(db, force=False) -> SyncReport:
     db.execute(stmt)
     db.commit()
     report.deleted = len(to_delete)
+    report.reserved_topics = reserved_topics(topic_names)
+    for name, slug in report.reserved_topics:
+        logger.warning("Tema %r: el slug %r choca con una ruta fija del sitio", name, slug)
     return report
+
+
+def reserved_topics(names) -> list[tuple[str, str]]:
+    """[(nombre, slug), ...] de los temas cuyo slug choca con una ruta fija."""
+    return sorted(
+        (name, slugify(name)) for name in names if slugify(name) in RESERVED_TOPIC_SLUGS
+    )
