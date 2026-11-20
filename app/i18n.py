@@ -14,10 +14,19 @@ las trae (footer, accesibilidad, errores, lista vacía).
 
 Regla: ningún texto de interfaz se escribe a mano en un template. Si falta uno,
 se agrega acá en los dos idiomas.
+
+Además viven acá las otras dos piezas de idioma que no son textos sueltos:
+  lang_from_path(path)    el idioma de un pedido, deducido de su ruta (/en/…).
+  topic_name(tema, lang)  el nombre visible de un tema en un idioma.
 """
+from markupsafe import Markup, escape
 
 DEFAULT_LANG = "es"
 LANGS = ("es", "en")
+
+# Prefijo de ruta de cada idioma. El idioma por defecto no lleva: sus URLs
+# son las de siempre («/archivo/»); el inglés vive bajo /en/ (README §8).
+LANG_PREFIX = {"es": "", "en": "/en"}
 
 STRINGS: dict[str, dict[str, str]] = {
     "es": {
@@ -107,6 +116,17 @@ STRINGS: dict[str, dict[str, str]] = {
         "not_found_post": "El post que buscás no existe o fue movido.",
         "maybe_looking": "Quizás buscabas",
         "error_ref": "ref · {ref}",
+        # idioma
+        "anchor_title": "Enlace a esta sección",
+        "lang_empty_title": "Todavía no hay posts en español acá",
+        "lang_empty_topic_one": "Hay 1 post sobre {topic} en inglés.",
+        "lang_empty_topic_many": "Hay {n} posts sobre {topic} en inglés.",
+        "lang_empty_all_one": "Hay 1 post en inglés.",
+        "lang_empty_all_many": "Hay {n} posts en inglés.",
+        # El botón del estado vacío lleva al otro idioma y se escribe en ese
+        # idioma («Ver en español» en una página en inglés, como el diseño):
+        # el template lo toma de la tabla del otro idioma.
+        "see_in_this_lang": "Ver en español",
     },
     "en": {
         "archive": "Archive",
@@ -188,6 +208,13 @@ STRINGS: dict[str, dict[str, str]] = {
         "not_found_post": "The post you're looking for doesn't exist or was moved.",
         "maybe_looking": "Maybe you were looking for",
         "error_ref": "ref · {ref}",
+        "anchor_title": "Link to this section",
+        "lang_empty_title": "No posts in English here yet",
+        "lang_empty_topic_one": "There is 1 post on {topic} in Spanish.",
+        "lang_empty_topic_many": "There are {n} posts on {topic} in Spanish.",
+        "lang_empty_all_one": "There is 1 post in Spanish.",
+        "lang_empty_all_many": "There are {n} posts in Spanish.",
+        "see_in_this_lang": "See in English",
     },
 }
 
@@ -224,6 +251,58 @@ class UIText:
 UI_TEXT = {lang: UIText(lang) for lang in LANGS}
 
 
-def plural(t: UIText, key: str, n: int) -> str:
-    """Elige `<key>_one` o `<key>_many` y completa `{n}`."""
-    return getattr(t, f"{key}_one" if n == 1 else f"{key}_many").format(n=n)
+def plural(t: UIText, key: str, n: int, **fields) -> Markup:
+    """
+    Elige `<key>_one` o `<key>_many` y completa `{n}` y los demás `fields`.
+
+    Devuelve Markup: el texto del diccionario se escapa y los campos también,
+    salvo los que ya son Markup. Así un campo puede llevar marcado propio
+    (`topic=Markup("<em>{}</em>").format(nombre)`) sin abrir la puerta a que un
+    nombre que viene de Notion inyecte HTML.
+    """
+    template = getattr(t, f"{key}_one" if n == 1 else f"{key}_many")
+    return Markup(escape(template)).format(n=n, **fields)
+
+
+def normalize_lang(value) -> str:
+    """Un código de idioma conocido o el idioma por defecto."""
+    return value if value in LANGS else DEFAULT_LANG
+
+
+def lang_from_path(path: str) -> str:
+    """
+    Idioma de un pedido según su ruta: «/en» y «/en/…» son inglés; todo lo
+    demás, el idioma por defecto. Es el único lugar que lo decide: lo usan las
+    rutas, el contexto común de los templates y los manejadores de error (una
+    404 del enrutador no tiene ruta encontrada, pero sí path).
+    """
+    for lang, prefix in LANG_PREFIX.items():
+        if prefix and (path == prefix or path.startswith(prefix + "/")):
+            return lang
+    return DEFAULT_LANG
+
+
+# Nombres de los temas en cada idioma, indexados por el slug del tema. El slug
+# es el mismo en los dos idiomas (/concurrencia/ y /en/concurrencia/); solo se
+# traduce el nombre visible. Un tema que no está acá se muestra con su nombre
+# original, el de Notion. El español no necesita entradas: los temas se
+# escriben en Notion en español.
+TOPIC_NAMES: dict[str, dict[str, str]] = {
+    "es": {},
+    "en": {
+        "concurrencia": "concurrency",
+        "herramientas": "tools",
+    },
+}
+
+
+def topic_name(topic, lang: str) -> str:
+    """
+    Nombre visible de un tema en `lang`. `topic` es una Category o un dict con
+    `slug` y `name` (como los de selectors.get_tag_counts).
+    """
+    if isinstance(topic, dict):
+        slug, name = topic["slug"], topic["name"]
+    else:
+        slug, name = topic.slug, topic.name
+    return TOPIC_NAMES.get(lang, {}).get(slug, name)
