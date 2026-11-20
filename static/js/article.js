@@ -8,6 +8,8 @@
     deshabilitado pierde el foco, y dentro del panel el foco se perdería).
   - Compartir: copiar el link (cambia a «Copiado» 1,6 s y avisa con
     window.blogToast) y el menú nativo si existe navigator.share.
+  - Índice: marca la sección que se está leyendo (ver «Índice que sigue al
+    scroll» más abajo).
   - Panel inferior (mobile): lo abre el botón flotante. Velo, tirador y Esc lo
     cierran; el foco queda atrapado adentro y vuelve al botón al cerrar. Un
     link del índice cierra el panel y deja que el navegador lleve a la sección.
@@ -71,6 +73,8 @@
     button.addEventListener("click", function () {
       if (button.getAttribute("aria-disabled") === "true") return;
       setSize(size + parseInt(button.dataset.sizeStep, 10));
+      // Otro tamaño mueve los títulos: el índice vuelve a mirar dónde está.
+      if (sections.length && !frame) frame = window.requestAnimationFrame(markCurrent);
     });
   });
 
@@ -136,6 +140,109 @@
     });
   }
 
+  // — Índice que sigue al scroll —
+  // Marca con aria-current la entrada de la sección que se está leyendo: la
+  // del último h2 del índice que ya pasó la línea de lectura (READING_LINE
+  // de la ventana desde arriba). Antes del primer título, ninguna; al llegar
+  // al final de la página, la última, aunque su título no llegue a la línea.
+  // Un solo marcado sirve al lateral de desktop y al panel de mobile, así que
+  // al abrir el panel la sección actual ya está marcada.
+  // Al tocar una entrada se marca enseguida, y la marca se sostiene mientras
+  // dura el salto a la sección: el navegador puede no llevar el título hasta
+  // la línea (las secciones del final), y no tiene que ganar la de al lado.
+  // Se suelta con el próximo scroll del lector.
+  // El estilo de entradas inactivas solo rige con .reader-toc--spy, que pone
+  // este script: sin JavaScript el índice es una lista de links común.
+
+  var READING_LINE = 0.3;
+  var JUMP_QUIET_MS = 200; // sin scroll durante este tiempo, el salto terminó
+
+  var tocList = reader.querySelector(".reader-toc");
+  var sections = [];
+  Array.prototype.forEach.call(reader.querySelectorAll("[data-reader-toc]"), function (link) {
+    var id;
+    try { id = decodeURIComponent(link.hash.slice(1)); } catch (e) { id = link.hash.slice(1); }
+    var heading = id && document.getElementById(id);
+    if (heading) sections.push({ link: link, heading: heading });
+  });
+
+  var active = null;
+  var pinned = null;    // entrada tocada, sostenida durante el salto
+  var lastScroll = 0;   // último scroll mientras hay una entrada sostenida
+  var frame = 0;
+
+  function setActive(section) {
+    if (section === active) return;
+    if (active) active.link.removeAttribute("aria-current");
+    active = section;
+    if (active) active.link.setAttribute("aria-current", "location");
+  }
+
+  function sectionInView() {
+    var doc = document.documentElement;
+    var bottom = window.scrollY + window.innerHeight;
+    if (window.scrollY > 0 && doc.scrollHeight > window.innerHeight && bottom >= doc.scrollHeight - 2) {
+      return sections[sections.length - 1];
+    }
+    var line = window.innerHeight * READING_LINE;
+    var found = null;
+    for (var i = 0; i < sections.length; i++) {
+      if (sections[i].heading.getBoundingClientRect().top > line) break;
+      found = sections[i];
+    }
+    return found;
+  }
+
+  function markCurrent() {
+    frame = 0;
+    if (!pinned) setActive(sectionInView());
+  }
+
+  function onScroll() {
+    if (pinned) {
+      var now = performance.now();
+      var jumping = now - lastScroll < JUMP_QUIET_MS;
+      lastScroll = now;
+      if (jumping) return;
+      pinned = null;
+    }
+    if (!frame) frame = window.requestAnimationFrame(markCurrent);
+  }
+
+  function pin(section) {
+    pinned = section;
+    lastScroll = performance.now();
+    setActive(section);
+  }
+
+  if (sections.length) {
+    tocList.classList.add("reader-toc--spy");
+    sections.forEach(function (section) {
+      section.link.addEventListener("click", function () { pin(section); });
+    });
+    // La rueda, un toque o una tecla son del lector: sueltan la entrada
+    // sostenida (la marca se recalcula con el scroll que provoquen).
+    ["wheel", "touchstart", "keydown"].forEach(function (type) {
+      window.addEventListener(type, function () { pinned = null; }, { passive: true });
+    });
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", function () {
+      if (!frame) frame = window.requestAnimationFrame(markCurrent);
+    });
+
+    // Con el ancla de una sección en la URL (al llegar, con atrás y
+    // adelante, o con el «#» de un título), esa queda marcada.
+    var fromHash = function () {
+      return sections.filter(function (s) { return s.link.hash === window.location.hash; })[0];
+    };
+    window.addEventListener("hashchange", function () {
+      var section = fromHash();
+      if (section) pin(section);
+    });
+    if (fromHash()) pin(fromHash());
+    else markCurrent();
+  }
+
   // — Panel inferior (mobile) —
   // Foco atrapado, Esc y fondo sin scroll los resuelve blogDialog (dialog.js).
 
@@ -152,6 +259,7 @@
       if (openButton) openButton.setAttribute("aria-expanded", "true");
       reader.scrollTop = 0;
       reader.focus({ preventScroll: true });
+      if (sections.length) markCurrent();
     },
     onClose: function () {
       reader.classList.remove("is-open");

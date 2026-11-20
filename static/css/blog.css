@@ -897,6 +897,27 @@ a.archive-row { color: var(--color-text); }
   text-decoration: none;
 }
 
+/* Índice que sigue al scroll (ventana 7). article.js pone .reader-toc--spy:
+   sin JavaScript el índice queda como una lista de links común. Inactivas en
+   el gris de metadatos; la activa (aria-current), en el color del texto y
+   con una barrita de acento a la izquierda. La barrita va por fuera de la
+   caja del texto: no cambia el ancho ni el partido de líneas, y la marca no
+   depende solo del color. Cubre las líneas del título, sin el aire del link. */
+.reader-toc--spy .reader-toc__link {
+  --toc-mark-inset: var(--sheet-toc-link-pad);
+  color: var(--color-neutral-700);
+}
+.reader-toc--spy .reader-toc__link:hover,
+.reader-toc--spy .reader-toc__link[aria-current] { color: var(--color-text); }
+.reader-toc--spy .reader-toc__link[aria-current]::before {
+  content: "";
+  position: absolute;
+  inset-block: var(--toc-mark-inset);
+  inset-inline-start: calc((var(--toc-mark-gap) + var(--toc-mark-w)) * -1);
+  width: var(--toc-mark-w);
+  background: var(--color-accent);
+}
+
 .reader-size {
   display: flex;
   align-items: center;
@@ -1019,6 +1040,7 @@ a.archive-row { color: var(--color-text); }
     overflow-wrap: break-word; /* un nombre largo de función no se sale de la columna */
   }
   .reader-toc__link.hit::after { content: none; }
+  .reader-toc--spy .reader-toc__link { --toc-mark-inset: var(--toc-link-pad); }
 
   .reader-size { gap: var(--reader-size-gap); }
   .reader-size__btn { flex: none; min-height: 0; }

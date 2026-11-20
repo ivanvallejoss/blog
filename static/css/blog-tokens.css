@@ -165,6 +165,10 @@
   --fab-bottom: 32px;
   --sheet-duration: 0.22s;
 
+  /* índice que sigue al scroll (ventana 7), en el lateral y en el panel */
+  --toc-mark-w: 2px;                  /* barrita de la entrada activa */
+  --toc-mark-gap: 10px;               /* barrita ↔ texto, por fuera de la caja del link */
+
   /* ── Búsqueda (ventana 4) ── */
   --search-field-icon-x: 12px;        /* lupa dentro del campo */
   --search-field-icon: 18px;
