@@ -11,6 +11,7 @@
   - Panel inferior (mobile): lo abre el botón flotante. Velo, tirador y Esc lo
     cierran; el foco queda atrapado adentro y vuelve al botón al cerrar. Un
     link del índice cierra el panel y deja que el navegador lleve a la sección.
+    Requiere dialog.js (window.blogDialog), que base.html carga antes.
 
   Sin textos escritos: salen de data-attributes que pone el template.
 */
@@ -136,109 +137,50 @@
   }
 
   // — Panel inferior (mobile) —
+  // Foco atrapado, Esc y fondo sin scroll los resuelve blogDialog (dialog.js).
 
   var openButton = document.querySelector("[data-reader-open]");
   var veil = document.querySelector("[data-reader-veil]");
-  var isOpen = false;
 
-  var FOCUSABLE = "a[href], button:not([disabled]), input, select, textarea, [tabindex]:not([tabindex='-1'])";
-
-  function focusables() {
-    return Array.prototype.filter.call(reader.querySelectorAll(FOCUSABLE), function (el) {
-      return !el.hidden && el.getClientRects().length > 0;
-    });
-  }
-
-  function openSheet() {
-    if (isOpen || DESKTOP.matches) return;
-    isOpen = true;
-    reader.setAttribute("role", "dialog");
-    reader.setAttribute("aria-modal", "true");
-    reader.setAttribute("tabindex", "-1");
-    reader.classList.add("is-open");
-    if (veil) veil.classList.add("is-open");
-    root.classList.add("reader-open");
-    if (openButton) openButton.setAttribute("aria-expanded", "true");
-    reader.scrollTop = 0;
-    reader.focus({ preventScroll: true });
-    document.addEventListener("keydown", onKeydown);
-    document.addEventListener("focusin", onFocusin);
-  }
-
-  function closeSheet(returnFocus) {
-    if (!isOpen) return;
-    isOpen = false;
-    reader.classList.remove("is-open");
-    reader.removeAttribute("role");
-    reader.removeAttribute("aria-modal");
-    reader.removeAttribute("tabindex");
-    if (veil) veil.classList.remove("is-open");
-    root.classList.remove("reader-open");
-    if (openButton) openButton.setAttribute("aria-expanded", "false");
-    document.removeEventListener("keydown", onKeydown);
-    document.removeEventListener("focusin", onFocusin);
-    if (returnFocus !== false && openButton) openButton.focus({ preventScroll: true });
-  }
-
-  function onKeydown(event) {
-    if (event.key === "Escape") {
-      event.preventDefault();
-      closeSheet();
-      return;
-    }
-    if (event.key !== "Tab") return;
-    // Foco atrapado, y en el orden en que se ve: en el panel el índice va al
-    // final aunque en el marcado esté primero (ver post.html). De la última
-    // pieza vuelve a la primera y al revés.
-    event.preventDefault();
-    var items = visualOrder(focusables());
-    if (!items.length) return;
-    var index = items.indexOf(document.activeElement);
-    var next;
-    if (index === -1) next = event.shiftKey ? items[items.length - 1] : items[0];
-    else next = items[(index + (event.shiftKey ? -1 : 1) + items.length) % items.length];
-    next.focus();
-  }
-
-  function visualOrder(items) {
-    return items
-      .map(function (el) { return { el: el, box: el.getBoundingClientRect() }; })
-      .sort(function (a, b) {
-        return Math.abs(a.box.top - b.box.top) > 1 ? a.box.top - b.box.top : a.box.left - b.box.left;
-      })
-      .map(function (item) { return item.el; });
-  }
-
-  // Si el foco sale del panel por otro camino (lector de pantalla, clic en
-  // una zona sin velo), vuelve adentro.
-  function onFocusin(event) {
-    if (!reader.contains(event.target)) {
-      var items = focusables();
-      (items[0] || reader).focus({ preventScroll: true });
-    }
-  }
+  var sheet = window.blogDialog.create({
+    element: reader,
+    setModal: true, // en desktop el mismo <aside> es la columna lateral, no un diálogo
+    onOpen: function () {
+      reader.setAttribute("tabindex", "-1");
+      reader.classList.add("is-open");
+      if (veil) veil.classList.add("is-open");
+      if (openButton) openButton.setAttribute("aria-expanded", "true");
+      reader.scrollTop = 0;
+      reader.focus({ preventScroll: true });
+    },
+    onClose: function () {
+      reader.classList.remove("is-open");
+      reader.removeAttribute("tabindex");
+      if (veil) veil.classList.remove("is-open");
+      if (openButton) openButton.setAttribute("aria-expanded", "false");
+    },
+  });
 
   if (openButton) {
     openButton.addEventListener("click", function () {
-      if (isOpen) closeSheet(); else openSheet();
+      if (sheet.isOpen()) sheet.close();
+      else if (!DESKTOP.matches) sheet.open(openButton);
     });
   }
-  if (veil) veil.addEventListener("click", function () { closeSheet(); });
+  if (veil) veil.addEventListener("click", function () { sheet.close(); });
 
   var handle = reader.querySelector("[data-reader-close]");
-  if (handle) handle.addEventListener("click", function () { closeSheet(); });
+  if (handle) handle.addEventListener("click", function () { sheet.close(); });
 
   // Un link del índice cierra el panel sin devolver el foco al botón: el
   // navegador lleva a la sección y el foco sigue desde ahí. Se cierra antes
   // de la navegación, así el fondo ya puede scrollear.
   Array.prototype.forEach.call(reader.querySelectorAll("[data-reader-toc]"), function (link) {
-    link.addEventListener("click", function () {
-      if (isOpen) closeSheet(false);
-    });
+    link.addEventListener("click", function () { sheet.close(false); });
   });
 
   // Al pasar a desktop el panel deja de existir: se cierra sin mover el foco.
-  var onBreakpoint = function (event) { if (event.matches) closeSheet(false); };
+  var onBreakpoint = function (event) { if (event.matches) sheet.close(false); };
   if (DESKTOP.addEventListener) DESKTOP.addEventListener("change", onBreakpoint);
   else if (DESKTOP.addListener) DESKTOP.addListener(onBreakpoint);
 })();
