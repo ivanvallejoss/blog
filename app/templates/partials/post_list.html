@@ -1,32 +1,27 @@
-<ul class="post-list" id="post-list">
+<ol class="post-list">
   {% for post in posts %}
-  <li class="post-item">
-    <div class="post-meta">
-      <time class="meta" datetime="{{ post.published_at.isoformat() }}">
-        {{ post.published_at | format_date }}
-      </time>
-      - <span class="meta">{{ post.reading_minutes }} min</span>
-      <a href="{{ url_for('get_category', category_slug=post.category.slug) }}"
-         class="tag"
-         hx-get="{{ url_for('get_category', category_slug=post.category.slug) }}"
-         hx-target="#listing"
-         hx-select="#listing"
-         hx-swap="outerHTML"
-         hx-push-url="true">
-        {{ post.category.name }}
+    {% if loop.first %}
+    <li class="post-row post-row--featured">
+      <a href="{{ url_for('get_post', category_slug=post.category.slug, post_slug=post.slug) }}">
+        <p class="row-eyebrow">{{ post.category.name }} · {{ post.published_at | format_date }} · {{ post.reading_minutes }} min</p>
+        <p class="row-title">{{ post.title }}</p>
+        {% if post.summary %}<p class="row-summary">{{ post.summary }}</p>{% endif %}
       </a>
-    </div>
-    <a href="{{ url_for('get_post', category_slug=post.category.slug, post_slug=post.slug) }}"
-       class="post-title-link">
-      {{ post.title }}
-    </a>
-    <span class="post-author meta">Ivan Vallejos</span>
-  </li>
+    </li>
+    {% else %}
+    <li class="post-row post-row--item">
+      <a href="{{ url_for('get_post', category_slug=post.category.slug, post_slug=post.slug) }}">
+        <div>
+          <p class="row-eyebrow">{{ post.category.name }}<span class="row-meta-inline"> · {{ post.published_at | format_date_short }} · {{ post.reading_minutes }} min</span></p>
+          <p class="row-title">{{ post.title }}</p>
+        </div>
+        <p class="row-meta">{{ post.published_at | format_date_short }}<br>{{ post.reading_minutes }} min</p>
+      </a>
+    </li>
+    {% endif %}
+  {% else %}
+    <li class="post-row post-row--empty">
+      <p>No hay posts publicados todavía.</p>
+    </li>
   {% endfor %}
-
-  {% if not posts %}
-  <li class="post-item">
-    <p class="meta">No hay posts publicados todavía.</p>
-  </li>
-  {% endif %}
-</ul>
+</ol>

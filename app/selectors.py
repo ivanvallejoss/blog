@@ -1,5 +1,7 @@
+from sqlalchemy import func
 from sqlalchemy.orm import joinedload, selectinload
 
+from app.dates import MONTHS
 from app.models.post import Post
 from app.models.category import Category
 
@@ -50,3 +52,48 @@ def get_post_by_slugs(db, category_slug, post_slug):
         ).one_or_none()
 
     return post
+
+
+def get_tag_counts(db):
+    """
+    Grupo TAGS del rail: cada categoría con su cantidad de posts, más el
+    total como entrada 'ALL'. 'ALL' lleva slug None — es lo que hace que
+    el chequeo de activo en el template funcione sin un caso especial.
+    """
+    rows = (
+        db.query(Category.name, Category.slug, func.count(Post.id))
+        .join(Post, Post.category_id == Category.id)
+        .group_by(Category.id)
+        .order_by(func.count(Post.id).desc(), Category.name)
+        .all()
+    )
+
+    tags = [{"name": name, "slug": slug, "count": count} for name, slug, count in rows]
+    total = sum(tag["count"] for tag in tags)
+
+    return [{"name": "ALL", "slug": None, "count": total}] + tags
+
+
+def get_archive_counts(db):
+    """
+    Grupo de año del rail: [{"year": 2026, "months": [{"label": "JUN", "count": 4}]}]
+    Agrupado en SQL y agrupado por año en Python — el template no arma nada.
+    """
+    year = func.extract("year", Post.published_at)
+    month = func.extract("month", Post.published_at)
+
+    rows = (
+        db.query(year, month, func.count(Post.id))
+        .group_by(year, month)
+        .order_by(year.desc(), month.desc())
+        .all()
+    )
+
+    groups = []
+    for raw_year, raw_month, count in rows:
+        y, m = int(raw_year), int(raw_month)
+        if not groups or groups[-1]["year"] != y:
+            groups.append({"year": y, "months": []})
+        groups[-1]["months"].append({"label": MONTHS[m - 1].upper(), "count": count})
+
+    return groups

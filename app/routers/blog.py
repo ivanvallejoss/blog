@@ -1,14 +1,17 @@
-from datetime import datetime
-
 from fastapi import APIRouter, Depends, Request, HTTPException
-from fastapi.templating import Jinja2Templates
 
 from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.templating import templates
 
-from ..selectors import get_category_by_slug, get_post_by_slugs, get_published_posts 
+from ..selectors import (
+    get_archive_counts,
+    get_category_by_slug,
+    get_post_by_slugs,
+    get_published_posts,
+    get_tag_counts,
+)
 
 router = APIRouter()
 
@@ -21,7 +24,12 @@ def post_list(
     return templates.TemplateResponse(
         request,
         "index.html", 
-        {"posts": posts}
+        {
+            "posts": posts,
+            "tags": get_tag_counts(db),
+            "archive": get_archive_counts(db),
+            "active_tag": None,
+        }
         )
 
 
@@ -38,7 +46,13 @@ def get_category(
     return templates.TemplateResponse(
         request,
         "category.html",
-        {"posts": category.posts, "category": category}
+        {
+            "posts": category.posts,
+            "category": category,
+            "tags": get_tag_counts(db),
+            "archive": get_archive_counts(db),
+            "active_tag": category.slug,
+        }
         )
 
 
@@ -57,5 +71,5 @@ def get_post(
     return templates.TemplateResponse(
         request,
         "post.html", 
-        {"post":post}
+        {"post": post}
         )

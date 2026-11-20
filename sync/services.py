@@ -7,7 +7,7 @@ from sqlalchemy import delete
 from notion.client import get_posts, get_page_blocks, get_details_from_post
 from notion.converter import blocks_to_markdown
 
-from app.render import convert_markdown_to_html
+from app.render import render_markdown
 
 from app.models.category import Category
 from app.models.post import Post
@@ -44,6 +44,7 @@ def _create_post(db, full_post):
         slug=full_post["slug"],
         content_markdown=full_post["content_markdown"],
         content_html=full_post["content_html"],
+        content_toc=full_post["content_toc"],
         published_at=full_post["published_at"],
         notion_id=full_post["notion_id"],
         synced_at=full_post["synced_at"],
@@ -63,6 +64,7 @@ def _update_post(post, full_post):
     post.slug = full_post["slug"]
     post.content_markdown = full_post["content_markdown"]
     post.content_html = full_post["content_html"]
+    post.content_toc = full_post["content_toc"]
     post.published_at = full_post["published_at"]
     post.synced_at = full_post["synced_at"]
     post.category = full_post["category"]
@@ -75,19 +77,20 @@ def _get_full_post(db, post_details, db_categories) -> dict:
     Funcion helper para orquestar: 
     1. El fetch al contenido del post y su transformacion a markdown,
     2. La obtencion o creacion de la categoria asociada al post
-    3. Se incorporan las dos nuevas propiedades al diccionario `post_details`
+    3. Se incorporan las nuevas propiedades al diccionario `post_details`
     """
     # OBTENIENDO EL CONTENT
     page_id = post_details["notion_id"]
     page_blocks = get_page_blocks(page_id)
     content_markdown = blocks_to_markdown(page_blocks)
-    content_html = convert_markdown_to_html(content_markdown)
+    content_html, content_toc = render_markdown(content_markdown)
 
     # OBTENIENDO LA CATEGORIA
     category = _get_or_create_category(post_details["category_name"], db, db_categories)
 
     post_details["content_markdown"] = content_markdown
     post_details["content_html"] = content_html
+    post_details["content_toc"] = content_toc
     post_details["category"] = category
     return post_details
 

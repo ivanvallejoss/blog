@@ -1,10 +1,17 @@
 {% extends "base.html" %}
 
-{% block title %}ivan.dev{% endblock %}
+{% block title %}blog — Iván Vallejos{% endblock %}
+
+{% block rail %}{% include "partials/rail_listing.html" %}{% endblock %}
 
 {% block content %}
-{% include "partials/ghost_field.html" %}
-<div id="listing">
+<div class="col-list">
+  <header class="list-head">
+    <h1>Ivan's Blog</h1>
+    <p>The problem as it actually appeared, the decision as it was actually made.</p>
+  </header>
+
+  {% include "partials/tags_row.html" %}
   {% include "partials/post_list.html" %}
 </div>
 {% endblock %}

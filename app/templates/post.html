@@ -1,36 +1,69 @@
 {% extends "base.html" %}
 
-{% block title %}{{ post.title }} — ivan.dev{% endblock %}
+{% block title %}{{ post.title }} — blog · Iván Vallejos{% endblock %}
 
 {% block body_class %}page-post{% endblock %}
 
 {% block head %}
 <link rel="stylesheet" href="{{ url_for('static', path='css/pygments.css') }}">
+<script defer src="{{ url_for('static', path='js/article.js') }}"></script>
+{% endblock %}
+
+{% block nav %}
+<a class="nowrap" href="{{ url_for('post_list') }}">← ALL POSTS</a>
+{% if post.content_toc %}
+{# eco visual del rail: para un lector de pantalla es ruido, no información #}
+<span class="nav-counter nowrap" data-toc-counter aria-hidden="true">01 / {{ '%02d' % post.content_toc|length }}</span>
+{% endif %}
+{% endblock %}
+
+{% block subheader %}
+<div class="progress-mobile" aria-hidden="true">
+  <div class="progress-fill" data-progress></div>
+</div>
+{% endblock %}
+
+{% block rail %}
+<nav class="rail" aria-label="Contenidos">
+  <div class="rail-inner">
+    {% if post.content_toc %}
+    <div class="rail-group">
+      <p class="rail-label">CONTENTS</p>
+      <div class="rail-list">
+        {% for item in post.content_toc %}
+        <a class="rail-item{% if loop.first %} is-active{% endif %}"
+           {% if loop.first %}aria-current="true"{% endif %}
+           href="#{{ item.id }}"
+           data-toc-link="{{ item.id }}">{{ '%02d' % loop.index }} {{ item.text }}</a>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+    <div class="rail-group rail-progress" aria-hidden="true">
+      <p class="rail-label">PROGRESS</p>
+      <div class="progress-track">
+        <div class="progress-fill" data-progress></div>
+      </div>
+    </div>
+  </div>
+</nav>
 {% endblock %}
 
 {% block content %}
-{% include "partials/ghost_field.html" %}
-<article class="post-detail">
-  <header class="post-header">
-    <div class="post-meta">
-      <time class="meta" datetime="{{ post.published_at.isoformat() }}">
-        {{ post.published_at | format_date }}
-      </time>
-      - <span class="meta">{{ post.reading_minutes }} min de lectura</span>
-      <a href="{{ url_for('get_category', category_slug=post.category.slug) }}" class="tag">
-        {{ post.category.name }}
-      </a>
-    </div>
+<article class="article" data-article>
+  <header class="article-head">
+    <p class="eyebrow">
+      {{ post.category.name }} ·
+      <time datetime="{{ post.published_at.isoformat() }}">{{ post.published_at | format_date }}</time> ·
+      {{ post.reading_minutes }} min de lectura
+    </p>
     <h1>{{ post.title }}</h1>
-    <p class="post-author meta">Ivan Vallejos</p>
+    <p class="byline">Iván Vallejos</p>
   </header>
 
-  <div class="post-content">
+  <div class="prose">
     {{ post.content_html | safe }}
   </div>
-
-  <footer class="post-footer">
-    <a href="{{ url_for('post_list') }}" class="back-link"><span class="arr">←</span> Todos los posts</a>
-  </footer>
 </article>
 {% endblock %}

@@ -1,16 +1,16 @@
 from .models.post import Post
-from .render import convert_markdown_to_html
+from .render import render_markdown
 
 def backfill_html(db):
     """
-    funcion one-time only
-    Esta encargada de derivar content_markdown -> content_html
+    Re-deriva content_markdown -> (content_html, content_toc) para todos
+    los posts. Herramienta recurrente: corre cada vez que cambia el
+    renderer o el converter, sin necesidad de re-sincronizar Notion.
     """
     db_posts = db.query(Post).all()
 
     for post in db_posts:
-        content_html = convert_markdown_to_html(post.content_markdown)
-        post.content_html = content_html
+        post.content_html, post.content_toc = render_markdown(post.content_markdown)
     
     db.commit()
     

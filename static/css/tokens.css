@@ -1,60 +1,111 @@
-/* ============================================================
-   TOKENS — CIMIENTO v2 (sistema cerrado)
-   --amber : identidad y acento. ÚNICO color de marca.
-   --signal: verde semántico. SOLO estados vivos, NUNCA decorativo.
-   ============================================================ */
+/* ---------------------------------------------------------------------------
+   Blog técnico — tokens del sistema 8a
+   Un solo archivo, sin build step. Cargalo antes que cualquier otro CSS.
+   Los valores son los del diseño aprobado: no los redondees ni los "mejores".
+--------------------------------------------------------------------------- */
+
 :root {
-  --amber:  oklch(0.78 0.13 70);
-  --signal: oklch(0.72 0.12 155);
+  /* --- Superficies -------------------------------------------------------
+     Una sola superficie de página. El código baja apenas dos puntos: es un
+     hundimiento, no una tarjeta. NO agregar sombras ni superficies elevadas. */
+  --surface:            #0E0C0A;  /* fondo de página, único */
+  --surface-code:       #100E0C;  /* fondo de bloque de código */
+  --surface-code-inline:#1A1512;  /* fondo de <code> en línea */
 
-  --ink:   #f2f2f0;
-  --ink-2: #c9c9c3;
-  --ink-3: #a6a6a0;
-  --ink-4: #77776f;
-  --ink-5: #5c5c58;
+  /* --- Reglas ------------------------------------------------------------
+     Dos niveles, y la distinción importa:
+     rule-module = separa módulos estructurales (header, rail, secciones)
+     rule-item   = separa ítems dentro de una lista */
+  --rule-module: #24402F;  /* verde bosque — estructura */
+  --rule-item:   #241D16;  /* marrón cálido — repetición */
 
-  /* tonos de módulo del backdrop */
-  --mod-neutral: #17171a;
-  --mod-warm:    #201914;
-  --mod-slate:   #14161c;
-  --mod-deep:    #0f0f12;
+  /* --- Texto -------------------------------------------------------------
+     Rampa de cuatro pasos. No inventes intermedios. */
+  --text-title:  #F7EDDB;  /* h1, h2, h3 */
+  --text-lead:   #EBE2D0;  /* párrafo de entrada (22px) */
+  --text-body:   #DCD3C1;  /* cuerpo */
+  --text-strong: #F0E7D6;  /* <code> en línea, <em>, pregunta de Q&A */
+  --text-soft:   #C2BAA8;  /* respuesta de Q&A, texto de callout */
+  --text-muted:  #918878;  /* metadata mono, fechas, rail inactivo — 5.0:1 */
+  --text-dim:    #9C9381;  /* bajada de listado */
 
-  /* superficies */
-  --bg-solid:  #0b0b0d;              /* interludios / ticker */
-  --band-bg:   rgba(10, 10, 11, .72);
-  --line:      rgba(255, 255, 255, .07);
+  /* --- Acentos: tres colores, roles fijos --------------------------------
+     Esta asignación es la decisión central del sistema. Si un elemento nuevo
+     no encaja en uno de los tres roles, probablemente no necesite color. */
 
-  --font-sans: "Geist", system-ui, -apple-system, sans-serif;
-  --font-mono: "Geist Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
-  /* display: fuente de los títulos (H1 del nombre + .sec-title).
-     Decisión de Ivan 2026-07-24: Geist Mono. Cambiar acá revierte todo. */
-  --font-display: var(--font-mono);
+  /* SIENA — navegación y estado: tag/sección activa, barra de cita,
+     barra de progreso, underline de tag en mobile, número de ADR */
+  --accent-nav: #C0663A;
 
-  --nav-h: 60px;
-  --pad-x: clamp(20px, 5vw, 48px);
-  --container: 1100px;
+  /* ÁMBAR — metadata y valores: eyebrow del post actual, nombres de header
+     en el glosario, strings en el código, veredicto "falta precisión" */
+  --accent-meta: #D9A05B;
+
+  /* VERDE — estructura y lo técnico: keywords del código, callout de nota,
+     scope de ADR, veredicto "correcta" */
+  --accent-tech: #6FA184;
+
+  /* --- Tipografía --------------------------------------------------------
+     Geist = UI, metadata, código. Newsreader = todo el texto de lectura.
+     La regla no se rompe: si es prosa, es Newsreader. */
+  --font-ui:   "Geist", system-ui, sans-serif;
+  --font-mono: "Geist Mono", ui-monospace, Menlo, monospace;
+  --font-read: "Newsreader", Georgia, serif;
+
+  /* Escala de lectura — desktop */
+  --read-lead:  22px;  /* line-height 1.64, weight 300 */
+  --read-body:  19px;  /* line-height 1.78, weight 300 */
+  --read-small: 17.5px;/* line-height 1.70, weight 300 — callouts, Q&A, dl */
+  --read-quote: 25px;  /* line-height 1.48, weight 300 */
+  --read-h1:    38px;  /* line-height 1.16, weight 400, tracking -.014em */
+  --read-h2:    25px;  /* line-height 1.30, weight 500 */
+  --read-h3:    21px;  /* line-height 1.35, weight 500 */
+  --read-item:  21px;  /* título en fila de listado, weight 400, lh 1.3 */
+  --read-feat:  26px;  /* título del post destacado, weight 400, lh 1.24 */
+
+  /* Escala de lectura — mobile (≤640px) */
+  --read-lead-m:  19px;  /* lh 1.70 */
+  --read-body-m:  17.5px;/* lh 1.76 */
+  --read-h1-m:    28px;  /* lh 1.18 */
+  --read-h2-m:    21px;  /* lh 1.32 */
+  --read-quote-m: 20px;  /* lh 1.50 */
+
+  /* Mono — cinco tamaños, con su tracking obligatorio */
+  --mono-code:      14px;  /* bloque de código, lh 1.8 */
+  --mono-code-wide: 12px;  /* diagramas a ancho completo, lh 1.7 */
+  --mono-code-m:    12px;  /* bloque de código en mobile, lh 1.75 */
+  --mono-inline:    15.5px;/* <code> dentro de prosa de 19px */
+  --mono-meta:      11px;  /* eyebrow del post — tracking .16em */
+  --mono-label:     10px;  /* labels del rail — tracking .16em */
+  --mono-nav:       12px;  /* header, rail — tracking .08em/.14em */
+  --mono-row:       12.5px;/* ítems del rail, lh 1.3 */
+
+  /* --- Layout ------------------------------------------------------------ */
+  --rail-w:      200px;  /* fijo, no flexible */
+  --read-w:      560px;  /* medida de lectura: ~62ch en Newsreader 19px */
+  --read-w-wide: 680px;  /* cabecera del artículo y listados */
+  --pad-col:     40px;   /* padding lateral de la columna de contenido */
+  --pad-mod:     30px;   /* padding de módulos del listado */
+  --pad-rail:    22px;   /* padding del rail */
+  --pad-mobile:  20px;   /* padding lateral en mobile */
+  --bp-mobile:   640px;  /* único breakpoint */
 }
 
-/* ===== reset / base ===== */
-*, *::before, *::after { box-sizing: border-box; }
-html { scroll-behavior: smooth; }
+/* --- Reset mínimo -------------------------------------------------------- */
 body {
   margin: 0;
-  color: var(--ink);
-  font-family: var(--font-sans);
+  background: var(--surface);
+  color: var(--text-body);
+  font-family: var(--font-ui);
   -webkit-font-smoothing: antialiased;
-  background: linear-gradient(180deg, #100f0d 0%, #0c0b0c 42%, #08080a 100%);
-  background-attachment: fixed;
 }
-a { color: inherit; text-decoration: none; }
-a:hover { opacity: .82; }
-h1, h2, h3, p, blockquote { margin: 0; }
 
-::selection { background: var(--amber); color: #0a0a0b; }
+/* Los links del cuerpo: siena, subrayado sutil. NUNCA azul por default. */
+a           { color: var(--accent-nav); text-decoration-color: color-mix(in oklch, var(--accent-nav) 40%, transparent); text-underline-offset: 3px; }
+a:hover     { color: var(--text-title); text-decoration-color: var(--text-title); }
+a:focus-visible { outline: 2px solid var(--accent-nav); outline-offset: 2px; }
 
-a:focus-visible,
-button:focus-visible {
-  outline: 2px solid var(--amber);
-  outline-offset: 3px;
-  border-radius: 4px;
-}
+/* ⚠ REGLA CRÍTICA — toda columna de grid que pueda contener código lleva
+   minmax(0,1fr), no 1fr. Sin esto el min-content del <pre> estira el track
+   y rompe el layout entero. Nos pasó dos veces durante el diseño. */
+.shell { display: grid; grid-template-columns: var(--rail-w) minmax(0, 1fr); }

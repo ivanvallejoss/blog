@@ -16,3 +16,26 @@
   font-style: normal;
   font-display: swap;
 }
+
+/* Newsreader — tipografía de lectura del sistema 8a.
+   Variable con dos ejes: wght 200..800 y opsz 6..72. El óptico responde solo
+   vía font-optical-sizing: auto, que es el default — no hace falta declararlo.
+   Subset latin + latin-ext. Origen: repo oficial de Google Fonts, SIL OFL. */
+@font-face {
+  font-family: "Newsreader";
+  src: url("../fonts/Newsreader-Variable.woff2") format("woff2");
+  font-weight: 200 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* La itálica se descarga sólo cuando aparece un <em> en la página.
+   Sin esta declaración el navegador sintetiza la inclinación deformando la
+   redonda, que en una serif a peso 300 queda mal. */
+@font-face {
+  font-family: "Newsreader";
+  src: url("../fonts/Newsreader-Italic-Variable.woff2") format("woff2");
+  font-weight: 200 800;
+  font-style: italic;
+  font-display: swap;
+}

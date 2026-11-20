@@ -8,45 +8,50 @@
   <link rel="icon" type="image/svg+xml" href="{{ url_for('static', path='public/favicon.svg') }}">
 
   {#
-    Sistema de diseño CIMIENTO v2 — fuente de verdad: repo de la landing.
-    tokens.css y fonts.css son copias VERBATIM (no editar acá; si divergen,
-    gana la landing). blog.css es la capa de adaptación al contexto de blog.
-    Mismo patrón de preload de fuentes variables que la landing.
+    Sistema 8a — propio del blog (handoff de diseño, 2026-07-30).
+    tokens.css es el archivo del handoff, verbatim: no editar acá.
+    blog.css implementa layout, componentes y prosa sobre esos tokens.
+    Ya NO se sincroniza con la landing — ver ADR de supersesión.
   #}
   <link rel="preload" href="{{ url_for('static', path='fonts/Geist-Variable.woff2') }}" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="{{ url_for('static', path='fonts/GeistMono-Variable.woff2') }}" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="{{ url_for('static', path='fonts/Newsreader-Variable.woff2') }}" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="{{ url_for('static', path='css/fonts.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', path='css/tokens.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', path='css/blog.css') }}">
 
-  {#
-    Slot para CSS adicional por página.
-    post.html lo usa para pygments.css (syntax highlighting server-side).
-  #}
   {% block head %}{% endblock %}
-
-  <script defer src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.4/dist/htmx.min.js"></script>
 </head>
 <body class="{% block body_class %}{% endblock %}">
 
+  {#
+    Header a ancho completo: grid 1fr auto con bordes internos --rule-module.
+    El bloque `nav` cambia por pantalla (ARCHIVE/LANDING en listado,
+    ← ALL POSTS + contador de sección en artículo).
+  #}
   <header class="site-header">
-    <nav class="content-wrapper site-nav">
-      <a href="{{ url_for('post_list') }}" class="nav-brand"><svg class="nav-ring" viewBox="0 0 32 32" aria-hidden="true"><path d="M 16.00 28.50 A 12.5 12.5 0 0 1 3.98 19.45" stroke="oklch(0.78 0.13 70)" stroke-width="2.6" fill="none" stroke-linecap="round"/><path d="M 3.62 14.26 A 12.5 12.5 0 0 1 14.26 3.62" stroke="oklch(0.78 0.13 70)" stroke-width="2.6" fill="none" stroke-linecap="round"/><path d="M 19.45 3.98 A 12.5 12.5 0 0 1 28.50 16.00" stroke="oklch(0.78 0.13 70)" stroke-width="2.6" fill="none" stroke-linecap="round"/></svg>IV<span class="path">/blog</span></a>
-      <a href="https://ivanvallejos.dev/" class="nav-back">
-        ivanvallejos.dev <span class="arr">↗</span>
-      </a>
+    <a class="brand" href="{{ url_for('post_list') }}">IV · BLOG</a>
+    <nav class="site-nav">
+      {% block nav %}
+      <a href="{{ url_for('post_list') }}">ARCHIVE</a>
+      <a class="nowrap" href="https://ivanvallejos.dev/">LANDING ↗</a>
+      {% endblock %}
     </nav>
   </header>
 
-  <main class="content-wrapper site-main">
-    {% block content %}{% endblock %}
-  </main>
+  {# barra de progreso mobile: va pegada bajo el header, fuera del shell #}
+  {% block subheader %}{% endblock %}
+
+  <div class="shell">
+    {% block rail %}<div class="rail rail--empty"></div>{% endblock %}
+    <div class="col">
+      {% block content %}{% endblock %}
+    </div>
+  </div>
 
   <footer class="site-footer">
-    <div class="content-wrapper footer-inner">
-      <span class="footer-copy">© 2026 Iván Vallejos</span>
-      <a href="https://ivanvallejos.dev/" class="nav-back">visitar la landing <span class="arr">↗</span></a>
-    </div>
+    <span>© 2026 IVÁN VALLEJOS</span>
+    <a class="nowrap" href="https://ivanvallejos.dev/">IVANVALLEJOS.DEV ↗</a>
   </footer>
 
 </body>

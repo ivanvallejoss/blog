@@ -1,17 +1,17 @@
 {% extends "base.html" %}
 
-{% block title %}{{ category.name }} — ivan.dev{% endblock %}
+{% block title %}{{ category.name }} — blog · Iván Vallejos{% endblock %}
+
+{% block rail %}{% include "partials/rail_listing.html" %}{% endblock %}
 
 {% block content %}
-{% include "partials/ghost_field.html" %}
-<div id="listing">
-<header class="post-header">
-  <div class="post-meta">
-    <span class="meta">Categoría</span>
-  </div>
-  <h1>{{ category.name }}</h1>
-</header>
+<div class="col-list">
+  <header class="list-head">
+    <h1>Notes from inside the systems I build.</h1>
+    <p>The problem as it actually appeared, the decision as it was actually made.</p>
+  </header>
 
-{% include "partials/post_list.html" %}
+  {% include "partials/tags_row.html" %}
+  {% include "partials/post_list.html" %}
 </div>
 {% endblock %}
