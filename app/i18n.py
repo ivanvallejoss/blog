@@ -6,7 +6,8 @@ sin las claves que solo servían al prototipo (rótulos de pantallas de demo, pi
 como «toca Aa», el índice de ejemplo y el conteo fijo «7 posts · 3 temas»).
 Las claves pasan de camelCase a snake_case. Lo que en el diseño era una función o
 un texto armado con datos queda como plantilla con `{campos}` para `str.format`
-(en Jinja: `t.results_many.format(n=3)`).
+(en Jinja: `t.results_many.format(n=3)`). Los pares `<clave>_one` / `<clave>_many`
+se eligen con el filtro `plural`: `t | plural("posts", 7)` → «7 posts».
 
 Las claves marcadas «fuera del diseño» las pide el blog real y el prototipo no
 las trae (footer, accesibilidad, errores, lista vacía).
@@ -45,7 +46,11 @@ STRINGS: dict[str, dict[str, str]] = {
         "close": "cerrar",
         "all_posts": "Todos los posts",
         # countLine y res(n) del diseño, como plantillas
-        "count_line": "{posts} posts · {topics} temas",
+        # countLine del diseño, con singular y plural (ver el filtro `plural`)
+        "posts_one": "1 post",
+        "posts_many": "{n} posts",
+        "topics_one": "1 tema",
+        "topics_many": "{n} temas",
         "results_none": "Sin resultados",
         "results_one": "{n} resultado",
         "results_many": "{n} resultados",
@@ -71,6 +76,13 @@ STRINGS: dict[str, dict[str, str]] = {
         "error_title": "Algo salió mal",
         "error_body": "Error inesperado. Intentá de nuevo en unos segundos; si sigue pasando, avisame.",
         "back_home": "Volver al inicio",
+        "see_topic": "Ver los {n}",
+        "empty_topic_title": "Todavía no hay posts sobre este tema",
+        "empty_topic_body": "Probá con otro tema o mirá el archivo completo.",
+        "load_failed": "No se pudo cargar el contenido.",
+        "load_topic_failed": "No se pudo cargar el tema.",
+        "retry": "Reintentar",
+        "notifications": "Avisos",
     },
     "en": {
         "archive": "Archive",
@@ -96,7 +108,10 @@ STRINGS: dict[str, dict[str, str]] = {
         "open": "open",
         "close": "close",
         "all_posts": "All posts",
-        "count_line": "{posts} posts · {topics} topics",
+        "posts_one": "1 post",
+        "posts_many": "{n} posts",
+        "topics_one": "1 topic",
+        "topics_many": "{n} topics",
         "results_none": "No results",
         "results_one": "{n} result",
         "results_many": "{n} results",
@@ -121,6 +136,13 @@ STRINGS: dict[str, dict[str, str]] = {
         "error_title": "Something went wrong",
         "error_body": "Unexpected error. Try again in a few seconds; if it keeps happening, let me know.",
         "back_home": "Back to home",
+        "see_topic": "See all {n}",
+        "empty_topic_title": "No posts on this topic yet",
+        "empty_topic_body": "Try another topic or browse the full archive.",
+        "load_failed": "Couldn't load the content.",
+        "load_topic_failed": "Couldn't load the topic.",
+        "retry": "Retry",
+        "notifications": "Notifications",
     },
 }
 
@@ -155,3 +177,8 @@ class UIText:
 
 
 UI_TEXT = {lang: UIText(lang) for lang in LANGS}
+
+
+def plural(t: UIText, key: str, n: int) -> str:
+    """Elige `<key>_one` o `<key>_many` y completa `{n}`."""
+    return getattr(t, f"{key}_one" if n == 1 else f"{key}_many").format(n=n)

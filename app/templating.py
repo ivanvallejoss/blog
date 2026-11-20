@@ -6,7 +6,7 @@ from starlette.routing import NoMatchFound
 
 from .config import LANG_SWITCH_ENABLED
 from .dates import format_date, format_date_short
-from .i18n import DEFAULT_LANG, LANGS, UI_TEXT
+from .i18n import DEFAULT_LANG, LANGS, UI_TEXT, plural
 
 
 def site_context(request: Request) -> dict:
@@ -36,3 +36,4 @@ templates = Jinja2Templates(directory="app/templates", context_processors=[site_
 
 templates.env.filters["format_date"] = format_date
 templates.env.filters["format_date_short"] = format_date_short
+templates.env.filters["plural"] = plural
