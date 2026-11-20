@@ -40,6 +40,9 @@ a:where(:not(.btn)):hover { color: var(--color-accent-600); }
 
 button { font: inherit; }
 
+/* El atributo hidden gana siempre: si no, una clase con display (.btn) lo pisa. */
+[hidden] { display: none !important; }
+
 /* Metadatos: 11.5px en mobile, 12px en desktop (README §5). Extiende la clase
    de blog-tokens.css. */
 .meta-mono {
@@ -98,6 +101,11 @@ button { font: inherit; }
   white-space: nowrap;
   border: 0;
 }
+
+/* Controles que necesitan JavaScript. Sin él no se muestran. La página que
+   los usa marca <html> con .has-js desde un script en línea del <head>
+   (hoy, post.html). */
+html:not(.has-js) .js-only { display: none !important; }
 
 /* «Saltar al contenido»: aparece arriba a la izquierda al recibir foco. */
 .skip-link {
@@ -615,3 +623,355 @@ a.archive-row { color: var(--color-text); }
   }
 }
 
+
+
+/* ── Artículo ──────────────────────────────────────────────────────────
+   Mobile: cabecera, prosa y «Siguiente» a lo ancho; los controles de
+   lectura van en un panel inferior que abre el botón flotante.
+   Desktop: grilla 220px | 680px con 80px; los controles en la columna
+   lateral, sticky a 24px del borde. */
+
+.article { padding-block-start: var(--article-pad-top); }
+.article__main { min-width: 0; }
+
+.article__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--article-meta-gap);
+  margin: 0 0 var(--article-meta-mb);
+}
+a.article__tag { text-decoration: none; }
+a.article__tag:hover { color: var(--color-accent-800); text-decoration: underline; }
+
+.article__title {
+  margin: 0 0 var(--article-title-mb);
+  font-size: clamp(32px, calc(32px + (100vw - 390px) * 16 / 890), 48px);
+  /* 32px / 1.12 → 48px / 1.08, interpolado en px */
+  line-height: clamp(35.84px, calc(35.84px + (100vw - 390px) * 16 / 890), 51.84px);
+}
+.article__author {
+  margin: 0 0 var(--article-author-mb);
+  font-size: clamp(15px, calc(15px + (100vw - 390px) * 1 / 890), 16px);
+  color: var(--color-neutral-700);
+}
+
+.article__next {
+  display: flex;
+  flex-direction: column;
+  gap: var(--article-next-gap);
+  margin-block-start: var(--article-next-mt);
+}
+.article__next-link {
+  font-size: clamp(22px, calc(22px + (100vw - 390px) * 4 / 890), 26px);
+  font-weight: var(--font-heading-weight);
+  line-height: 1.2;
+  text-decoration: none;
+  text-wrap: balance;
+}
+
+/* Con el botón flotante, el footer deja lugar abajo para que no lo tape. */
+@media (max-width: 767.98px) {
+  .has-js .page-article .site-footer {
+    padding-block-end: calc(var(--fab-bottom) + var(--fab-size) + var(--space-4));
+  }
+}
+
+
+/* ── Prosa ─────────────────────────────────────────────────────────────
+   Tamaño por --prose-size (15–24, 18 por defecto), interlineado y medida
+   por sus tokens. Todo lo demás en em: escala con el tamaño elegido.
+   El código (bloque y en línea) está en pygments-light.css. */
+
+.post-content {
+  max-width: var(--measure);
+  font-size: var(--prose-size);
+  line-height: var(--prose-leading);
+  color: var(--color-neutral-900);
+  overflow-wrap: break-word;
+}
+.post-content > :first-child { margin-block-start: 0; }
+.post-content > :last-child { margin-block-end: 0; }
+
+.post-content p { margin: 0 0 1.1em; }
+
+.post-content h2,
+.post-content h3 { scroll-margin-top: var(--anchor-offset); }
+.post-content h2 { font-size: 1.3em; margin: 1.8em 0 0.5em; }
+.post-content h3 { font-size: 1.1em; margin: 1.6em 0 0.45em; }
+.post-content h2 + h3 { margin-block-start: 1em; }
+
+/* Ancla del título (permalink «#» del renderer): aparece al pasar o con foco. */
+.post-content .headerlink {
+  margin-inline-start: 0.3em;
+  font-weight: 400;
+  color: var(--color-neutral-600);
+  text-decoration: none;
+  opacity: 0;
+}
+.post-content :is(h2, h3):hover .headerlink,
+.post-content .headerlink:focus-visible { opacity: 1; }
+.post-content .headerlink:hover { color: var(--color-accent-700); }
+
+/* Cita: itálica, más grande, neutral-800, sin borde lateral. */
+.post-content blockquote {
+  margin: 1.5em 0;
+  padding: 0;
+  font-style: italic;
+  font-size: 1.15em;
+  line-height: 1.5;
+  color: var(--color-neutral-800);
+}
+.post-content blockquote p { margin: 0 0 0.6em; }
+.post-content blockquote > :last-child { margin-block-end: 0; }
+.post-content blockquote :is(code, pre) { font-style: normal; }
+.post-content blockquote em { font-style: normal; } /* itálica dentro de itálica: se invierte */
+
+/* Listas: con y sin orden, anidadas. Python-Markdown emite <li><p>… cuando
+   un ítem tiene más de un bloque; se ve igual que una lista compacta. */
+.post-content :is(ul, ol) {
+  margin: 0 0 1.1em;
+  padding-inline-start: 1.3em;
+}
+.post-content li { padding-inline-start: 0.2em; }
+.post-content li + li { margin-block-start: 0.35em; }
+.post-content li::marker { color: var(--color-neutral-700); }
+.post-content ol > li::marker { font-variant-numeric: tabular-nums; }
+.post-content li > :is(ul, ol) { margin: 0.35em 0 0; }
+.post-content li > p { margin: 0; }
+.post-content li > * + :is(p, blockquote, .codehilite) { margin-block-start: 0.5em; }
+.post-content li > :last-child { margin-block-end: 0; }
+
+/* En línea. La romana va de 400 a 600: la negrita es 600. */
+.post-content :is(strong, b) { font-weight: 600; }
+.post-content :is(em, i) { font-style: italic; }
+.post-content del {
+  color: var(--color-neutral-700);
+  text-decoration-thickness: 0.06em;
+}
+.post-content a:not(.headerlink) {
+  color: var(--color-accent-700);
+  text-decoration-thickness: 0.06em;
+  text-underline-offset: 0.18em;
+}
+.post-content a:not(.headerlink):hover { color: var(--color-accent-600); }
+
+/* Separador: la regla de Broadsheet (.hr), con aire de sección corta. */
+.post-content hr {
+  height: 1px;
+  margin: 2em 0;
+  border: 0;
+  background: var(--color-divider);
+}
+
+
+/* ── Controles de lectura ──────────────────────────────────────────────
+   Un solo marcado (#reader). Mobile: panel inferior, cerrado fuera de la
+   vista y del árbol de accesibilidad (visibility: hidden); article.js lo
+   abre con .is-open. Desktop: columna lateral sticky. */
+
+.reader {
+  position: fixed;
+  inset: auto 0 0;
+  z-index: 35;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sheet-gap);
+  max-height: var(--sheet-max-h);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: var(--sheet-pad-top) var(--sheet-pad-x) calc(var(--sheet-pad-bottom) + env(safe-area-inset-bottom));
+  background: var(--color-bg);
+  border-radius: var(--sheet-radius) var(--sheet-radius) 0 0;
+  box-shadow: var(--shadow-lg);
+  visibility: hidden;
+  transform: translateY(100%);
+  transition: transform var(--sheet-duration) ease, visibility 0s linear var(--sheet-duration);
+}
+.reader.is-open {
+  visibility: visible;
+  transform: none;
+  transition: transform var(--sheet-duration) ease;
+}
+.reader:focus { outline: none; } /* recibe el foco al abrir; no es un control */
+
+/* Tirador 40×4, que también cierra el panel (área táctil de 44px). */
+.reader__handle {
+  flex: none;
+  align-self: center;
+  width: var(--sheet-handle-w);
+  height: var(--sheet-handle-h);
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: var(--color-neutral-300);
+  cursor: pointer;
+}
+
+.reader__block {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sheet-block-gap);
+}
+/* En el panel el orden es tamaño, compartir, índice (en el marcado, el
+   índice va primero, como en el lateral de desktop). */
+.reader__block--size { order: 1; }
+.reader__block--share { order: 2; }
+.reader__block--toc { order: 3; gap: var(--sheet-toc-gap); }
+
+.reader__label { font-size: 13px; color: var(--color-neutral-700); }
+.reader__block--toc .reader__label { margin-block-end: var(--sheet-toc-gap); }
+
+.reader-toc { display: flex; flex-direction: column; gap: var(--sheet-toc-gap); }
+.reader-toc__link {
+  display: block;
+  padding-block: var(--sheet-toc-link-pad); /* 42px de alto; .hit lo lleva a 44 sin tocar el paso */
+  font-size: 17px;
+  text-decoration: none;
+}
+
+.reader-size {
+  display: flex;
+  align-items: center;
+  gap: var(--sheet-btn-gap);
+}
+.reader-size__btn { flex: 1; min-height: var(--hit); }
+.reader-size__btn--dec { font-size: 14px; }
+.reader-size__btn--inc { font-size: 19px; }
+.reader-size__btn[aria-disabled="true"] { opacity: 0.45; cursor: not-allowed; }
+.reader-size__btn[aria-disabled="true"]:is(:hover, :active) { background: transparent; }
+.reader-size__value {
+  flex: none;
+  width: var(--sheet-value-w);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  text-align: center;
+}
+
+.reader-share { display: flex; gap: var(--sheet-btn-gap); }
+.reader-share__btn { flex: 1; min-height: var(--hit); }
+.reader-share__btn--icon { flex: none; width: var(--hit); padding: 0; }
+
+/* Botón flotante: círculo de 56px a 20px del borde derecho y 32px del de abajo. */
+.reader-fab {
+  position: fixed;
+  right: var(--fab-right);
+  bottom: calc(var(--fab-bottom) + env(safe-area-inset-bottom));
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  width: var(--fab-size);
+  height: var(--fab-size);
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--color-accent);
+  color: var(--color-bg);
+  font-size: var(--fab-icon);
+  box-shadow: var(--shadow-md);
+  cursor: pointer;
+}
+.reader-fab:hover { background: var(--color-accent-600); }
+.reader-fab:active { background: var(--color-accent-700); }
+
+/* Velo: tocarlo cierra el panel. */
+.reader-veil {
+  position: fixed;
+  inset: 0;
+  z-index: 34;
+  background: color-mix(in srgb, var(--color-neutral-900) var(--veil-mix), transparent);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity var(--sheet-duration) ease, visibility 0s linear var(--sheet-duration);
+}
+.reader-veil.is-open {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity var(--sheet-duration) ease;
+}
+
+/* Panel abierto: el fondo no scrollea. */
+html.reader-open,
+html.reader-open body { overflow: hidden; }
+
+@media (prefers-reduced-motion: reduce) {
+  .reader,
+  .reader.is-open,
+  .reader-veil,
+  .reader-veil.is-open { transition: none; }
+}
+
+@media (min-width: 768px) {
+  .article {
+    display: grid;
+    grid-template-columns: var(--article-side) minmax(0, var(--measure));
+    gap: var(--article-columns-gap);
+    align-items: start;
+  }
+
+  .reader {
+    position: sticky;
+    inset: auto;
+    top: var(--reader-sticky-top);
+    z-index: auto;
+    gap: var(--reader-blocks-gap);
+    max-height: none;
+    overflow: visible;
+    padding: var(--reader-side-pad-top) 0 0;
+    background: none;
+    border-radius: 0;
+    box-shadow: none;
+    visibility: visible;
+    transform: none;
+    transition: none;
+  }
+  .reader-veil { display: none; }
+
+  .reader__block,
+  .reader__block--toc { order: 0; gap: var(--reader-block-gap); }
+  .reader__block--toc .reader__label { margin-block-end: 0; }
+
+  /* Índice: 15px con 8px entre links. El área de cada link ocupa todo el
+     paso (el aire entre links incluido); 44px no entra sin cambiar el
+     espaciado del diseño, así que se agranda solo con puntero táctil. */
+  .reader-toc {
+    --toc-link-pad: calc(var(--reader-block-gap) / 2);
+    gap: 0;
+    margin-block: calc(var(--toc-link-pad) * -1);
+  }
+  .reader-toc__link {
+    padding-block: var(--toc-link-pad);
+    font-size: 15px;
+  }
+  .reader-toc__link.hit::after { content: none; }
+
+  .reader-size { gap: var(--reader-size-gap); }
+  .reader-size__btn { flex: none; min-height: 0; }
+  .reader-size__btn--dec { font-size: 13px; }
+  .reader-size__btn--inc { font-size: 17px; }
+  .reader-size__value { width: var(--reader-value-w); font-size: 12px; }
+  .reader-size__unit { display: none; }
+
+  .reader-share { gap: var(--reader-share-gap); }
+  .reader-share__btn {
+    flex: none;
+    width: var(--reader-icon-btn);
+    height: var(--reader-icon-btn);
+    min-height: 0;
+    padding: 0;
+  }
+  /* En el lateral los botones son solo ícono: el texto queda para el lector
+     de pantalla (mismo marcado que el panel, donde se ve). */
+  .reader-share__label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
+
+@media (min-width: 768px) and (pointer: coarse) {
+  .reader-toc { --toc-link-pad: calc((var(--hit) - 1lh) / 2); }
+}

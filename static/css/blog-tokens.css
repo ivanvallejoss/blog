@@ -106,4 +106,47 @@
   --toast-max: 480px;                 /* ancho máximo en desktop */
   --toast-pad: 6px 6px 6px 16px;
   --toast-gap: 8px;
+
+  /* ── Artículo (ventana 3) ── */
+  --article-pad-top: clamp(16px, calc(16px + (100vw - 390px) * 24 / 890), 40px);
+  --article-side: 220px;              /* columna lateral de desktop */
+  --article-columns-gap: 80px;
+  --article-meta-gap: 10px;           /* tag ↔ fecha y minutos */
+  --article-meta-mb: clamp(14px, calc(14px + (100vw - 390px) * 2 / 890), 16px);
+  --article-title-mb: clamp(10px, calc(10px + (100vw - 390px) * 4 / 890), 14px);
+  --article-author-mb: clamp(32px, calc(32px + (100vw - 390px) * 8 / 890), 40px);
+  --article-next-mt: clamp(56px, calc(56px + (100vw - 390px) * 8 / 890), 64px);
+  --article-next-gap: 6px;
+  --anchor-offset: 24px;              /* aire sobre un título al llegar por su ancla (el header no es fijo) */
+
+  /* controles de lectura: lateral de desktop */
+  --reader-sticky-top: 24px;
+  --reader-side-pad-top: 8px;
+  --reader-blocks-gap: 32px;
+  --reader-block-gap: 8px;            /* rótulo ↔ contenido, y entre links del índice */
+  --reader-size-gap: 6px;
+  --reader-share-gap: 4px;
+  --reader-value-w: 44px;
+  --reader-icon-btn: 36px;            /* compartir: .btn-icon de Broadsheet */
+
+  /* controles de lectura: panel inferior de mobile */
+  --sheet-radius: 18px;
+  --sheet-pad-top: 12px;
+  --sheet-pad-x: 24px;
+  --sheet-pad-bottom: 36px;
+  --sheet-gap: 22px;
+  --sheet-block-gap: 10px;
+  --sheet-btn-gap: 8px;
+  --sheet-value-w: 56px;
+  --sheet-toc-gap: 4px;
+  --sheet-toc-link-pad: 8px;
+  --sheet-handle-w: 40px;
+  --sheet-handle-h: 4px;
+  --sheet-max-h: calc(100dvh - 48px);
+  --veil-mix: 40%;                    /* velo: neutral-900 al 40 % */
+  --fab-size: 56px;
+  --fab-icon: 26px;
+  --fab-right: 20px;
+  --fab-bottom: 32px;
+  --sheet-duration: 0.22s;
 }

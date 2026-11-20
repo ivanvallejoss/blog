@@ -1,17 +1,20 @@
 /* pygments-light.css — reemplaza pygments.css. Tema claro sobre Broadsheet.
-   Requiere blog-tokens.css (--code-*). Misma estructura de selectores que el tema anterior. */
+   Requiere blog-tokens.css (--code-*). Misma estructura de selectores que el tema anterior.
+   Ventana 3: medidas en em sobre el tamaño de la prosa (--prose-size), para que el
+   código escale con el tamaño de texto elegido. A 18px dan los valores del diseño:
+   bloque mono 13px / 1.6 con padding 16×18; código en línea con padding 1×5. */
 
 .codehilite {
   background: var(--code-bg);
   border-radius: var(--radius-md);
-  padding: 16px 18px;
-  margin: 0 0 1.3em;
-  overflow-x: auto;
+  padding: calc(16em / 18) 1em;
+  margin: 0 0 calc(1.3em * 13 / 18); /* 1.3em de los 13px del código, como PostBody (16.9px a 18px) */
+  overflow-x: auto;     /* un bloque largo scrollea adentro de su caja, nunca la página */
 }
 .codehilite pre {
   margin: 0;
   font-family: var(--font-mono);
-  font-size: 13px;
+  font-size: calc(13em / 18);
   line-height: 1.6;
   color: var(--code-base);
 }
@@ -56,6 +59,6 @@
   font-family: var(--font-mono);
   font-size: .85em;
   background: var(--code-bg);
-  padding: 1px 5px;
+  padding: calc(1em / 15.3) calc(5em / 15.3); /* 1×5px sobre los 15.3px de .85em a 18px */
   border-radius: var(--radius-sm);
 }
