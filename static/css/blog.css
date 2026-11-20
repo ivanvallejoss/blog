@@ -379,6 +379,12 @@ a.post-row { color: var(--color-text); }
 .post-row:hover .post-row__title { color: var(--color-accent-700); }
 .post-row__meta { font-size: 11.5px; } /* en filas queda en 11.5 también en desktop (diseño) */
 
+/* Etiqueta de tema (macro topic_tag): el .tag.tag-accent de Broadsheet con link
+   al archivo del tema. La misma en la cabecera del artículo y en los bloques
+   por tema de la portada. */
+a.topic-tag { text-decoration: none; }
+a.topic-tag:hover { color: var(--color-accent-800); text-decoration: underline; }
+
 /* Estado vacío: título 26px, texto 17px. */
 .empty-state { padding-block-start: var(--empty-pad-top); }
 .empty-state__title { font-size: 26px; margin: 0 0 var(--empty-title-gap); }
@@ -444,31 +450,46 @@ a.post-row { color: var(--color-text); }
   .recent__label { margin: var(--recent-label-gap) 0 var(--space-2); }
   .post-row__title { line-height: 1.25; }
 
-  .topics {
+  /* Bloques por tema (ventana 7): rótulo «Por tema» como «Recientes»; cada
+     bloque abre con la etiqueta del tema y su cantidad en mono, y sus posts
+     son una lista compacta, con menos peso que una fila de Recientes. */
+  .topics__label { margin: 0 0 var(--topics-label-gap); }
+  .topics__grid {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: var(--topics-gap);
   }
-  .topic { display: flex; flex-direction: column; gap: var(--topic-gap); }
-  .topic__title { margin: 0; }
-  .topic__title a { color: var(--color-text); text-decoration: none; }
-  .topic__title a:hover { color: var(--color-accent-700); }
+  .topic { display: flex; flex-direction: column; align-items: flex-start; }
+  .topic__head {
+    display: flex;
+    align-items: center;
+    gap: var(--topic-count-gap);
+    margin: 0 0 var(--topic-head-gap);
+    font: inherit; /* el h3 no le cambia nada a la etiqueta: igual que en el artículo */
+  }
   .topic__count {
     font-family: var(--font-mono);
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 400;
     color: var(--color-neutral-700);
   }
-  .topic__list { display: flex; flex-direction: column; gap: var(--topic-gap); }
+  .topic__list { display: flex; flex-direction: column; align-self: stretch; }
+  /* El link ocupa todo el paso (el aire entre títulos incluido), como el
+     índice del lateral; con puntero táctil crece a 44px. */
   .topic__post {
-    font-size: 17px;
+    display: block;
+    padding-block: var(--topic-post-pad);
+    font-size: 16px;
     line-height: 1.35;
-    color: var(--color-text);
     text-decoration: none;
   }
-  a.topic__post { color: var(--color-text); }
+  a.topic__post { color: var(--color-neutral-800); }
   a.topic__post:hover { color: var(--color-accent-700); }
-  .topic__more { font-size: 15px; }
+  .topic__more { margin-block-start: var(--topic-more-gap); font-size: 15px; }
+}
+
+@media (min-width: 768px) and (pointer: coarse) {
+  .topic__post { padding-block: calc((var(--hit) - 1lh) / 2); }
 }
 
 /* Apilados en mobile, los recientes van a una separación de sección del
@@ -688,8 +709,6 @@ a.archive-row { color: var(--color-text); }
   gap: var(--article-meta-gap);
   margin: 0 0 var(--article-meta-mb);
 }
-a.article__tag { text-decoration: none; }
-a.article__tag:hover { color: var(--color-accent-800); text-decoration: underline; }
 
 .article__title {
   margin: 0 0 var(--article-title-mb);

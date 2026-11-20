@@ -82,7 +82,12 @@
   --recent-label-gap: 8px;            /* rótulo ↔ primera fila (10 en desktop) */
   --see-archive-nudge: -5px;          /* alinea el texto del .btn-ghost con la columna */
   --topics-gap: 56px;
-  --topic-gap: 10px;
+  /* bloques por tema (ventana 7): etiqueta + cantidad y lista compacta */
+  --topics-label-gap: 20px;           /* «Por tema» ↔ bloques */
+  --topic-count-gap: 8px;             /* etiqueta ↔ cantidad */
+  --topic-head-gap: 10px;             /* etiqueta ↔ primer título (más el aire del link) */
+  --topic-post-pad: 4px;              /* aire de cada título: 8px entre dos */
+  --topic-more-gap: 8px;              /* último título ↔ «Ver los N» */
 
   --archive-pad-top: clamp(12px, calc(12px + (100vw - 390px) * 36 / 890), 48px);
   --archive-side: 220px;

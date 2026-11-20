@@ -5,6 +5,9 @@
 
   post_url(post)          URL del post.
   post_meta(post)         «14 NOV · concurrencia · 12 min» (el template pone .meta-mono).
+  topic_tag(topic, class) etiqueta de tema (.tag.tag-accent) con link a su archivo. La
+                          misma en la cabecera del artículo y en los bloques por tema
+                          de la portada. `class` opcional, antes de .hit.
   post_row(post, class)   fila de lista: link en bloque con título y metadatos (Recientes).
                           `class` opcional: post-row--compact (404) achica el título y el aire.
   empty_state(title, body) título 26px + texto 17px (tema vacío, portada sin posts).
@@ -20,6 +23,10 @@
 
 {% macro post_meta(post) -%}
 <time datetime="{{ post.published_at.date().isoformat() }}">{{ post.published_at | format_date_short(lang) }}</time> · {{ post.category | topic(lang) }} · {{ t.minutes.format(n=post.reading_minutes) }}
+{%- endmacro %}
+
+{% macro topic_tag(topic, class="") -%}
+<a class="tag tag-accent topic-tag {{ class }} hit" href="{{ url_for('get_category', category_slug=topic.slug) }}">{{ topic | topic(lang) }}</a>
 {%- endmacro %}
 
 {% macro post_row(post, class="") -%}

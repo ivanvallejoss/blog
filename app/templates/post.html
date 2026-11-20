@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% from "partials/brand.html" import brand, back_button, ring %}
-{% from "partials/posts.html" import post_url with context %}
+{% from "partials/posts.html" import post_url, topic_tag with context %}
 
 {% block title %}{{ post.title }} — {{ t.site_title }}{% endblock %}
 
@@ -111,7 +111,7 @@
   <article class="article__main">
     <header class="article__head">
       <div class="article__meta">
-        <a class="tag tag-accent article__tag hit" href="{{ url_for('get_category', category_slug=post.category.slug) }}">{{ post.category | topic(lang) }}</a>
+        {{ topic_tag(post.category, class="article__tag") }}
         <span class="meta-mono"><time datetime="{{ post.published_at.date().isoformat() }}">{{ post.published_at | format_date(lang) }}</time> · {{ t.minutes.format(n=post.reading_minutes) }}</span>
       </div>
       <h1 class="article__title">{{ post.title }}</h1>

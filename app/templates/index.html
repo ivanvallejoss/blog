@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from "partials/posts.html" import post_url, post_meta, post_row, empty_state, lang_empty_state with context %}
+{% from "partials/posts.html" import post_url, post_meta, post_row, topic_tag, empty_state, lang_empty_state with context %}
 
 {% block content %}
 {% if featured %}
@@ -32,22 +32,29 @@
 
   {% if topics %}
   {# Bloques por tema (solo desktop). Todos los temas con posts, de más a menos
-     posts, en filas de tres. Cada bloque muestra hasta tres títulos; si hay
-     más, un link al tema con el total. #}
-  <section class="topics desktop-only" aria-label="{{ t.topics }}">
-    {% for topic in topics %}
-    <div class="topic">
-      <h3 class="topic__title"><a href="{{ url_for('get_category', category_slug=topic.slug) }}">{{ topic | topic(lang) }}</a> <span class="topic__count">{{ topic.count }}</span></h3>
-      <ul class="list-reset topic__list">
-        {% for post in topic.posts[:3] %}
-        <li><a class="topic__post" href="{{ post_url(post) }}">{{ post.title }}</a></li>
-        {% endfor %}
-      </ul>
-      {% if topic.count > 3 %}
-      <a class="topic__more" href="{{ url_for('get_category', category_slug=topic.slug) }}">{{ t.see_topic.format(n=topic.count) }} →</a>
-      {% endif %}
+     posts, en filas de tres. Cada bloque abre con la etiqueta del tema (la
+     misma de la cabecera del artículo) y su cantidad, y lista hasta tres
+     títulos en forma compacta; si hay más, un link al tema con el total. #}
+  <section class="topics desktop-only" aria-labelledby="topics-label">
+    <h2 class="section-label section-rule topics__label" id="topics-label">{{ t.by_topic }}</h2>
+    <div class="topics__grid">
+      {% for topic in topics %}
+      <div class="topic">
+        <h3 class="topic__head">
+          {{ topic_tag(topic) }}
+          <span class="topic__count"><span aria-hidden="true">{{ topic.count }}</span><span class="visually-hidden">{{ t | plural("posts", topic.count) }}</span></span>
+        </h3>
+        <ul class="list-reset topic__list">
+          {% for post in topic.posts[:3] %}
+          <li><a class="topic__post" href="{{ post_url(post) }}">{{ post.title }}</a></li>
+          {% endfor %}
+        </ul>
+        {% if topic.count > 3 %}
+        <a class="topic__more" href="{{ url_for('get_category', category_slug=topic.slug) }}">{{ t.see_topic.format(n=topic.count) }} →</a>
+        {% endif %}
+      </div>
+      {% endfor %}
     </div>
-    {% endfor %}
   </section>
   {% endif %}
 </div>

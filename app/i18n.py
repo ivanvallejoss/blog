@@ -90,6 +90,7 @@ STRINGS: dict[str, dict[str, str]] = {
         "error_body": "Error inesperado. Intentá de nuevo en unos segundos; si sigue pasando, avisame.",
         "back_home": "Volver al inicio",
         "see_topic": "Ver los {n}",
+        "by_topic": "Por tema",  # rótulo de los bloques por tema de la portada (ventana 7)
         "empty_topic_title": "Todavía no hay posts sobre este tema",
         "empty_topic_body": "Probá con otro tema o mirá el archivo completo.",
         "load_failed": "No se pudo cargar el contenido.",
@@ -194,6 +195,7 @@ STRINGS: dict[str, dict[str, str]] = {
         "error_body": "Unexpected error. Try again in a few seconds; if it keeps happening, let me know.",
         "back_home": "Back to home",
         "see_topic": "See all {n}",
+        "by_topic": "By topic",
         "empty_topic_title": "No posts on this topic yet",
         "empty_topic_body": "Try another topic or browse the full archive.",
         "load_failed": "Couldn't load the content.",
