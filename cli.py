@@ -48,16 +48,24 @@ def seed_dev(
 
     Inserta o actualiza los posts del prototipo Broadsheet con notion_id
     "seed-…": tres temas, dos años, uno destacado, y un tema sin posts
-    («herramientas») para el estado vacío. Se niega a correr si
-    DATABASE_URL no apunta a localhost o 127.0.0.1.
+    («herramientas») para el estado vacío.
+
+    Necesita las dos cosas: BLOG_ALLOW_SEED=1 en el entorno y DATABASE_URL
+    apuntando a localhost o 127.0.0.1. En el servidor no se define
+    BLOG_ALLOW_SEED, así que se niega aunque la base sea local.
+    Ejemplo: BLOG_ALLOW_SEED=1 uv run python cli.py seed-dev
 
     Ojo: `sync` borra estos posts, porque Notion es la fuente de verdad y
     allá no existen. Es el comportamiento esperado: después de un sync,
     volver a correr seed-dev.
     """
     import os
+    from app.config import SEED_ALLOWED
     from app.seed import clear_seed_posts, is_local_database, seed_posts
 
+    if not SEED_ALLOWED:
+        typer.echo("seed-dev está deshabilitado: es solo para desarrollo local. Para habilitarlo, definí BLOG_ALLOW_SEED=1 (nunca en el servidor).")
+        raise typer.Exit(code=1)
     if not is_local_database(os.environ.get("DATABASE_URL")):
         typer.echo("seed-dev solo corre contra una base local (localhost o 127.0.0.1). Revisá DATABASE_URL.")
         raise typer.Exit(code=1)
