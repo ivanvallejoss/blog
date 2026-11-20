@@ -6,10 +6,25 @@ from sync.services import sync_posts
 app = typer.Typer()
 
 @app.command()
-def sync():
-    """Sincroniza los posts desde Notion."""
+def sync(
+    force: bool = typer.Option(False, "--force", help="Reconvertir todos los posts, aunque no hayan cambiado en Notion."),
+):
+    """
+    Sincroniza los posts desde Notion (solo lectura del lado de Notion).
+
+    Un post solo se reconvierte si cambió en Notion; con --force se
+    reconvierten todos, por ejemplo después de cambiar el conversor.
+    Al final informa los tipos de bloque que el conversor no soporta, por post.
+    """
     with SessionLocal() as db:
-        sync_posts(db)
+        report = sync_posts(db, force=force)
+    typer.echo(
+        f"Sync: {report.created} nuevos, {report.updated} reconvertidos, "
+        f"{report.skipped} sin cambios, {report.deleted} borrados."
+    )
+    for title, notion_id, kinds in report.unsupported:
+        detail = ", ".join(f"{kind} ×{n}" for kind, n in sorted(kinds.items()))
+        typer.echo(f"  No soportado en «{title}» ({notion_id}): {detail}")
 
 @app.command()
 def feature(slug: str, off: bool = typer.Option(False, "--off", help="Quitar el destacado")):

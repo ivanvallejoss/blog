@@ -1,11 +1,13 @@
-from slugify import slugify
+import logging
+from collections import Counter
+from dataclasses import dataclass, field
 
-from datetime import datetime
+from slugify import slugify
 
 from sqlalchemy import delete
 
 from notion.client import get_posts, get_page_blocks, get_details_from_post
-from notion.converter import blocks_to_markdown
+from notion.converter import convert_blocks
 
 from app.render import render_markdown
 
@@ -14,6 +16,22 @@ from app.models.post import Post
 from app.models.sync_error import SyncError
 
 from .exceptions import CategoriaFaltanteError
+
+logger = logging.getLogger(__name__)
+
+
+@dataclass
+class SyncReport:
+    """
+    Resultado de un sync, para que `cli.py` lo muestre.
+    `unsupported`: por post reconvertido, lo que el conversor no pudo emitir
+    [(título, notion_id, Counter(tipo → cantidad)), ...].
+    """
+    created: int = 0
+    updated: int = 0
+    deleted: int = 0
+    skipped: int = 0  # sin cambios en Notion desde el último sync
+    unsupported: list[tuple[str, str, Counter]] = field(default_factory=list)
 
 
 def _get_or_create_category(name, db, db_categories):
@@ -72,7 +90,7 @@ def _update_post(post, full_post):
     return post
 
 
-def _get_full_post(db, post_details, db_categories) -> dict:
+def _get_full_post(db, post_details, db_categories, report) -> dict:
     """
     Funcion helper para orquestar: 
     1. El fetch al contenido del post y su transformacion a markdown,
@@ -82,8 +100,19 @@ def _get_full_post(db, post_details, db_categories) -> dict:
     # OBTENIENDO EL CONTENT
     page_id = post_details["notion_id"]
     page_blocks = get_page_blocks(page_id)
-    content_markdown = blocks_to_markdown(page_blocks)
+    conversion = convert_blocks(page_blocks)
+    content_markdown = conversion.markdown
     content_html, content_toc = render_markdown(content_markdown)
+
+    # Lo que no se pudo convertir se informa y el sync sigue: el post se
+    # publica sin esos bloques.
+    if conversion.unsupported:
+        report.unsupported.append((post_details["title"], page_id, conversion.unsupported))
+        logger.warning(
+            "Post %r (%s): tipos no soportados: %s",
+            post_details["title"], page_id,
+            ", ".join(f"{kind} ×{n}" for kind, n in conversion.unsupported.items()),
+        )
 
     # OBTENIENDO LA CATEGORIA
     category = _get_or_create_category(post_details["category_name"], db, db_categories)
@@ -95,10 +124,15 @@ def _get_full_post(db, post_details, db_categories) -> dict:
     return post_details
 
 
-def sync_posts(db):
+def sync_posts(db, force=False) -> SyncReport:
     """
-    Funcion orquestadora
+    Funcion orquestadora.
+
+    Un post existente solo se reconvierte si cambió en Notion desde el último
+    sync. Con `force`, se reconvierten todos (por ejemplo, después de cambiar
+    el conversor).
     """
+    report = SyncReport()
     db_posts = {post.notion_id: post for post in db.query(Post).all()}
     db_categories = {category.name: category for category in db.query(Category).all()}
 
@@ -125,16 +159,23 @@ def sync_posts(db):
             continue
 
         if notion_id not in db_posts:
-            full_post = _get_full_post(db, post_details, db_categories)
+            full_post = _get_full_post(db, post_details, db_categories, report)
             _create_post(db, full_post)
+            report.created += 1
 
-        elif post_details["synced_at"] > db_posts[notion_id].synced_at:
-            full_post = _get_full_post(db, post_details, db_categories)
+        elif force or post_details["synced_at"] > db_posts[notion_id].synced_at:
+            full_post = _get_full_post(db, post_details, db_categories, report)
             _update_post(db_posts[notion_id], full_post)
-    
+            report.updated += 1
+
+        else:
+            report.skipped += 1
+
     # Cruce de conjuntos para obtener los posts que ya no existen en Notion (Notion es la fuente de verdad)
     to_delete = set(db_posts.keys()) - seen_ids
 
     stmt = delete(Post).where(Post.notion_id.in_(to_delete))
     db.execute(stmt)
     db.commit()
+    report.deleted = len(to_delete)
+    return report
