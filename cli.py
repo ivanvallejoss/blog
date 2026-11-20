@@ -15,8 +15,10 @@ def sync(
     Un post solo se reconvierte si cambió en Notion; con --force se
     reconvierten todos, por ejemplo después de cambiar el conversor.
     Un post publicado al que le falta un dato obligatorio (título, slug,
-    Fecha Publicacion, categoria) o que repite el slug de otro se saltea y
-    se lista al final con el motivo; los demás se sincronizan igual. Si a la
+    Fecha Publicacion, categoria), con un título o un slug de más de 100
+    caracteres, con un slug que no sirve en una URL, o que repite el slug de
+    otro, se saltea y se lista al final con el motivo; los demás se
+    sincronizan igual. Si a la
     base de Notion le falta una de esas propiedades, no se cambia nada.
     Al final informa también los tipos de bloque que el conversor no soporta,
     por post, los valores de Idioma que no reconoce y los temas cuyo slug

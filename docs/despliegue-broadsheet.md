@@ -15,7 +15,7 @@ En la base de posts:
    - Vacía equivale a `es`.
    - Cualquier otro valor cae a español y el sync lo informa.
 2. **Crear la propiedad `Resumen`**, de tipo **Text**. Es la bajada escrita a mano: la usan la portada, la búsqueda, el feed y la descripción para compartir. Vacía, se deriva del primer párrafo.
-3. **Completar los datos obligatorios de todo post en estado `Published`:** `Titulo`, `slug`, `Fecha Publicacion` y `categoria`. Un post al que le falta uno no se publica: el sync lo saltea, lo lista con el motivo y sigue con los demás. Si ya estaba en el sitio, se quita hasta que se corrija.
+3. **Completar los datos obligatorios de todo post en estado `Published`:** `Titulo`, `slug`, `Fecha Publicacion` y `categoria`. Un post al que le falta uno no se publica: el sync lo saltea, lo lista con el motivo y sigue con los demás. Si ya estaba en el sitio, se quita hasta que se corrija. Lo mismo pasa con un título o un slug de más de 100 caracteres, y con un slug que tiene algo que no sea letras sin tilde, números, guion o guion bajo (espacios, `/`, `?`, `#`, tildes, `ñ`).
 4. **Una traducción es otra página, con su propio `slug`.** Si dos posts publicados comparten slug, aunque estén en idiomas distintos, se publica uno solo: el que ya estaba publicado con ese slug o, si no, el que se creó antes en Notion. El otro aparece en la lista de salteados.
 5. **Evitar temas (`categoria`) cuyo slug sea** `en`, `archivo`, `archive`, `search.json`, `rss.xml` o `static`: quedan tapados por una ruta fija. El sync los informa.
 

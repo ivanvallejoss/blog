@@ -159,14 +159,14 @@ The sync layer expects a Notion database with the following properties:
 | Property | Type | Notes |
 | --- | --- | --- |
 | `Titulo` | Title | Required. Post title (100 characters at most) |
-| `slug` | Rich text | Required. URL-friendly identifier, unique across both languages: a translation is another page with its own slug |
+| `slug` | Rich text | Required. URL identifier, unique across both languages: a translation is another page with its own slug. Only ASCII letters, digits, `-` and `_`, 100 characters at most |
 | `Estado` | Status | Only `Published` posts are synced |
 | `categoria` | Select | Required. Avoid names whose slug is `en`, `archivo`, `archive`, `search.json`, `rss.xml` or `static` |
 | `Fecha Publicacion` | Date | Required |
 | `Idioma` | Select | `es` or `en` (case-insensitive). Empty means `es`; any other value falls back to `es` and is reported |
 | `Resumen` | Text | Hand-written excerpt, used on the home page, in search, in the feed and as the share description. Empty: derived from the first paragraph |
 
-**Required properties:** `Titulo`, `slug`, `Fecha Publicacion` and `categoria`. A published post with one of them empty (or an unreadable date), or with the same slug as another published post, is skipped: the other posts sync normally, and the sync summary lists it with what to fix. If it was already on the site, it is removed until it is fixed. If the Notion database lacks one of these properties altogether, the sync stops without changing anything and says which one.
+**Required properties:** `Titulo`, `slug`, `Fecha Publicacion` and `categoria`. A published post with one of them empty (or an unreadable date), with a title or slug over 100 characters, with a slug that has anything other than ASCII letters, digits, `-` and `_` (spaces, `/`, `?`, `#`, accents…), or with the same slug as another published post, is skipped: the other posts sync normally, and the sync summary lists it with what to fix. If it was already on the site, it is removed until it is fixed. If the Notion database lacks one of these properties altogether, the sync stops without changing anything and says which one.
 
 Topic names are written in Spanish in Notion; their English names live in `TOPIC_NAMES` in `app/i18n.py`.
 

@@ -36,7 +36,8 @@ class SyncReport:
     `images`: la pasada de imágenes para compartir (app/og/images.py), con
     las que fallaron.
     `rejected`: posts publicados en Notion que no se publicaron por un dato
-    obligatorio que falta o porque repiten el slug de otro
+    obligatorio que falta o no entra en el sitio, o porque repiten el slug
+    de otro
     [(título, notion_id, [motivos]), ...]. Si ya estaban en la base, se
     borran, como cualquier post que deja de estar publicado.
     """
@@ -182,8 +183,10 @@ def sync_posts(db, force=False) -> SyncReport:
                 post_details["title"], post_details["notion_id"], post_details["lang_unknown"],
             )
 
-    # Un post al que le falta un dato obligatorio, o que repite el slug de
-    # otro, no se publica: se saltea, se informa y el sync sigue con los
+    # Un post al que le falta un dato obligatorio, cuyo título o slug no
+    # entra en el sitio (más de 100 caracteres, slug que no sirve en una URL;
+    # ver notion/client.py · read_required), o que repite el slug de otro, no
+    # se publica: se saltea, se informa y el sync sigue con los
     # demás. No entra en `seen_ids`, así que si ya estaba en la base se borra
     # (Notion es la fuente de verdad), hasta que se corrija.
     valid = [d for d in all_details if not d["problems"]]

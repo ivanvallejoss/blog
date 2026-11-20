@@ -13,7 +13,7 @@ from app.models.post import Post
 from typer.testing import CliRunner
 
 import cli
-from notion.client import get_details_from_post, read_lang, schema_problems
+from notion.client import TEXT_MAX, get_details_from_post, read_lang, schema_problems
 from sync.exceptions import EsquemaNotionError
 from sync.services import SyncReport, reserved_topics, sync_posts
 
@@ -216,6 +216,64 @@ class Sync(unittest.TestCase):
         self.assertIn("ya estaba publicado con ese slug", reason)
 
 
+    # — título o slug que no entran en el sitio (ventana 7) —
+
+    def test_title_or_slug_over_100_characters_skips_the_post(self):
+        cases = {
+            "título": (dict(title="T" * 101), "el título tiene 101 caracteres y el máximo es 100 (propiedad «Titulo»)"),
+            "slug": (dict(slug="s" * 101), "el slug tiene 101 caracteres y el máximo es 100 (propiedad «slug»)"),
+        }
+        for what, (broken, reason) in cases.items():
+            with self.subTest(what=what):
+                report, posts = self.run_sync(
+                    page("p1", title="Bueno", slug="bueno"),
+                    page("p2", **broken),
+                )
+                # el post largo no llega a la base: el sync no se deshace y el bueno se crea
+                self.assertEqual([p.slug for p in posts], ["bueno"])
+                self.assertEqual(report.created, 1)
+                [(_, notion_id, reasons)] = report.rejected
+                self.assertEqual((notion_id, reasons), ("p2", [reason]))
+
+    def test_title_and_slug_of_exactly_100_characters_are_published(self):
+        report, [post] = self.run_sync(page(title="T" * 100, slug="s" * 100))
+        self.assertEqual(report.rejected, [])
+        self.assertEqual((len(post.title), len(post.slug)), (100, 100))
+
+    def test_slug_not_usable_in_a_url_skips_the_post(self):
+        cases = {
+            "un post": "espacios",
+            "dos/partes": "«/»",
+            "que?": "«?»",
+            "ancla#1": "«#»",
+            "cien%": "«%»",
+            "diseño": "«ñ»",
+            "rediseño-más": "«ñ», «á»",
+            "a.b": "«.»",
+            "a+b": "«+»",
+        }
+        for slug, shown in cases.items():
+            with self.subTest(slug=slug):
+                report, posts = self.run_sync(page(slug=slug))
+                self.assertEqual(posts, [])
+                [(_, _, [reason])] = report.rejected
+                self.assertEqual(reason, f"el slug «{slug}» tiene caracteres que no sirven en una URL ({shown}); "
+                                         "usá solo letras sin tilde, números, guion y guion bajo (propiedad «slug»)")
+
+    def test_current_slugs_stay_valid(self):
+        # el post real usa guion bajo; los de muestra, guion
+        for slug in ("levantar_un_servidor_sin_mirar", "concurrencia-sin-miedo-async-en-python-3-14", "Post_2026-v2"):
+            with self.subTest(slug=slug):
+                report, [post] = self.run_sync(page(slug=slug))
+                self.assertEqual((report.rejected, post.slug), ([], slug))
+
+    def test_a_long_slug_with_bad_characters_lists_both_problems(self):
+        problems = get_details_from_post(page(slug="a b" * 40))["problems"]
+        self.assertEqual(len(problems), 2)
+        self.assertIn("120 caracteres", problems[0])
+        self.assertIn("(espacios)", problems[1])
+
+
 class RequiredProperties(unittest.TestCase):
     def test_well_formed_post_has_no_problems(self):
         details = get_details_from_post(page(date="2026-11-14T10:30:00.000-03:00"))
@@ -227,6 +285,10 @@ class RequiredProperties(unittest.TestCase):
     def test_blank_title_counts_as_missing(self):
         self.assertEqual(get_details_from_post(page(title="   "))["problems"],
                          ["le falta el título (propiedad «Titulo»)"])
+
+    def test_length_limit_matches_the_columns(self):
+        self.assertEqual(Post.__table__.c.title.type.length, TEXT_MAX)
+        self.assertEqual(Post.__table__.c.slug.type.length, TEXT_MAX)
 
     def test_every_problem_is_listed(self):
         problems = get_details_from_post(page(title="", slug="", date=None, category=None))["problems"]
@@ -265,6 +327,23 @@ class SyncOutput(unittest.TestCase):
                       "(propiedad «Fecha Publicacion»).", result.output)
         self.assertIn("  Post sin título (def): le falta el título (propiedad «Titulo»); "
                       "le falta el slug (propiedad «slug»).", result.output)
+
+    def test_summary_says_how_to_fix_a_bad_slug_or_a_long_title(self):
+        # De punta a punta: páginas de Notion → sync_posts real → lo que imprime la CLI.
+        pages = [page("ok", title="Bueno", slug="bueno"),
+                 page("sp", title="Con espacios", slug="con espacios"),
+                 page("lg", title="L" * 120, slug="largo")]
+        with mock.patch("cli.SessionLocal"), \
+             mock.patch("sync.services.get_posts", return_value=pages), \
+             mock.patch("sync.services.get_page_blocks", return_value=[]), \
+             mock.patch("sync.services.refresh_images"), \
+             mock.patch("sync.services.logger"):
+            result = CliRunner().invoke(cli.app, ["sync"])
+        self.assertEqual(result.exit_code, 0, result.output)
+        self.assertIn("1 nuevos, 0 reconvertidos, 0 sin cambios, 0 borrados, 2 salteados.", result.output)
+        self.assertIn("  «Con espacios» (sp): el slug «con espacios» tiene caracteres que no sirven en una URL "
+                      "(espacios); usá solo letras sin tilde, números, guion y guion bajo (propiedad «slug»).", result.output)
+        self.assertIn(f"  «{'L' * 120}» (lg): el título tiene 120 caracteres y el máximo es 100 (propiedad «Titulo»).", result.output)
 
     def test_missing_property_stops_with_the_reason(self):
         error = EsquemaNotionError(["La base de Notion no tiene la propiedad «slug» (tipo Texto). Creala con ese nombre exacto."])

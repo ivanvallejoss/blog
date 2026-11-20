@@ -1,6 +1,7 @@
 from notion_client import Client
 from notion_client.helpers import collect_paginated_api
 import os
+import re
 from datetime import datetime
 from dotenv import load_dotenv
 
@@ -122,6 +123,33 @@ def schema_problems(notion_posts) -> list[str]:
     return problems
 
 
+# Largo máximo del título y del slug: las columnas `Post.title` y `Post.slug`
+# son String(100). Uno más largo hace fallar el INSERT y deshace el sync
+# entero, así que el post se saltea antes (tests/test_notion.py comprueba que
+# coincide con el modelo).
+TEXT_MAX = 100
+
+# Caracteres que puede tener un slug: letras sin tilde, números, guion y guion
+# bajo. Todo lo demás (espacios, «/», «?», «#», «%», tildes, «ñ»…) rompe la
+# URL del post, la parte en dos o se codifica distinto según quién la arme.
+SLUG_CHARS = re.compile(r"[A-Za-z0-9_-]")
+
+
+def slug_problems(slug: str) -> list[str]:
+    """Lo que impide usar `slug` en la URL de un post, en palabras para Notion."""
+    problems = []
+    if len(slug) > TEXT_MAX:
+        problems.append(f"el slug tiene {len(slug)} caracteres y el máximo es {TEXT_MAX} (propiedad «slug»)")
+    bad = list(dict.fromkeys(ch for ch in slug if not SLUG_CHARS.fullmatch(ch)))
+    if bad:
+        shown = ", ".join("espacios" if ch.isspace() else f"«{ch}»" for ch in bad)
+        problems.append(
+            f"el slug «{slug}» tiene caracteres que no sirven en una URL ({shown}); "
+            "usá solo letras sin tilde, números, guion y guion bajo (propiedad «slug»)"
+        )
+    return problems
+
+
 def _plain(prop, kind) -> str:
     """Texto plano de una propiedad de título o de texto, sin espacios en los bordes."""
     if not prop or prop.get("type") != kind:
@@ -133,18 +161,24 @@ def read_required(properties):
     """
     (valores, problemas) de las propiedades obligatorias de un post.
     `valores` tiene title, slug, published_at y category_name, con None o ""
-    donde falta el dato. `problemas` dice, para cada dato que falta o no se
-    puede leer, qué corregir en Notion. Un post con problemas no se publica.
+    donde falta el dato. `problemas` dice, para cada dato que falta, no se
+    puede leer o no entra en el sitio (título o slug de más de TEXT_MAX
+    caracteres, slug que no sirve en una URL), qué corregir en Notion. Un
+    post con problemas no se publica.
     """
     problems = []
 
     title = _plain(properties.get("Titulo"), "title")
     if not title:
         problems.append("le falta el título (propiedad «Titulo»)")
+    elif len(title) > TEXT_MAX:
+        problems.append(f"el título tiene {len(title)} caracteres y el máximo es {TEXT_MAX} (propiedad «Titulo»)")
 
     slug = _plain(properties.get("slug"), "rich_text")
     if not slug:
         problems.append("le falta el slug (propiedad «slug»)")
+    else:
+        problems.extend(slug_problems(slug))
 
     published_at = None
     date_prop = properties.get("Fecha Publicacion") or {}
