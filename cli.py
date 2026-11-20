@@ -14,16 +14,33 @@ def sync(
 
     Un post solo se reconvierte si cambió en Notion; con --force se
     reconvierten todos, por ejemplo después de cambiar el conversor.
-    Al final informa los tipos de bloque que el conversor no soporta, por post,
-    los valores de Idioma que no reconoce y los temas cuyo slug choca con una
-    ruta fija del sitio.
+    Un post publicado al que le falta un dato obligatorio (título, slug,
+    Fecha Publicacion, categoria) o que repite el slug de otro se saltea y
+    se lista al final con el motivo; los demás se sincronizan igual. Si a la
+    base de Notion le falta una de esas propiedades, no se cambia nada.
+    Al final informa también los tipos de bloque que el conversor no soporta,
+    por post, los valores de Idioma que no reconoce y los temas cuyo slug
+    choca con una ruta fija del sitio.
     """
+    from sync.exceptions import EsquemaNotionError
+
     with SessionLocal() as db:
-        report = sync_posts(db, force=force)
+        try:
+            report = sync_posts(db, force=force)
+        except EsquemaNotionError as exc:
+            typer.echo("El sync no se hizo: a la base de Notion le falta algo obligatorio. No se cambió nada.")
+            for problem in exc.problems:
+                typer.echo(f"  {problem}")
+            raise typer.Exit(code=1)
     typer.echo(
         f"Sync: {report.created} nuevos, {report.updated} reconvertidos, "
-        f"{report.skipped} sin cambios, {report.deleted} borrados."
+        f"{report.skipped} sin cambios, {report.deleted} borrados, {len(report.rejected)} salteados."
     )
+    if report.rejected:
+        typer.echo("Salteados (no se publicaron; si ya estaban en el sitio, se quitaron hasta que se corrijan en Notion):")
+    for title, notion_id, reasons in report.rejected:
+        name = f"«{title}» ({notion_id})" if title else f"Post sin título ({notion_id})"
+        typer.echo(f"  {name}: {'; '.join(reasons)}.")
     for title, notion_id, kinds in report.unsupported:
         detail = ", ".join(f"{kind} ×{n}" for kind, n in sorted(kinds.items()))
         typer.echo(f"  No soportado en «{title}» ({notion_id}): {detail}")
