@@ -53,3 +53,38 @@ La fuente de verdad pasa a ser:
 - Las ventanas siguientes (portada y archivo, artículo, búsqueda y errores, idioma, OpenGraph) construyen sobre `base.html` y `blog.css`. Ver `CORRECCIONES.md` §5.
 - Cambiar el aspecto del sistema se hace en el design system Broadsheet y se vuelve a copiar `broadsheet.css`, no editándolo en el repo.
 - El ADR de CIMIENTO queda como histórico; sus reglas de sincronización con la landing ya no obligan.
+
+---
+
+## Estado final (20 nov 2026, ventana 6)
+
+El rediseño quedó completo en seis ventanas, con un informe cada una en `docs/design_handoff_blog_broadsheet/informes/`. Todo está en la rama `opengraph`, que sale de `idioma`. `main` tiene hasta la ventana 4. Nada está desplegado: los pasos a mano están en `docs/despliegue-broadsheet.md`.
+
+| Ventana | Qué dejó |
+| --- | --- |
+| 1 · Base | CSS de Broadsheet, `base.html`, header y footer, fuentes alojadas, diccionario de textos, fechas por idioma. |
+| 2 · Portada y archivo | Destacado, recientes, bloques por tema, `/archivo/`, filtros con HTMX, carga y toasts, `seed-dev`. |
+| 3 · Artículo | Prosa, código claro, panel de lectura y lateral, tamaño de texto, compartir, «Siguiente», conversor de Notion ampliado. |
+| 4 · Búsqueda y errores | `/search.json`, búsqueda en pantalla completa y diálogo ⌘K, 404 y 500 con planchas. |
+| 5 · Idioma | `Post.lang` y `Post.excerpt`, propiedades `Idioma` y `Resumen`, rutas `/en/`, switch, `hreflang`, nombres de tema traducidos. |
+| 6 · OpenGraph y feed | Meta tags y canonical, imágenes para compartir, `apple-touch-icon`, feeds Atom. |
+
+### Deudas del ADR de julio, resueltas
+
+`adaptacion-design-blog.md` §4 dejó dos features pendientes. Las dos quedaron resueltas en la ventana 6:
+
+1. **RSS/Atom:** está resuelta la decisión que había quedado abierta, contenido completo o resumen.
+   - Hay un feed Atom por idioma, en `/rss.xml` y `/en/rss.xml`, con los últimos 20 posts completos. Lo arma `app/feed.py` y la ruta está en `app/routers/blog.py · rss`.
+   - Atom en vez de RSS 2.0: tiene `<content type="html">`, ids permanentes y fechas RFC 3339.
+   - Todas las páginas lo enlazan con `<link rel="alternate">` y el footer muestra «RSS».
+2. **OpenGraph y meta description:**
+   - `app/meta.py` arma descripción, canonical, OpenGraph y `twitter:card` para portada, archivo, tema y post, en los dos idiomas. Lo pinta `partials/meta.html`.
+   - Cada post tiene su imagen de 1200 × 630, y cada idioma una por defecto. Las dibuja `app/og/` con Pillow, desde los mismos tokens y la misma Source Serif 4 en opsz 14.
+   - Se generan en el sync y con `cli.py og-images`, solo cuando cambia lo que muestran. La huella va dentro del PNG y en el `?v=` de la URL.
+
+### Decisiones de la ventana 6
+
+- **Pillow** es la única dependencia nueva de todo el rediseño. El servidor no tiene navegador y no convierte SVG. Los TTF de las imágenes viven en `app/og/fonts/`, que no se sirve como estático.
+- **Los tokens que usan las imágenes** están duplicados como constantes en `app/og/tokens.py`, cada una con el nombre de su variable de CSS. Si cambia un token del sitio, hay que cambiarlo ahí también.
+- **Región de `og:locale`:** `es_AR` y `en_US`.
+- **El `apple-touch-icon.png` se commitea.** Lo dibuja el mismo código del anillo (`cli.py touch-icon`).
