@@ -5,10 +5,12 @@ from dataclasses import dataclass, field
 from slugify import slugify
 
 from sqlalchemy import delete
+from sqlalchemy.orm import joinedload
 
 from notion.client import get_posts, get_page_blocks, get_details_from_post
 from notion.converter import convert_blocks
 
+from app.og.images import ImageReport, refresh_images
 from app.render import render_markdown
 from app.urls import RESERVED_TOPIC_SLUGS
 
@@ -31,6 +33,8 @@ class SyncReport:
     español [(título, notion_id, valor), ...].
     `reserved_topics`: temas cuyo slug choca con una ruta fija (app/urls.py)
     [(nombre, slug), ...]: sus páginas quedan tapadas en al menos un idioma.
+    `images`: la pasada de imágenes para compartir (app/og/images.py), con
+    las que fallaron.
     """
     created: int = 0
     updated: int = 0
@@ -39,6 +43,7 @@ class SyncReport:
     unsupported: list[tuple[str, str, Counter]] = field(default_factory=list)
     unknown_lang: list[tuple[str, str, str]] = field(default_factory=list)
     reserved_topics: list[tuple[str, str]] = field(default_factory=list)
+    images: ImageReport = field(default_factory=ImageReport)
 
 
 def _get_or_create_category(name, db, db_categories):
@@ -150,6 +155,7 @@ def sync_posts(db, force=False) -> SyncReport:
 
     notion_posts = get_posts()
     seen_ids = set()
+    removed_slugs = []  # imágenes para compartir que hay que borrar
 
     topic_names = set()
 
@@ -190,7 +196,10 @@ def sync_posts(db, force=False) -> SyncReport:
 
         elif force or post_details["synced_at"] > db_posts[notion_id].synced_at:
             full_post = _get_full_post(db, post_details, db_categories, report)
+            old_slug = db_posts[notion_id].slug
             _update_post(db_posts[notion_id], full_post)
+            if old_slug != full_post["slug"]:
+                removed_slugs.append(old_slug)  # su imagen queda huérfana
             report.updated += 1
 
         else:
@@ -198,15 +207,33 @@ def sync_posts(db, force=False) -> SyncReport:
 
     # Cruce de conjuntos para obtener los posts que ya no existen en Notion (Notion es la fuente de verdad)
     to_delete = set(db_posts.keys()) - seen_ids
+    removed_slugs += [db_posts[notion_id].slug for notion_id in to_delete]
 
     stmt = delete(Post).where(Post.notion_id.in_(to_delete))
     db.execute(stmt)
     db.commit()
     report.deleted = len(to_delete)
+    report.images = _refresh_images(db, removed_slugs)
     report.reserved_topics = reserved_topics(topic_names)
     for name, slug in report.reserved_topics:
         logger.warning("Tema %r: el slug %r choca con una ruta fija del sitio", name, slug)
     return report
+
+
+def _refresh_images(db, removed_slugs) -> ImageReport:
+    """
+    Imágenes para compartir, después de guardar los posts: borra las de los
+    posts borrados (o que cambiaron de slug) y genera las que falten o cuyo
+    contenido cambió (título, tema, fecha, minutos, dominio). Las que no
+    cambiaron no se tocan. Un fallo no corta el sync: queda en el reporte y el
+    post usa la imagen por defecto.
+    """
+    try:
+        posts = db.query(Post).options(joinedload(Post.category)).all()
+        return refresh_images(posts, removed_slugs)
+    except Exception as exc:  # noqa: BLE001 — el sync ya guardó los posts
+        logger.exception("Imágenes para compartir: la pasada no terminó")
+        return ImageReport(failed=[("(todas)", "", str(exc))])
 
 
 def reserved_topics(names) -> list[tuple[str, str]]:

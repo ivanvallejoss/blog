@@ -9,3 +9,7 @@ wheels/
 
 # Virtual environments
 .venv
+
+# Imágenes para compartir generadas (app/og/images.py): las escriben el sync,
+# `cli.py og-images` y `cli.py seed-dev`.
+static/og/

@@ -74,6 +74,10 @@ class Sync(unittest.TestCase):
         logger = mock.patch("sync.services.logger")
         self.logger = logger.start()
         self.addCleanup(logger.stop)
+        # Las imágenes para compartir tienen sus propias pruebas (test_og.py).
+        images = mock.patch("sync.services.refresh_images")
+        self.refresh_images = images.start()
+        self.addCleanup(images.stop)
 
     def run_sync(self, *pages):
         db = mock.MagicMock()

@@ -492,9 +492,13 @@ def seed_posts(db) -> list[Post]:
     return result
 
 
-def clear_seed_posts(db) -> tuple[int, int]:
-    """Borra los posts `seed-…` y los temas que quedaron sin posts por eso."""
+def clear_seed_posts(db) -> tuple[int, int, list[str]]:
+    """
+    Borra los posts `seed-…` y los temas que quedaron sin posts por eso.
+    Devuelve (posts, temas, slugs de los posts borrados), para borrar sus imágenes.
+    """
     posts = db.query(Post).filter(Post.notion_id.like(f"{SEED_PREFIX}%")).all()
+    slugs = [post.slug for post in posts]
     touched = {p.category_id for p in posts}
     touched |= {c.id for c in db.query(Category).filter(Category.name.in_(EMPTY_TOPICS)).all()}
     for post in posts:
@@ -508,4 +512,4 @@ def clear_seed_posts(db) -> tuple[int, int]:
             removed_categories += 1
 
     db.commit()
-    return len(posts), removed_categories
+    return len(posts), removed_categories, slugs
