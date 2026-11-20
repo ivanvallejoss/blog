@@ -72,6 +72,25 @@ class Wrapping(unittest.TestCase):
         flat = " ".join(" ".join(t for t, _ in word) for line in balanced for word in line)
         self.assertEqual(flat, TITLE_100)
 
+    def test_same_breaks_as_chromium(self):
+        # Cortes de Chromium con text-wrap: balance y las fuentes del sitio
+        # (ventana 6, comparado con Playwright). En el de 100 caracteres, una
+        # búsqueda del ancho mínimo dejaba «la» al final de la tercera línea.
+        cases = {
+            "Concurrencia sin miedo: async en Python 3.14": ["Concurrencia sin miedo:", "async en Python 3.14"],
+            "Por qué dejé de usar ORMs para todo y volví a escribir SQL a mano":
+                ["Por qué dejé de usar", "ORMs para todo y volví", "a escribir SQL a mano"],
+            TITLE_100: ["Cómo diseñé un sistema de", "sincronización entre Notion",
+                        "y PostgreSQL sin perder", "la calma por el camino"],
+            "Año nuevo, señales viejas: ñandúes, pingüinos y acentos — ¿qué más?":
+                ["Año nuevo, señales viejas:", "ñandúes, pingüinos y", "acentos — ¿qué más?"],
+            "Un design system para dos sitios, una sola fuente de verdad y ningún copy-paste":
+                ["Un design system para dos", "sitios, una sola fuente de", "verdad y ningún copy-paste"],
+        }
+        for title, lines in cases.items():
+            with self.subTest(title=title):
+                self.assertEqual(draw.layout_title(title).lines, lines)
+
     def test_one_line_stays_one_line(self):
         words = self.words("Hola mundo")
         self.assertEqual(len(draw.balance(words, 960, draw.advance(" ", self.style))), 1)

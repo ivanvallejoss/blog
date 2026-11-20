@@ -15,8 +15,10 @@ las posiciones coinciden con el HTML del diseño:
 - **Kerning:** el de la fuente (GPOS), mediante libraqm. Sin raqm, Pillow cae
   al motor básico, que no kernea (ver `RAQM`).
 - **text-wrap: balance:** Pillow no lo trae. `balance()` hace lo mismo que
-  Chromium: busca el ancho más angosto que mantiene la cantidad de líneas
-  del partido normal.
+  el partidor por puntaje de Chromium: la misma cantidad de líneas que el
+  partido normal y, entre los cortes posibles, el que deja los huecos más
+  parejos. Comparado contra Chromium con las fuentes del sitio, da los
+  mismos cortes.
 
 El anillo se dibuja como polígono sobre una máscara ocho veces más grande y se
 reduce promediando: los bordes y las puntas redondas quedan suaves. El texto
@@ -178,22 +180,47 @@ def wrap(words: list[Word], max_width: float, space: float) -> list[list[Word]]:
 
 def balance(words: list[Word], max_width: float, space: float) -> list[list[Word]]:
     """
-    `text-wrap: balance`: el mismo número de líneas que el partido normal,
-    con el ancho más angosto que lo permite (búsqueda binaria, como Chromium).
-    Las líneas quedan parejas y ninguna pasa de `max_width`.
+    `text-wrap: balance`: la misma cantidad de líneas que el partido normal
+    y, entre todas las formas de cortar en esa cantidad, la que minimiza la
+    suma de los cuadrados del espacio que sobra en cada línea, también en la
+    última. Es el criterio del partidor por puntaje de Chromium. Una búsqueda
+    del ancho mínimo (el balance de las primeras versiones) deja larga una
+    línea del medio y corta la última. Ninguna línea pasa de `max_width`.
+
+    Programación dinámica sobre los cortes: con los ~20 términos de un título
+    de 100 caracteres, es instantáneo.
     """
-    lines = wrap(words, max_width, space)
-    if len(lines) < 2:
-        return lines
-    low = max(min(_word_width(word), max_width) for word in words) - 0.01
-    high = max_width
-    while high - low > 0.25:
-        middle = (low + high) / 2
-        if len(wrap(words, middle, space)) <= len(lines):
-            high = middle
-        else:
-            low = middle
-    return wrap(words, high, space)
+    pieces = [piece for word in words
+              for piece in (_split_long_word(word, max_width) if _word_width(word) > max_width else [word])]
+    count = len(wrap(pieces, max_width, space))
+    if count < 2:
+        return wrap(pieces, max_width, space)
+
+    widths = [_word_width(piece) for piece in pieces]
+    total = len(pieces)
+    infinity = float("inf")
+    # best[k][i]: (costo, corte siguiente) de partir pieces[i:] en k líneas
+    best = [[(infinity, total)] * (total + 1) for _ in range(count + 1)]
+    best[0][total] = (0.0, total)
+    for lines in range(1, count + 1):
+        for i in range(total - 1, -1, -1):
+            width = -space
+            for j in range(i + 1, total + 1):
+                width += widths[j - 1] + space
+                if width > max_width + 0.01:
+                    break
+                rest = best[lines - 1][j][0]
+                if rest < infinity:
+                    cost = rest + (max_width - width) ** 2
+                    if cost < best[lines][i][0]:
+                        best[lines][i] = (cost, j)
+
+    result, i = [], 0
+    for lines in range(count, 0, -1):
+        j = best[lines][i][1]
+        result.append(pieces[i:j])
+        i = j
+    return result
 
 
 def _plain_words(text: str, style: Style) -> list[Word]:
