@@ -10,7 +10,7 @@ def backfill_html(db):
     db_posts = db.query(Post).all()
 
     for post in db_posts:
-        post.content_html, post.content_toc = render_markdown(post.content_markdown)
+        post.content_html, post.content_toc = render_markdown(post.content_markdown, post.lang)
     
     db.commit()
     
