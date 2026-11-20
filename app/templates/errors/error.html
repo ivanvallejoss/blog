@@ -5,6 +5,10 @@
    página no la ofrece (Extras E1b no tiene lupa). #}
 {% set hide_search = true %}
 
+{# Sin equivalente en el otro idioma: el switch lleva a la portada y la página
+   no lleva hreflang (base.html). #}
+{% set error_page = true %}
+
 {% block title %}{{ t.error_title }} — {{ t.site_title }}{% endblock %}
 
 {#

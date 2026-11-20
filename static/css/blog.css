@@ -231,16 +231,28 @@ a.site-nav__link[aria-current="page"] { color: var(--color-accent-700); }
   color: var(--color-neutral-700);
 }
 
-/* Switch ES/EN: mono 12px, «/» en neutral-500, activo en --color-text e
-   inactivo en neutral-600. Cada botón mide al menos 44×44: el texto queda
-   pegado a la barra, como en el diseño, y el área sobrante crece hacia afuera. */
+/* Switch ES/EN: dos links, mono 12px, «/» en neutral-500, activo
+   (aria-current) en --color-text e inactivo en neutral-600.
+
+   Mobile: el diseño pone EN a 8px de la lupa (padding 0 8 0 4) y ES con
+   0 8 0 4 al revés; así cada uno mide 26px de ancho. Para que los dos tengan
+   44×44 sin pisarse:
+     EN conserva el padding del diseño y su área de 44px (::after) crece hacia
+     la izquierda, sobre la barra. EN y «/» quedan donde los pone el diseño.
+     ES mide 44px de ancho con el texto contra su borde derecho, que es donde
+     empieza el área de EN. La barra se separa de ES con
+     --lang-switch-sep-offset (44px − EN − «/», en ch de la mono).
+   Resultado: solo ES queda unos 6px a la izquierda del diseño. */
 .lang-switch {
   display: flex;
   align-items: center;
   font-family: var(--font-mono);
   font-size: 12px;
 }
-.lang-switch__sep { color: var(--color-neutral-500); }
+.lang-switch__sep {
+  color: var(--color-neutral-500);
+  margin-inline-start: var(--lang-switch-sep-offset);
+}
 .lang-switch__btn {
   display: inline-flex;
   align-items: center;
@@ -250,12 +262,17 @@ a.site-nav__link[aria-current="page"] { color: var(--color-accent-700); }
   border: 0;
   background: transparent;
   font: inherit;
+  text-decoration: none;
   cursor: pointer;
   color: var(--color-neutral-600);
 }
-.lang-switch__btn:first-child { justify-content: flex-end; padding-inline-end: var(--lang-switch-pad-x); }
-.lang-switch__btn:last-child { justify-content: flex-start; padding-inline-start: var(--lang-switch-pad-x); }
-.lang-switch__btn[aria-pressed="true"] { color: var(--color-text); }
+.lang-switch__btn:first-child { justify-content: flex-end; }
+.lang-switch__btn:last-child {
+  min-width: 0;
+  padding-inline: var(--lang-switch-pad-x) calc(var(--lang-switch-pad-x) * 2);
+}
+.lang-switch__btn:last-child::after { inset-inline: auto 0; width: var(--hit); }
+.lang-switch__btn[aria-current] { color: var(--color-text); }
 .lang-switch__btn:hover { color: var(--color-text); }
 
 /* Visibilidad por tamaño. Se oculta en el tamaño que no corresponde en vez de
@@ -293,6 +310,7 @@ a.site-nav__link[aria-current="page"] { color: var(--color-accent-700); }
   .lang-switch__btn:last-child { padding: var(--lang-switch-pad-y) var(--lang-switch-pad-x); }
   .lang-switch__btn:first-child::after { inset-inline: auto 0; }
   .lang-switch__btn:last-child::after { inset-inline: 0 auto; }
+  .lang-switch__sep { margin-inline-start: 0; }
 }
 
 /* En mobile el switch va antes de la lupa; en desktop, después de «Buscar». */
@@ -346,6 +364,12 @@ a.post-row { color: var(--color-text); }
 .empty-state { padding-block-start: var(--empty-pad-top); }
 .empty-state__title { font-size: 26px; margin: 0 0 var(--empty-title-gap); }
 .empty-state__body { font-size: 17px; color: var(--color-neutral-800); margin: 0; }
+/* «Ver en español» del estado sin posts en este idioma (Extras E3b). */
+.empty-state__action {
+  margin-block-start: var(--empty-action-gap);
+  min-height: var(--hit);
+  font-size: 15px;
+}
 
 
 /* ── Portada ───────────────────────────────────────────────────────────

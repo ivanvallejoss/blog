@@ -9,7 +9,7 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from .database import SessionLocal, engine
 from .dates import MONTHS
-from .i18n import DEFAULT_LANG, STRINGS
+from .i18n import DEFAULT_LANG, STRINGS, lang_from_path
 from .routers import blog
 from .selectors import get_recent_posts
 from .templating import templates
@@ -42,24 +42,32 @@ def _error_ref() -> str:
     return f"{secrets.token_hex(2)}-{now.day:02d}{month}-{now:%H%M}"
 
 
-def _detail_text(detail) -> str | None:
+# El idioma de una página de error sale de la ruta pedida, como el de
+# cualquier página (app/i18n.py · lang_from_path): bajo /en/, en inglés. El
+# contexto común de los templates lo deduce igual, así que la página entera
+# (textos, <html lang>, switch) sale en ese idioma.
+
+def _detail_text(detail, lang: str) -> str | None:
     """
     Los routers pasan en `detail` una clave del diccionario («post_not_found»).
     Cualquier otro detail (el «Not Found» de Starlette, por ejemplo) no se
     muestra: la página usa su texto por defecto.
     """
-    if isinstance(detail, str) and detail in STRINGS[DEFAULT_LANG]:
-        return STRINGS[DEFAULT_LANG][detail]
+    if isinstance(detail, str) and detail in STRINGS[lang]:
+        return STRINGS[lang][detail]
     return None
 
 
-def _recent_posts_or_nothing(request: Request) -> list:
-    """Posts para la 404. Si la base no responde, la página sale igual, sin ellos."""
+def _recent_posts_or_nothing(request: Request, lang: str) -> list:
+    """
+    Posts del idioma de la página para la 404. Si la base no responde, la
+    página sale igual, sin ellos.
+    """
     if request.url.path.startswith("/static/"):
         return []
     try:
         with SessionLocal() as db:
-            return get_recent_posts(db, limit=NOT_FOUND_RECENT)
+            return get_recent_posts(db, lang, limit=NOT_FOUND_RECENT)
     except Exception:
         logger.warning("404 sin «Quizás buscabas»: la base no respondió", exc_info=True)
         return []
@@ -88,10 +96,11 @@ def _error_page(request: Request, status_code: int, ref: str, headers=None):
 @app.exception_handler(StarletteHTTPException)
 def http_exception_handler(request: Request, exc: StarletteHTTPException):
     if exc.status_code == 404:
+        lang = lang_from_path(request.url.path)
         return templates.TemplateResponse(
             request,
             "errors/404.html",
-            {"detail": _detail_text(exc.detail), "recent": _recent_posts_or_nothing(request)},
+            {"detail": _detail_text(exc.detail, lang), "recent": _recent_posts_or_nothing(request, lang)},
             status_code=404,
             headers=exc.headers,
         )

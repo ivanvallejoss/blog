@@ -1,15 +1,18 @@
 from fastapi import APIRouter, Depends, Request, HTTPException
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, Response
 
 from sqlalchemy.orm import Session
 
-from app.config import BASE_URL
 from app.database import get_db
-from app.i18n import DEFAULT_LANG, LANGS
+from app.feed import FEED_LIMIT, MEDIA_TYPE as FEED_MEDIA_TYPE, build_feed
+from app.i18n import STRINGS, lang_from_path, normalize_lang, other_lang, plain_text, topic_name
+from app.meta import listing_meta, post_meta
 from app.search import build_search_index
-from app.templating import templates
+from app.templating import absolute_url, page_path, templates
+from app.urls import registration_order, route_name
 
 from ..selectors import (
+    count_posts,
     get_category_by_slug,
     get_next_post,
     get_post_by_slugs,
@@ -32,61 +35,29 @@ RECENT_DESKTOP = 4
 TEXT_SIZE = {"min": 15, "max": 24, "default": 18, "key": "blog.textSize"}
 
 
-def _absolute_url(request: Request, name: str, **path_params) -> str:
+def request_lang(request: Request) -> str:
+    """Idioma de la página pedida, deducido de la ruta (app/i18n.py)."""
+    return lang_from_path(request.url.path)
+
+
+def post_path(request: Request, post) -> str:
+    """Ruta de un post, bajo las de su idioma."""
+    return page_path(
+        request, "get_post", post.lang, category_slug=post.category.slug, post_slug=post.slug
+    )
+
+
+def _other_count(db: Session, lang: str, category_id=None) -> int:
     """
-    URL absoluta para usar fuera del sitio (compartir). Con BLOG_BASE_URL, se
-    arma con ella; si no, sale del pedido (detrás de un proxy, da https solo si
-    uvicorn confía en sus cabeceras).
+    Posts en el otro idioma, para el estado «sin posts en este idioma»: con
+    más de cero, la página vacía ofrece ir a la misma página en el otro.
     """
-    url = request.url_for(name, **path_params)
-    return f"{BASE_URL}{url.path}" if BASE_URL else str(url)
+    return count_posts(db, other_lang(lang), category_id)
 
 
-@router.get("/")
-def post_list(
-    request: Request,
-    db: Session = Depends(get_db)
-    ):
-    posts = get_published_posts(db)
-    tags = get_tag_counts(db)
-    return templates.TemplateResponse(
-        request,
-        "index.html",
-        {
-            "featured": posts[0] if posts else None,
-            "recent": posts[1:],
-            "recent_desktop": RECENT_DESKTOP,
-            "topics": group_posts_by_tag(posts, tags),
-        }
-        )
-
-
-def _archive_response(request: Request, db: Session, category=None):
-    """
-    Archivo completo o filtrado por tema: la misma plantilla y la página
-    entera en los dos casos. HTMX recorta #listing y #archive-filters de la
-    respuesta; el router no distingue pedidos de HTMX.
-    """
-    # Filtros: solo temas con al menos un post (get_tag_counts). El sync nunca
-    # borra temas, así que uno vacío no se ofrece como filtro; entrar directo a
-    # su URL igual responde y muestra el estado vacío, sin filtro marcado.
-    tags = get_tag_counts(db)
-
-    return templates.TemplateResponse(
-        request,
-        "archive.html",
-        {
-            "category": category,
-            "active_tag": category.slug if category else None,
-            "filters": tags,
-            "years": get_posts_by_year(db, category.id if category else None),
-            "total_posts": sum(tag["count"] for tag in tags),
-            "total_topics": len(tags),
-        }
-        )
-
-
-# Rutas fijas registradas ANTES que /{category_slug}/ (CORRECCIONES §6).
+# Rutas fijas registradas ANTES que /{category_slug}/ (CORRECCIONES §6). Las
+# de las páginas, en los dos idiomas, las registra el bucle del final en el
+# orden de app/urls.py.
 
 # El índice cambia solo con un sync: unos minutos de caché alcanzan y evitan
 # pedirlo de nuevo en cada página que abre la búsqueda.
@@ -96,52 +67,115 @@ SEARCH_CACHE = "public, max-age=300"
 @router.get("/search.json", name="search_index")
 def search_index(
     request: Request,
-    lang: str = DEFAULT_LANG,
+    lang: str | None = None,
     db: Session = Depends(get_db)
     ):
-    if lang not in LANGS:
-        lang = DEFAULT_LANG
+    lang = normalize_lang(lang)
     index = build_search_index(
-        get_recent_posts(db),
+        get_recent_posts(db, lang),
         lang,
-        lambda post: request.url_for(
-            "get_post", category_slug=post.category.slug, post_slug=post.slug
-        ).path,
+        lambda post: post_path(request, post),
     )
     return JSONResponse(index, headers={"Cache-Control": SEARCH_CACHE})
 
 
-@router.get("/archivo/", name="archive")
-def archive(
+def post_list(
     request: Request,
+    lang: str = Depends(request_lang),
     db: Session = Depends(get_db)
     ):
-    return _archive_response(request, db)
+    posts = get_published_posts(db, lang)
+    tags = get_tag_counts(db, lang)
+    return templates.TemplateResponse(
+        request,
+        "index.html",
+        {
+            "featured": posts[0] if posts else None,
+            "recent": posts[1:],
+            "recent_desktop": RECENT_DESKTOP,
+            "topics": group_posts_by_tag(posts, tags),
+            "other_count": 0 if posts else _other_count(db, lang),
+            "meta": listing_meta(
+                request, lang,
+                title=STRINGS[lang]["site_title"],
+                description=plain_text(STRINGS[lang]["site_description"]),
+            ),
+        }
+        )
 
 
-@router.get("/{category_slug}/")
+def _archive_response(request: Request, db: Session, lang: str, category=None):
+    """
+    Archivo completo o filtrado por tema, en `lang`: la misma plantilla y la
+    página entera en los dos casos. HTMX recorta #listing, #archive-filters y
+    el switch de idioma de la respuesta; el router no distingue pedidos de HTMX.
+    """
+    # Filtros: solo temas con al menos un post en el idioma (get_tag_counts).
+    # El sync nunca borra temas, así que uno vacío no se ofrece como filtro;
+    # entrar directo a su URL igual responde y muestra el estado vacío, sin
+    # filtro marcado.
+    tags = get_tag_counts(db, lang)
+    category_id = category.id if category else None
+    years = get_posts_by_year(db, lang, category_id)
+
+    t = STRINGS[lang]
+    if category:
+        name = topic_name(category, lang)
+        meta = listing_meta(request, lang, title=f"{name} — {t['archive']}",
+                            description=t["topic_description"].format(topic=name))
+    else:
+        meta = listing_meta(request, lang, title=t["archive"], description=t["archive_description"])
+
+    return templates.TemplateResponse(
+        request,
+        "archive.html",
+        {
+            "category": category,
+            "active_tag": category.slug if category else None,
+            "filters": tags,
+            "years": years,
+            "total_posts": sum(tag["count"] for tag in tags),
+            "total_topics": len(tags),
+            "other_count": 0 if years else _other_count(db, lang, category_id),
+            "meta": meta,
+        }
+        )
+
+
+def archive(
+    request: Request,
+    lang: str = Depends(request_lang),
+    db: Session = Depends(get_db)
+    ):
+    return _archive_response(request, db, lang)
+
+
 def get_category(
     category_slug: str,
     request: Request,
+    lang: str = Depends(request_lang),
     db: Session = Depends(get_db)
     ):
+    # El tema existe o no en los dos idiomas a la vez: es el mismo slug. Uno
+    # sin posts en este idioma responde con el estado vacío.
     category = get_category_by_slug(db, category_slug)
     if not category:
         # Un segmento que no es un tema puede ser cualquier cosa (un post mal
         # escrito, una ruta vieja): el texto genérico de la 404, como el diseño.
         raise HTTPException(status_code=404, detail="not_found_body")  # clave de app/i18n.py
 
-    return _archive_response(request, db, category)
+    return _archive_response(request, db, lang, category)
 
 
-@router.get("/{category_slug}/{post_slug}/")
 def get_post(
     category_slug: str,
     post_slug: str,
     request: Request,
+    lang: str = Depends(request_lang),
     db: Session = Depends(get_db)
     ):
-    post = get_post_by_slugs(db, category_slug, post_slug)
+    # Un post se sirve solo bajo las rutas de su idioma: bajo las del otro, 404.
+    post = get_post_by_slugs(db, category_slug, post_slug, lang)
 
     if not post:
         raise HTTPException(status_code=404, detail="not_found_post")  # clave de app/i18n.py
@@ -152,9 +186,42 @@ def get_post(
         {
             "post": post,
             "next_post": get_next_post(db, post),
-            "share_url": _absolute_url(
-                request, "get_post", category_slug=post.category.slug, post_slug=post.slug
-            ),
+            "share_url": absolute_url(request, post_path(request, post)),
             "text_size": TEXT_SIZE,
+            "meta": post_meta(request, post),
         }
         )
+
+
+# El feed cambia solo con un sync, como el índice de búsqueda.
+FEED_CACHE = SEARCH_CACHE
+
+
+def rss(
+    request: Request,
+    lang: str = Depends(request_lang),
+    db: Session = Depends(get_db)
+    ):
+    """Feed Atom del idioma (app/feed.py): los últimos posts, completos."""
+    feed = build_feed(
+        get_recent_posts(db, lang, limit=FEED_LIMIT),
+        lang,
+        feed_url=absolute_url(request, page_path(request, "rss", lang)),
+        home_url=absolute_url(request, page_path(request, "post_list", lang)),
+        icon_url=absolute_url(request, page_path(request, "static", lang, path="public/apple-touch-icon.png")),
+        post_url=lambda post: absolute_url(request, post_path(request, post)),
+    )
+    return Response(feed, media_type=FEED_MEDIA_TYPE, headers={"Cache-Control": FEED_CACHE})
+
+
+# Una ruta por página y por idioma («archive.es» → /archivo/, «archive.en» →
+# /en/archive/), con el mismo manejador: el idioma lo deduce request_lang.
+_HANDLERS = {
+    "post_list": post_list,
+    "archive": archive,
+    "get_category": get_category,
+    "get_post": get_post,
+    "rss": rss,
+}
+for _name, _lang, _path in registration_order():
+    router.add_api_route(_path, _HANDLERS[_name], methods=["GET"], name=route_name(_name, _lang))

@@ -4,20 +4,30 @@ import markdown
 from markupsafe import Markup
 from slugify import slugify as _slugify
 
+from .i18n import DEFAULT_LANG, LANGS, STRINGS
+
 # sane_lists: una lista con viñetas seguida de una numerada son dos listas, no
 # una sola (sin esto Python-Markdown las funde). Las listas anidadas no
 # necesitan extensión: 4 espacios de sangría. El tachado tampoco: el conversor
 # emite <del> en línea (Python-Markdown no trae extensión de tachado).
-md = markdown.Markdown(
-    extensions=['fenced_code', 'codehilite', 'toc', 'sane_lists'],
-    extension_configs={
-        'toc': {
-            'slugify': lambda value, separator: _slugify(value, separator=separator),
-            'permalink': '#',
-            'permalink_title': 'Enlace a esta sección',
-        }
-    },
-)
+#
+# Una instancia por idioma: el título del ancla «#» de cada heading queda
+# escrito dentro de content_html, así que sale del idioma del post al
+# renderizar (sync, seed-dev, backfill-db).
+def _markdown(lang: str) -> markdown.Markdown:
+    return markdown.Markdown(
+        extensions=['fenced_code', 'codehilite', 'toc', 'sane_lists'],
+        extension_configs={
+            'toc': {
+                'slugify': lambda value, separator: _slugify(value, separator=separator),
+                'permalink': '#',
+                'permalink_title': STRINGS[lang]["anchor_title"],
+            }
+        },
+    )
+
+
+_md = {lang: _markdown(lang) for lang in LANGS}
 
 
 def _flatten_toc(tokens: list[dict]) -> list[dict]:
@@ -39,14 +49,16 @@ def _flatten_toc(tokens: list[dict]) -> list[dict]:
     return flat
 
 
-def render_markdown(content_markdown: str) -> tuple[str, list[dict]]:
+def render_markdown(content_markdown: str, lang: str = DEFAULT_LANG) -> tuple[str, list[dict]]:
     """
-    Deriva content_markdown -> (content_html, content_toc).
+    Deriva content_markdown -> (content_html, content_toc), con los textos de
+    las anclas en el idioma del post (`lang`).
 
     Único punto del sistema que lee md.toc_tokens: los ids de «En este artículo» son
     literalmente los que el renderer puso en los headings, no una lista
     paralela mantenida a mano.
     """
+    md = _md[lang if lang in _md else DEFAULT_LANG]
     md.reset()
 
     content_html = md.convert(content_markdown)

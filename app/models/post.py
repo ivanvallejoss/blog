@@ -1,7 +1,7 @@
 import re
 from datetime import datetime
 
-from sqlalchemy import String, Text, Integer, ForeignKey, DateTime, Boolean, func, text
+from sqlalchemy import CheckConstraint, String, Text, Integer, ForeignKey, DateTime, Boolean, func, text
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.sql import expression
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -22,6 +22,7 @@ class Post(Base):
     Modelado de los Posts del blog - heredan directamente de la clase Base `./base.py`
     """
     __tablename__ = "posts"
+    __table_args__ = (CheckConstraint("lang IN ('es', 'en')", name="ck_posts_lang"),)
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     title: Mapped[str] = mapped_column(String(100), nullable=False)
@@ -36,6 +37,17 @@ class Post(Base):
     content_toc: Mapped[list[dict]] = mapped_column(
         JSONB, nullable=False, server_default=text("'[]'::jsonb")
     )
+
+    # Idioma del post (app/i18n.py · LANGS). Un post tiene uno solo: su
+    # traducción, si existe, es otro post con su propio slug. Decide bajo qué
+    # rutas se sirve (/… o /en/…) y en qué listados aparece.
+    lang: Mapped[str] = mapped_column(
+        String(2), nullable=False, index=True, default="es", server_default=text("'es'")
+    )
+
+    # Bajada escrita a mano (propiedad «Resumen» de Notion). Opcional: sin
+    # ella, `summary` la deriva del primer párrafo.
+    excerpt: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 
     published_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now(), onupdate=func.now())
@@ -66,12 +78,17 @@ class Post(Base):
     @property
     def summary(self) -> str:
         """
-        Bajada del post (destacado de la portada, búsqueda, OpenGraph): primer
-        párrafo real, recortado a 160 caracteres. Es una derivación, no una bajada editorial — el diseño pide
-        el slot y el modelo no tiene el campo. Si más adelante querés escribir
-        la bajada a mano, esto se reemplaza por una columna sincronizada desde
-        Notion y el template no cambia.
+        Bajada del post (destacado de la portada, búsqueda, OpenGraph): la
+        escrita a mano (`excerpt`) si existe; si no, el primer párrafo real,
+        recortado a 160 caracteres.
         """
+        if self.excerpt and self.excerpt.strip():
+            return self.excerpt.strip()
+        return self.derived_summary
+
+    @property
+    def derived_summary(self) -> str:
+        """Primer párrafo de texto del markdown, recortado a 160 caracteres."""
         for block in self.content_markdown.split("\n\n"):
             if not block.strip() or _NOT_PARAGRAPH.match(block):
                 continue

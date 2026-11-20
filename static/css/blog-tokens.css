@@ -56,6 +56,9 @@
   /* switch ES/EN: aire entre cada código y la barra; alto del botón en desktop */
   --lang-switch-pad-x: 4px;
   --lang-switch-pad-y: 6px;
+  /* mobile: aire entre ES y «/», para que EN + «/» + este aire sumen 44px y
+     las áreas táctiles de ES y EN no se pisen (ventana 5; ver blog.css) */
+  --lang-switch-sep-offset: calc(var(--hit) - 3ch - var(--lang-switch-pad-x) * 3);
 
   /* footer: 64px arriba en mobile (prototipo) → la separación de sección en desktop */
   --footer-gap: 16px;
@@ -96,6 +99,7 @@
   --archive-min-col: 56px;
   --empty-pad-top: 48px;
   --empty-title-gap: 10px;
+  --empty-action-gap: 24px;           /* texto ↔ «Ver en español» (Extras E3b) */
 
   /* ── Estados ── */
   --load-bar-height: 2px;
