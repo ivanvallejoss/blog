@@ -45,12 +45,10 @@ def _archive_response(request: Request, db: Session, category=None):
     entera en los dos casos. HTMX recorta #listing y #archive-filters de la
     respuesta; el router no distingue pedidos de HTMX.
     """
+    # Filtros: solo temas con al menos un post (get_tag_counts). El sync nunca
+    # borra temas, así que uno vacío no se ofrece como filtro; entrar directo a
+    # su URL igual responde y muestra el estado vacío, sin filtro marcado.
     tags = get_tag_counts(db)
-    filters = list(tags)
-    # Un tema que existe pero no tiene posts no aparece en get_tag_counts;
-    # se suma con 0 para que el filtro activo siga visible y marcado.
-    if category is not None and all(tag["slug"] != category.slug for tag in tags):
-        filters.append({"name": category.name, "slug": category.slug, "count": 0})
 
     return templates.TemplateResponse(
         request,
@@ -58,7 +56,7 @@ def _archive_response(request: Request, db: Session, category=None):
         {
             "category": category,
             "active_tag": category.slug if category else None,
-            "filters": filters,
+            "filters": tags,
             "years": get_posts_by_year(db, category.id if category else None),
             "total_posts": sum(tag["count"] for tag in tags),
             "total_topics": len(tags),

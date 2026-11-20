@@ -18,3 +18,7 @@ def _flag(name: str, default: bool = False) -> bool:
 # Switch ES/EN del header. Apagado hasta la ventana de idioma: no se muestra
 # un control que todavía no hace nada (CORRECCIONES §4).
 LANG_SWITCH_ENABLED = _flag("BLOG_LANG_SWITCH", default=False)
+
+# Log de cada sentencia SQL (echo del engine). Apagado por defecto: llena la
+# salida del servidor. Para depurar: BLOG_SQL_ECHO=1.
+SQL_ECHO = _flag("BLOG_SQL_ECHO", default=False)
