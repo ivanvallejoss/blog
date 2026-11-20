@@ -132,7 +132,9 @@ button { font: inherit; }
 
 /* Con la flecha atrás a la izquierda (artículo y archivo) el padding de inicio
    es el mismo que el del final: el botón de 44px ya trae su aire. */
-.site-header--back .site-header__inner { padding-inline-start: var(--header-pad-end); }
+@media (max-width: 767.98px) {
+  .site-header--back .site-header__inner { padding-inline-start: var(--header-pad-end); }
+}
 
 .site-header__start,
 .site-header__center,
@@ -188,7 +190,8 @@ button { font: inherit; }
   color: var(--color-text);
   text-decoration: none;
 }
-a.site-nav__link:hover { color: var(--color-accent-700); }
+a.site-nav__link:hover,
+a.site-nav__link[aria-current="page"] { color: var(--color-accent-700); }
 
 /* Link a la landing: link de texto, sin cortar. */
 .site-nav__external {
@@ -243,14 +246,17 @@ a.site-nav__link:hover { color: var(--color-accent-700); }
 .lang-switch__btn[aria-pressed="true"] { color: var(--color-text); }
 .lang-switch__btn:hover { color: var(--color-text); }
 
-/* Lo que solo existe en desktop. */
-.desktop-only { display: none; }
+/* Visibilidad por tamaño. Se oculta en el tamaño que no corresponde en vez de
+   "restaurar" el display en el otro: así .btn, grid o flex conservan el suyo. */
+@media (max-width: 767.98px) {
+  .desktop-only { display: none !important; }
+}
+@media (min-width: 768px) {
+  .mobile-only { display: none !important; }
+}
 
 @media (min-width: 768px) {
   .site-header__end { gap: var(--header-gap); }
-
-  .desktop-only { display: revert; }
-  .mobile-only { display: none; }
 
   .site-search {
     width: auto;
@@ -302,3 +308,310 @@ a.site-nav__link:hover { color: var(--color-accent-700); }
   color: var(--color-neutral-700);
 }
 .site-footer a { white-space: nowrap; }
+
+
+/* ── Filas y estados compartidos ─────────────────────────────────────── */
+
+/* Fila de lista (Recientes): link en bloque, título + metadatos, sin bordes. */
+.post-row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--row-gap);
+  padding-block: var(--row-pad-y);
+  color: var(--color-text);
+  text-decoration: none;
+}
+a.post-row { color: var(--color-text); }
+.post-row__title {
+  font-weight: var(--font-heading-weight);
+  font-size: clamp(19px, calc(20px - (100vw - 390px) * 1 / 890), 20px);
+  line-height: 1.2;
+}
+.post-row:hover .post-row__title { color: var(--color-accent-700); }
+.post-row__meta { font-size: 11.5px; } /* en filas queda en 11.5 también en desktop (diseño) */
+
+/* Estado vacío: título 26px, texto 17px. */
+.empty-state { padding-block-start: var(--empty-pad-top); }
+.empty-state__title { font-size: 26px; margin: 0 0 var(--empty-title-gap); }
+.empty-state__body { font-size: 17px; color: var(--color-neutral-800); margin: 0; }
+
+
+/* ── Portada ───────────────────────────────────────────────────────────
+   Mobile: destacado, Recientes (todas las filas) y «Ver archivo completo».
+   Desktop: grilla 7fr | 4fr con 96px; abajo, a 112px, un bloque por tema. */
+
+.home { padding-block-start: var(--featured-pad-top); }
+
+.featured__kicker {
+  margin: 0;
+  font-size: clamp(12px, calc(12px + (100vw - 390px) * 1 / 890), 13px);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-accent-2-700);
+}
+.featured__title {
+  margin: var(--featured-kicker-gap) 0 var(--featured-title-gap);
+  font-size: clamp(34px, calc(34px + (100vw - 390px) * 24 / 890), 58px);
+  /* 34px / 1.1 → 58px / 1.04, interpolado en px (un interlineado sin unidad
+     no se puede interpolar con vw) */
+  line-height: clamp(37.4px, calc(37.4px + (100vw - 390px) * 22.92 / 890), 60.32px);
+}
+.featured__title a { color: var(--color-text); text-decoration: none; }
+.featured__title a:hover { color: var(--color-accent-700); }
+.featured__summary {
+  margin: 0 0 var(--featured-title-gap);
+  max-width: var(--featured-summary-max);
+  font-size: clamp(17px, calc(17px + (100vw - 390px) * 4 / 890), 21px);
+  /* 17px / 1.55 (el del body) → 21px / 1.5 */
+  line-height: clamp(26.35px, calc(26.35px + (100vw - 390px) * 5.15 / 890), 31.5px);
+  color: var(--color-neutral-800);
+}
+.featured__foot { display: flex; align-items: center; gap: var(--featured-cta-gap); }
+.featured__meta { margin: 0; }
+.featured__cta { font-size: 15px; }
+
+.recent__label { margin: 0 0 var(--recent-label-gap); }
+.see-archive {
+  margin: var(--space-2) 0 0 var(--see-archive-nudge);
+  min-height: var(--hit);
+  font-size: 15px;
+}
+
+.topics { padding-block-start: var(--section-gap); }
+
+@media (min-width: 768px) {
+  .home__top {
+    display: grid;
+    grid-template-columns: 7fr 4fr;
+    gap: var(--home-columns-gap);
+    align-items: start;
+  }
+  .recent__label { margin: var(--recent-label-gap) 0 var(--space-2); }
+  .post-row__title { line-height: 1.25; }
+
+  .topics {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--topics-gap);
+  }
+  .topic { display: flex; flex-direction: column; gap: var(--topic-gap); }
+  .topic__title { margin: 0; }
+  .topic__title a { color: var(--color-text); text-decoration: none; }
+  .topic__title a:hover { color: var(--color-accent-700); }
+  .topic__count {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--color-neutral-700);
+  }
+  .topic__list { display: flex; flex-direction: column; gap: var(--topic-gap); }
+  .topic__post {
+    font-size: 17px;
+    line-height: 1.35;
+    color: var(--color-text);
+    text-decoration: none;
+  }
+  a.topic__post { color: var(--color-text); }
+  a.topic__post:hover { color: var(--color-accent-700); }
+  .topic__more { font-size: 15px; }
+}
+
+/* Apilados en mobile, los recientes van a una separación de sección del
+   destacado; en la grilla de desktop son columna y no la llevan. */
+@media (max-width: 767.98px) {
+  .recent { margin-block-start: var(--section-gap); }
+}
+
+
+/* ── Archivo ───────────────────────────────────────────────────────────
+   Mobile: título, conteo, filtros en fila con scroll horizontal y lista por
+   año en grilla 60px | 1fr. Desktop: lateral de 220px con título, conteo y
+   filtros en columna; lista en grilla 72px | 1fr | 150px | 56px. */
+
+.archive { padding-block-start: var(--archive-pad-top); }
+
+.archive__title {
+  margin: 0 0 var(--archive-title-gap);
+  font-size: clamp(36px, calc(36px + (100vw - 390px) * 6 / 890), 42px);
+}
+.archive__count { margin: 0; font-size: 15px; color: var(--color-neutral-700); }
+
+.archive-filters {
+  display: flex;
+  gap: var(--filter-gap);
+  /* la fila corre de borde a borde de la pantalla y scrollea */
+  margin-inline: calc(var(--gutter) * -1);
+  padding: var(--archive-count-gap) var(--gutter) var(--filter-row-pad-bottom);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.archive-filters::-webkit-scrollbar { display: none; }
+
+.archive-filter {
+  flex: none;
+  min-height: var(--filter-height);
+  font-size: 14px;
+  white-space: nowrap;
+}
+.archive-filter__count {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 400;
+  opacity: 0.75;
+}
+.archive-filter__spinner { display: none; }
+
+.archive__listing { padding-block-start: var(--archive-count-gap); }
+.archive-year + .archive-year { margin-block-start: var(--years-gap); }
+.archive-year__label { margin: 0 0 var(--archive-title-gap); }
+
+.archive-row {
+  display: grid;
+  grid-template-columns: var(--archive-date-col) minmax(0, 1fr);
+  row-gap: var(--space-1);
+  padding-block: var(--archive-row-pad-y);
+  color: var(--color-text);
+  text-decoration: none;
+}
+a.archive-row { color: var(--color-text); }
+.archive-row:hover .archive-row__title { color: var(--color-accent-700); }
+.archive-row__date,
+.archive-row__meta {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  letter-spacing: 0.04em;
+  color: var(--color-neutral-700);
+}
+.archive-row__date { padding-block-start: var(--space-1); }
+.archive-row__title {
+  font-weight: var(--font-heading-weight);
+  font-size: 18px;
+  line-height: 1.25;
+}
+.archive-row__meta { grid-column: 2; text-transform: uppercase; }
+
+@media (min-width: 768px) {
+  .archive {
+    display: grid;
+    grid-template-columns: var(--archive-side) minmax(0, 1fr);
+    gap: var(--archive-columns-gap);
+    align-items: start;
+  }
+  .archive__side {
+    display: flex;
+    flex-direction: column;
+    gap: var(--row-gap);
+    padding-block-start: var(--archive-side-pad);
+  }
+  .archive__title { margin-block-end: var(--archive-title-gap-d); }
+  .archive__count { margin-block-end: var(--archive-count-gap); }
+
+  .archive-filters {
+    flex-direction: column;
+    gap: var(--row-gap);
+    margin: 0;
+    padding: 0;
+    overflow: visible;
+  }
+  .archive-filter { justify-content: space-between; font-size: 15px; }
+
+  .archive__listing { padding-block-start: 0; max-width: var(--archive-list-max); }
+  .archive-year__label { margin-block-end: var(--recent-label-gap); }
+
+  .archive-row {
+    grid-template-columns: var(--archive-date-col-d) minmax(0, 1fr) var(--archive-cat-col) var(--archive-min-col);
+    align-items: baseline;
+    column-gap: var(--archive-row-gap);
+  }
+  .archive-row__date { font-size: 12px; padding-block-start: 0; }
+  .archive-row__title { font-size: 20px; }
+  .archive-row__meta { display: contents; }
+  .archive-row__sep { display: none; }
+  .archive-row__min { font-size: 12px; text-transform: none; text-align: right; }
+}
+
+
+/* ── Carga con HTMX ────────────────────────────────────────────────────
+   loading.js marca <html> con .is-loading y la lista destino con aria-busy.
+   HTMX le pone .htmx-request al filtro que disparó el pedido. Sin skeletons. */
+
+.load-bar {
+  position: fixed;
+  inset: 0 auto auto 0;
+  z-index: 30;
+  width: 0;
+  height: var(--load-bar-height);
+  background: var(--color-accent);
+  opacity: 0;
+  pointer-events: none;
+}
+.is-loading .load-bar {
+  opacity: 1;
+  width: 85%;
+  transition: width 3s cubic-bezier(0.1, 0.6, 0.3, 1);
+}
+
+[aria-busy="true"] {
+  opacity: var(--loading-opacity);
+  transition: opacity 0.15s ease;
+}
+
+/* El filtro elegido pasa a activo en cuanto se toca, con el ícono girando. */
+.archive-filter.htmx-request {
+  background: var(--color-accent);
+  color: var(--color-bg);
+  border-color: transparent;
+}
+.archive-filter.htmx-request .archive-filter__spinner {
+  display: block;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .is-loading .load-bar { width: 100%; transition: none; }
+  [aria-busy="true"] { transition: none; }
+  .archive-filter.htmx-request .archive-filter__spinner { animation: none; }
+}
+
+
+/* ── Toasts ────────────────────────────────────────────────────────────
+   A 16px de los costados y 40px del borde inferior; el segundo se apila
+   arriba (a 118px). Fondo neutral-100, sombra lg, radio lg, 15px. */
+
+.toasts {
+  position: fixed;
+  inset: auto var(--toast-inset) var(--toast-bottom);
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  gap: var(--toast-stack-gap);
+  pointer-events: none;
+}
+.toast {
+  display: flex;
+  align-items: center;
+  gap: var(--toast-gap);
+  padding: var(--toast-pad);
+  border-radius: var(--radius-lg);
+  background: var(--color-neutral-100);
+  box-shadow: var(--shadow-lg);
+  font-size: 15px;
+  pointer-events: auto;
+}
+.toast__icon { flex: none; font-size: 20px; }
+.toast--success .toast__icon { color: var(--color-accent-700); }
+.toast--error .toast__icon { color: var(--color-accent-2-700); }
+.toast__message { flex: 1; min-height: var(--hit); display: flex; align-items: center; }
+.toast__action { min-height: var(--hit); font-size: 15px; }
+.toast[hidden] { display: none; }
+
+@media (min-width: 768px) {
+  .toasts {
+    left: 50%;
+    right: auto;
+    width: min(var(--toast-max), calc(100% - var(--toast-inset) * 2));
+    transform: translateX(-50%);
+  }
+}
+

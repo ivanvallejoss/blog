@@ -5,7 +5,9 @@
 
   ring()          anillo SVG de la marca (decorativo).
   brand()         anillo + «IV» + «/blog», link a la portada. Lado izquierdo por defecto.
-  back_button()   flecha atrás de 44×44 (artículo y archivo). Recibe la URL de destino.
+                  `class` opcional (p. ej. "desktop-only").
+  back_button()   flecha atrás de 44×44 (artículo y archivo). Recibe la URL de destino
+                  y `class` opcional (p. ej. "mobile-only").
   search_button() lupa en mobile, «Buscar ⌘K» en desktop. Sin comportamiento todavía:
                   la búsqueda se engancha por [data-search-open].
   lang_switch()   ES/EN. Solo se renderiza si el flag está activo (app/config.py).
@@ -21,15 +23,15 @@
 </svg>
 {%- endmacro %}
 
-{% macro brand(t, href) -%}
-<a class="brand hit" href="{{ href }}">
+{% macro brand(t, href, class="") -%}
+<a class="brand hit {{ class }}" href="{{ href }}">
   {{ ring() }}
   <span>{{ t.brand_mark }}</span><span class="brand__sub">{{ t.brand_sub }}</span>
 </a>
 {%- endmacro %}
 
-{% macro back_button(t, href) -%}
-<a class="btn btn-icon header-icon-btn" href="{{ href }}" aria-label="{{ t.back }}">
+{% macro back_button(t, href, class="") -%}
+<a class="btn btn-icon header-icon-btn {{ class }}" href="{{ href }}" aria-label="{{ t.back }}">
   <i class="ph-duotone ph-arrow-left" aria-hidden="true"></i>
 </a>
 {%- endmacro %}

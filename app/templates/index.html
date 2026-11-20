@@ -1,11 +1,60 @@
 {% extends "base.html" %}
+{% from "partials/posts.html" import post_url, post_meta, post_row, empty_state with context %}
 
 {% block content %}
-<div class="container">
-  <h1 class="visually-hidden">{{ t.site_title }}</h1>
-  <section class="section" aria-labelledby="recent-label">
-    <h2 class="section-label" id="recent-label">{{ t.recent }}</h2>
-    {% include "partials/post_list.html" %}
+{% if featured %}
+<div class="container home">
+  <div class="home__top">
+    <article class="featured">
+      <p class="featured__kicker">{{ t.featured }}</p>
+      <h1 class="featured__title"><a href="{{ post_url(featured) }}">{{ featured.title }}</a></h1>
+      {% if featured.summary %}<p class="featured__summary">{{ featured.summary }}</p>{% endif %}
+      <div class="featured__foot">
+        {# El título ya es el link; este botón es atajo visual en desktop y no
+           duplica el link para lectores de pantalla ni para el teclado. #}
+        <a class="btn btn-primary featured__cta desktop-only" href="{{ post_url(featured) }}" tabindex="-1" aria-hidden="true">{{ t.read }}</a>
+        <p class="meta-mono featured__meta">{{ post_meta(featured) }}</p>
+      </div>
+    </article>
+
+    {% if recent %}
+    <section class="recent" aria-labelledby="recent-label">
+      <h2 class="section-label recent__label" id="recent-label">{{ t.recent }}</h2>
+      <ol class="list-reset">
+        {% for post in recent %}
+        <li{% if loop.index > recent_desktop %} class="mobile-only"{% endif %}>{{ post_row(post) }}</li>
+        {% endfor %}
+      </ol>
+      <a class="btn btn-ghost see-archive mobile-only" href="{{ url_for('archive') }}">{{ t.see_archive }} <i class="ph-duotone ph-arrow-right" aria-hidden="true"></i></a>
+    </section>
+    {% endif %}
+  </div>
+
+  {% if topics %}
+  {# Bloques por tema (solo desktop). Todos los temas con posts, de más a menos
+     posts, en filas de tres. Cada bloque muestra hasta tres títulos; si hay
+     más, un link al tema con el total. #}
+  <section class="topics desktop-only" aria-label="{{ t.topics }}">
+    {% for topic in topics %}
+    <div class="topic">
+      <h3 class="topic__title"><a href="{{ url_for('get_category', category_slug=topic.slug) }}">{{ topic.name }}</a> <span class="topic__count">{{ topic.count }}</span></h3>
+      <ul class="list-reset topic__list">
+        {% for post in topic.posts[:3] %}
+        <li><a class="topic__post" href="{{ post_url(post) }}">{{ post.title }}</a></li>
+        {% endfor %}
+      </ul>
+      {% if topic.count > 3 %}
+      <a class="topic__more" href="{{ url_for('get_category', category_slug=topic.slug) }}">{{ t.see_topic.format(n=topic.count) }} →</a>
+      {% endif %}
+    </div>
+    {% endfor %}
   </section>
+  {% endif %}
 </div>
+{% else %}
+<div class="container home home--empty">
+  <h1 class="visually-hidden">{{ t.site_title }}</h1>
+  {{ empty_state(t.no_posts, none) }}
+</div>
+{% endif %}
 {% endblock %}

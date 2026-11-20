@@ -1,0 +1,32 @@
+{#
+  Piezas de listado de posts. Importar CON contexto (usan url_for, t y lang):
+
+    {% from "partials/posts.html" import post_url, post_meta, post_row, empty_state with context %}
+
+  post_url(post)          URL del post.
+  post_meta(post)         «14 NOV · concurrencia · 12 min» (el template pone .meta-mono).
+  post_row(post)          fila de lista: link en bloque con título y metadatos (Recientes).
+  empty_state(title, body) título 26px + texto 17px (tema vacío, portada sin posts).
+#}
+
+{% macro post_url(post) -%}
+{{ url_for('get_post', category_slug=post.category.slug, post_slug=post.slug) }}
+{%- endmacro %}
+
+{% macro post_meta(post) -%}
+<time datetime="{{ post.published_at.date().isoformat() }}">{{ post.published_at | format_date_short(lang) }}</time> · {{ post.category.name }} · {{ t.minutes.format(n=post.reading_minutes) }}
+{%- endmacro %}
+
+{% macro post_row(post) -%}
+<a class="post-row" href="{{ post_url(post) }}">
+  <span class="post-row__title">{{ post.title }}</span>
+  <span class="post-row__meta meta-mono">{{ post_meta(post) }}</span>
+</a>
+{%- endmacro %}
+
+{% macro empty_state(title, body) -%}
+<div class="empty-state">
+  <h2 class="empty-state__title">{{ title }}</h2>
+  {% if body %}<p class="empty-state__body">{{ body }}</p>{% endif %}
+</div>
+{%- endmacro %}

@@ -27,10 +27,14 @@
   <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/duotone/style.css">
 
   <script defer src="{{ url_for('static', path='js/htmx.min.js') }}"></script>
+  <script defer src="{{ url_for('static', path='js/toast.js') }}"></script>
+  <script defer src="{{ url_for('static', path='js/loading.js') }}"></script>
   {% block scripts %}{% endblock %}
 </head>
 <body class="{% block body_class %}{% endblock %}">
   <a class="btn btn-secondary skip-link" href="#main">{{ t.skip_to_content }}</a>
+  {# Barra de carga de HTMX (loading.js le pone la clase is-loading a <html>). #}
+  <div class="load-bar" aria-hidden="true"></div>
 
   {#
     Header. Tres zonas reemplazables por página:
@@ -48,8 +52,9 @@
       <div class="site-header__center">{% block header_center %}{% endblock %}</div>
       <nav class="site-header__end" aria-label="{{ t.main_nav }}">
         {% block header_end %}
-        {# Archivo apunta a la portada hasta que exista la ruta del archivo. #}
-        <a class="site-nav__link hit desktop-only" href="{{ url_for('post_list') }}">{{ t.archive }}</a>
+        {# nav_active: las páginas lo fijan con {% set nav_active = "archive" %} #}
+        <a class="site-nav__link hit desktop-only" href="{{ url_for('archive') }}"
+           {%- if nav_active == "archive" %} aria-current="page"{% endif %}>{{ t.archive }}</a>
         {{ search_button(t) }}
         {{ lang_switch(t, lang, langs, lang_switch_enabled) }}
         <a class="site-nav__external hit desktop-only" href="https://ivanvallejos.dev/">{{ t.landing_link }}</a>
@@ -61,6 +66,20 @@
   <main id="main" class="site-main" tabindex="-1">
     {% block content %}{% endblock %}
   </main>
+
+  {#
+    Toasts (static/js/toast.js). Los textos los pone el template: el script no
+    tiene ninguno escrito. API: window.blogToast.success(msg) /
+    blogToast.error(msg, {actionLabel, onAction}).
+  #}
+  <div id="toasts" class="toasts" role="region" aria-label="{{ t.notifications }}" aria-live="polite"
+       data-error-message="{{ t.load_failed }}" data-retry-label="{{ t.retry }}"></div>
+  <template id="toast-template">
+    <div class="toast">
+      <i class="ph-duotone toast__icon" aria-hidden="true"></i>
+      <span class="toast__message"></span>
+    </div>
+  </template>
 
   {% block footer %}
   <footer class="site-footer">

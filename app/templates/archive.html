@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% from "partials/brand.html" import brand, back_button %}
+{% from "partials/posts.html" import post_url, empty_state with context %}
+
+{% set nav_active = "archive" %}
+
+{% block scripts %}
+<script defer src="{{ url_for('static', path='js/archive.js') }}"></script>
+{% endblock %}
+
+{% block title %}{% if category %}{{ category.name }} — {% endif %}{{ t.archive }} — {{ t.site_title }}{% endblock %}
+
+{# Mobile: flecha atrás. Desktop: la marca, y «Archivo» activo en el header. #}
+{% block header_modifier %}site-header--back{% endblock %}
+{% block header_start %}
+{{ back_button(t, url_for('post_list'), class="mobile-only") }}
+{{ brand(t, url_for('post_list'), class="desktop-only") }}
+{% endblock %}
+
+{% macro filter_link(name, url, active, count=none, slug="all") -%}
+<a id="filter-{{ slug }}"
+   class="btn {{ 'btn-primary' if active else 'btn-secondary' }} archive-filter hit"
+   href="{{ url }}"{% if active %} aria-current="page"{% endif %}
+   hx-get="{{ url }}" hx-target="#listing" hx-select="#listing" hx-swap="outerHTML"
+   hx-select-oob="#archive-filters" hx-push-url="true">
+  <i class="ph-duotone ph-circle-notch archive-filter__spinner" aria-hidden="true"></i>
+  <span class="archive-filter__name">{{ name }}</span>
+  {%- if count is not none %}<span class="archive-filter__count">{{ count }}</span>{% endif %}
+</a>
+{%- endmacro %}
+
+{% block content %}
+<div class="container archive">
+  <div class="archive__side">
+    <h1 class="archive__title">{{ t.archive }}</h1>
+    <p class="archive__count">{{ t | plural("posts", total_posts) }} · {{ t | plural("topics", total_topics) }}</p>
+
+    {# Se reemplaza junto con #listing (hx-select-oob) para que el filtro activo
+       quede marcado después del swap. Los ids de cada filtro le permiten a HTMX
+       devolver el foco al mismo filtro. #}
+    <nav id="archive-filters" class="archive-filters" aria-label="{{ t.topics }}" data-toast-error="{{ t.load_topic_failed }}">
+      {{ filter_link(t.all, url_for('archive'), active_tag is none) }}
+      {% for tag in filters %}
+      {{ filter_link(tag.name, url_for('get_category', category_slug=tag.slug), tag.slug == active_tag, tag.count, tag.slug) }}
+      {% endfor %}
+    </nav>
+  </div>
+
+  <div id="listing" class="archive__listing">
+    {% for group in years %}
+    <section class="archive-year" aria-labelledby="year-{{ group.year }}">
+      <h2 class="section-label archive-year__label" id="year-{{ group.year }}">{{ group.year }}</h2>
+      <ol class="list-reset">
+        {% for post in group.posts %}
+        <li>
+          <a class="archive-row" href="{{ post_url(post) }}">
+            <time class="archive-row__date" datetime="{{ post.published_at.date().isoformat() }}">{{ post.published_at | format_date_short(lang) }}</time>
+            <span class="archive-row__title">{{ post.title }}</span>
+            <span class="archive-row__meta">
+              <span class="archive-row__cat">{{ post.category.name }}</span><span class="archive-row__sep"> · </span><span class="archive-row__min">{{ t.minutes.format(n=post.reading_minutes) }}</span>
+            </span>
+          </a>
+        </li>
+        {% endfor %}
+      </ol>
+    </section>
+    {% else %}
+    {% if category %}
+    {{ empty_state(t.empty_topic_title, t.empty_topic_body) }}
+    {% else %}
+    {{ empty_state(t.no_posts, none) }}
+    {% endif %}
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

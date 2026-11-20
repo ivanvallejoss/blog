@@ -6,31 +6,73 @@ from app.database import get_db
 from app.templating import templates
 
 from ..selectors import (
-    get_archive_counts,
     get_category_by_slug,
     get_post_by_slugs,
+    get_posts_by_year,
     get_published_posts,
     get_tag_counts,
+    group_posts_by_tag,
 )
 
 router = APIRouter()
 
+# Filas de «Recientes» en desktop; en mobile se muestran todas (diseño 1a).
+RECENT_DESKTOP = 4
+
+
 @router.get("/")
 def post_list(
-    request: Request, 
+    request: Request,
     db: Session = Depends(get_db)
     ):
     posts = get_published_posts(db)
+    tags = get_tag_counts(db)
     return templates.TemplateResponse(
         request,
-        "index.html", 
+        "index.html",
         {
-            "posts": posts,
-            "tags": get_tag_counts(db),
-            "archive": get_archive_counts(db),
-            "active_tag": None,
+            "featured": posts[0] if posts else None,
+            "recent": posts[1:],
+            "recent_desktop": RECENT_DESKTOP,
+            "topics": group_posts_by_tag(posts, tags),
         }
         )
+
+
+def _archive_response(request: Request, db: Session, category=None):
+    """
+    Archivo completo o filtrado por tema: la misma plantilla y la página
+    entera en los dos casos. HTMX recorta #listing y #archive-filters de la
+    respuesta; el router no distingue pedidos de HTMX.
+    """
+    tags = get_tag_counts(db)
+    filters = list(tags)
+    # Un tema que existe pero no tiene posts no aparece en get_tag_counts;
+    # se suma con 0 para que el filtro activo siga visible y marcado.
+    if category is not None and all(tag["slug"] != category.slug for tag in tags):
+        filters.append({"name": category.name, "slug": category.slug, "count": 0})
+
+    return templates.TemplateResponse(
+        request,
+        "archive.html",
+        {
+            "category": category,
+            "active_tag": category.slug if category else None,
+            "filters": filters,
+            "years": get_posts_by_year(db, category.id if category else None),
+            "total_posts": sum(tag["count"] for tag in tags),
+            "total_topics": len(tags),
+        }
+        )
+
+
+# Ruta fija registrada ANTES que /{category_slug}/ (CORRECCIONES §6).
+@router.get("/archivo/", name="archive")
+def archive(
+    request: Request,
+    db: Session = Depends(get_db)
+    ):
+    return _archive_response(request, db)
 
 
 @router.get("/{category_slug}/")
@@ -43,17 +85,7 @@ def get_category(
     if not category:
         raise HTTPException(status_code=404, detail="Categoria no encontrada o inexistente")
 
-    return templates.TemplateResponse(
-        request,
-        "category.html",
-        {
-            "posts": category.posts,
-            "category": category,
-            "tags": get_tag_counts(db),
-            "archive": get_archive_counts(db),
-            "active_tag": category.slug,
-        }
-        )
+    return _archive_response(request, db, category)
 
 
 @router.get("/{category_slug}/{post_slug}/")
@@ -70,6 +102,6 @@ def get_post(
 
     return templates.TemplateResponse(
         request,
-        "post.html", 
+        "post.html",
         {"post": post}
         )

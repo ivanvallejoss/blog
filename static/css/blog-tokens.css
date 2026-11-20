@@ -60,4 +60,50 @@
   /* footer: 64px arriba en mobile (prototipo) → la separación de sección en desktop */
   --footer-gap: 16px;
   --footer-pad-top: clamp(64px, calc(64px + (100vw - 390px) * 48 / 890), 112px);
+
+  /* ── Portada y archivo (ventana 2) ── */
+  --row-pad-y: clamp(12px, calc(14px - (100vw - 390px) * 2 / 890), 14px); /* 14 mobile → 12 desktop */
+  --row-gap: 6px;                     /* título ↔ metadatos en una fila */
+
+  --featured-pad-top: clamp(20px, calc(20px + (100vw - 390px) * 44 / 890), 64px);
+  --featured-kicker-gap: clamp(10px, calc(10px + (100vw - 390px) * 4 / 890), 14px);
+  --featured-title-gap: clamp(12px, calc(12px + (100vw - 390px) * 8 / 890), 20px);
+  --featured-summary-max: 580px;
+  --featured-cta-gap: 20px;
+  --home-columns-gap: 96px;           /* destacado 7fr | recientes 4fr */
+  --recent-label-gap: 8px;            /* rótulo ↔ primera fila (10 en desktop) */
+  --see-archive-nudge: -5px;          /* alinea el texto del .btn-ghost con la columna */
+  --topics-gap: 56px;
+  --topic-gap: 10px;
+
+  --archive-pad-top: clamp(12px, calc(12px + (100vw - 390px) * 36 / 890), 48px);
+  --archive-side: 220px;
+  --archive-columns-gap: 80px;
+  --archive-side-pad: 12px;           /* el lateral arranca 12px más abajo que la lista */
+  --archive-list-max: 760px;
+  --archive-count-gap: 24px;          /* conteo ↔ filtros */
+  --archive-title-gap: 6px;           /* «Archivo» ↔ conteo en mobile */
+  --archive-title-gap-d: 4px;         /* en desktop, más los 6px de la columna */
+  --filter-height: 40px;
+  --filter-gap: 8px;                  /* 6 en desktop, en columna */
+  --filter-row-pad-bottom: 8px;
+  --years-gap: clamp(32px, calc(32px + (100vw - 390px) * 8 / 890), 40px);
+  --archive-row-pad-y: 12px;
+  --archive-row-gap: 16px;            /* columnas de la fila en desktop */
+  --archive-date-col: 60px;           /* 72 en desktop */
+  --archive-date-col-d: 72px;
+  --archive-cat-col: 150px;
+  --archive-min-col: 56px;
+  --empty-pad-top: 48px;
+  --empty-title-gap: 10px;
+
+  /* ── Estados ── */
+  --load-bar-height: 2px;
+  --loading-opacity: 0.4;
+  --toast-inset: 16px;                /* a los costados */
+  --toast-bottom: 40px;               /* sobre la zona del pulgar */
+  --toast-stack-gap: 22px;            /* el segundo queda a 118px del borde */
+  --toast-max: 480px;                 /* ancho máximo en desktop */
+  --toast-pad: 6px 6px 6px 16px;
+  --toast-gap: 8px;
 }
